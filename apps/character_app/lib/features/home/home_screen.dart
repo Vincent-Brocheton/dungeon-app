@@ -5,6 +5,7 @@ import 'package:rules_engine/rules_engine.dart';
 
 import '../../data/character_doc.dart';
 import '../../router.dart';
+import '../admin/admin_providers.dart';
 import '../auth/auth_providers.dart';
 import '../characters/characters_providers.dart';
 
@@ -22,6 +23,12 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Personnages'),
         actions: [
+          if (ref.watch(isAdminProvider).value ?? false)
+            IconButton(
+              tooltip: 'Admin : voir tous les personnages',
+              icon: const Icon(Icons.admin_panel_settings_outlined),
+              onPressed: () => context.push(AppRoutes.admin),
+            ),
           IconButton(
             tooltip: isAnonymous
                 ? 'Compte anonyme : lie-le pour retrouver tes persos ailleurs'
