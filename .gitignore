@@ -36,3 +36,6 @@ firebase-debug.log
 
 # Secrets locaux
 pass.txt
+
+# Worktrees isolés (superpowers)
+.worktrees/
