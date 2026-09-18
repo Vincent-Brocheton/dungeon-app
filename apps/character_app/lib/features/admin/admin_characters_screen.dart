@@ -9,6 +9,13 @@ class AdminCharactersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isAdmin = ref.watch(isAdminProvider).value ?? false;
+    if (!isAdmin) {
+      return const Scaffold(
+        body: Center(child: Text('Accès réservé aux administrateurs')),
+      );
+    }
+
     final entries = ref.watch(allCharactersProvider);
 
     return Scaffold(

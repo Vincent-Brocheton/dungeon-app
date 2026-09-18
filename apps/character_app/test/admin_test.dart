@@ -8,6 +8,7 @@ import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
 import 'package:character_app/features/characters/characters_providers.dart';
+import 'package:character_app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,9 +73,11 @@ void main() {
   );
 
   testWidgets('un utilisateur non-admin ne voit pas l\'icône admin', (tester) async {
+    appRouter.go(AppRoutes.home);
     await tester.pumpWidget(_app(admin: false));
     await tester.pumpAndSettle();
 
+    expect(find.text('Personnages'), findsOneWidget);
     expect(find.byIcon(Icons.admin_panel_settings_outlined), findsNothing);
   });
 }
