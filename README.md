@@ -52,6 +52,9 @@ dernières : `cd apps/character_app && flutter pub add firebase_core firebase_au
 4. Android : dans `apps/character_app/android/app/build.gradle.kts` (généré par `make bootstrap`),
    mettre `minSdk = 23` (exigé par Firebase Auth).
 5. Web : dans Authentication → Settings → *Authorized domains*, ajouter le domaine Cloudflare Pages.
+6. Rôle admin : dans la console Firestore, crée un document `admins/{uid}` (n'importe quel champ,
+   même vide) pour l'uid à promouvoir. Aucune écriture cliente n'est possible sur cette collection ;
+   c'est la seule façon de désigner un admin.
 
 Fonctionnement : session **anonyme** au premier lancement, persos écrits en local et synchronisés
 par le SDK Firestore (cache hors-ligne activé dans `main.dart`). L'écran « Mon compte » lie la
