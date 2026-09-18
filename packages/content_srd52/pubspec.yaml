@@ -1,0 +1,24 @@
+name: content_srd52
+description: Pack de contenu SRD 5.2.1 (CC-BY-4.0) embarqué en JSON, chargé hors-ligne depuis les assets.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.7.0
+  flutter: ">=3.29.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  rules_engine:
+    path: ../rules_engine
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  assets:
+    - assets/srd52/pack.json

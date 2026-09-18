@@ -1,0 +1,30 @@
+name: character_app
+description: Gestionnaire de personnages compatible SRD 5.2 (règles 2024) — joueur, hors-ligne, Android + web.
+publish_to: none
+version: 0.1.0+1
+resolution: workspace
+
+environment:
+  sdk: ^3.7.0
+  flutter: ">=3.29.0"
+
+dependencies:
+  cloud_firestore: ^6.0.0
+  content_srd52:
+    path: ../../packages/content_srd52
+  firebase_auth: ^6.0.0
+  firebase_core: ^4.0.0
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.0.0
+  go_router: ^17.0.0
+  rules_engine:
+    path: ../../packages/rules_engine
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,13 @@
+# Racine du monorepo : un "pub workspace" (Dart >= 3.6).
+# `flutter pub get` lancé depuis n'importe quel paquet résout tout le workspace.
+name: dnd_character_workspace
+description: Monorepo de l'app de gestion de personnages D&D 2024 (SRD 5.2).
+publish_to: none
+
+environment:
+  sdk: ^3.7.0
+
+workspace:
+  - packages/rules_engine
+  - packages/content_srd52
+  - apps/character_app

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "srd-5.2",
+  "name": "SRD 5.2.1",
+  "license": "CC-BY-4.0",
+  "attribution": "This work includes material from the System Reference Document 5.2.1 (\"SRD 5.2.1\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+  "species": [
+    {
+      "id": "human",
+      "name": "Human",
+      "sizeOptions": ["small", "medium"],
+      "speed": 30
+    }
+  ],
+  "backgrounds": []
+}

@@ -1,0 +1,12 @@
+name: rules_engine
+description: Moteur de règles D&D 2024 (SRD 5.2) en Dart pur — aucune dépendance Flutter ni base de données.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.7.0
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0

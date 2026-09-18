@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Modèle : users/{uid}/characters/{characterId}
+// Un utilisateur (anonyme ou lié) ne voit et n'écrit que son propre sous-arbre.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validCharacter() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['schemaVersion', 'name', 'updatedAt'])
+        && d.schemaVersion is int && d.schemaVersion >= 1
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.updatedAt is timestamp
+        && (!('deletedAt' in d) || d.deletedAt == null || d.deletedAt is timestamp)
+        && (!('level' in d) || (d.level is int && d.level >= 1 && d.level <= 20));
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /characters/{characterId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validCharacter();
+      }
+    }
+
+    // Tout le reste est fermé.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

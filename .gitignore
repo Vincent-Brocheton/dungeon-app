@@ -1,0 +1,38 @@
+# Dart / Pub
+.dart_tool/
+.packages
+build/
+pubspec_overrides.yaml
+*.iml
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+**/android/.gradle/
+**/android/local.properties
+**/android/key.properties
+**/android/*.jks
+**/android/*.keystore
+**/ios/Pods/
+**/ios/.symlinks/
+**/web/.dart_tool/
+
+# Générés par build_runner (à activer quand freezed/drift arriveront)
+# *.g.dart
+# *.freezed.dart
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Firebase (le .firebaserc contient l'id du projet : copie .firebaserc.example)
+infra/firebase/.firebaserc
+.firebase/
+firebase-debug.log
+
+# Secrets locaux
+pass.txt

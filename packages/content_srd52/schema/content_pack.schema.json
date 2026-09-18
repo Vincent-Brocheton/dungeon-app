@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/content-pack-v1.json",
+  "title": "Content pack v1",
+  "description": "Pack de contenu lu par rules_engine (supportedSchemaVersion = 1). Les IDs sont en kebab-case, stables, uniques par pack.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "license"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "license": { "type": "string", "minLength": 1 },
+    "attribution": { "type": "string" },
+    "species": { "type": "array", "items": { "$ref": "#/$defs/species" } },
+    "backgrounds": { "type": "array", "items": { "$ref": "#/$defs/background" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[-.][a-z0-9]+)*$" },
+    "ability": { "type": "string", "enum": ["STR", "DEX", "CON", "INT", "WIS", "CHA"] },
+    "species": {
+      "type": "object",
+      "required": ["id", "name", "sizeOptions", "speed"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "sizeOptions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "enum": ["small", "medium"] }
+        },
+        "speed": { "type": "integer", "minimum": 0, "description": "En pieds (30 ft = 9 m)." }
+      }
+    },
+    "background": {
+      "type": "object",
+      "required": ["id", "name", "abilities", "originFeat", "skills", "tool"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "abilities": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/ability" }
+        },
+        "originFeat": { "$ref": "#/$defs/id" },
+        "skills": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "tool": { "$ref": "#/$defs/id" }
+      }
+    }
+  }
+}

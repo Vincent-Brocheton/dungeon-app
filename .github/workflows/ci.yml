@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Format · Analyse · Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dépendances (résout tout le workspace)
+        run: flutter pub get
+        working-directory: apps/character_app
+
+      - name: Formatage
+        run: dart format --output=none --set-exit-if-changed packages apps
+
+      - name: Analyse statique
+        run: dart analyze --fatal-infos
+
+      - name: Tests · rules_engine
+        run: dart test --reporter expanded
+        working-directory: packages/rules_engine
+
+      - name: Tests · content_srd52
+        run: flutter test
+        working-directory: packages/content_srd52
+
+      - name: Tests · character_app
+        run: flutter test
+        working-directory: apps/character_app
+
+  build:
+    name: Build APK + Web
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dépendances
+        run: flutter pub get
+        working-directory: apps/character_app
+
+      - name: APK (debug signing, suffisant pour le sideload)
+        run: flutter build apk --release
+        working-directory: apps/character_app
+
+      - name: Web
+        run: flutter build web --release
+        working-directory: apps/character_app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: apps/character_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: apps/character_app/build/web
+          retention-days: 14
