@@ -39,3 +39,6 @@ pass.txt
 
 # Worktrees isolés (superpowers)
 .worktrees/
+
+# Claude Code : overrides personnels, pas partagés en équipe
+.claude/settings.local.json
