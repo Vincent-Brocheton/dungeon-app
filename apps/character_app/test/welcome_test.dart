@@ -34,12 +34,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Commencer à jouer'), findsOneWidget);
-      expect(find.text('Personnages'), findsNothing);
+      expect(find.text('Mes personnages'), findsNothing);
 
       await tester.tap(find.text('Commencer à jouer'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Personnages'), findsOneWidget);
+      expect(find.text('Mes personnages'), findsOneWidget);
     },
   );
 
@@ -55,7 +55,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Personnages'), findsOneWidget);
+    expect(find.text('Mes personnages'), findsOneWidget);
     expect(find.text('Commencer à jouer'), findsNothing);
   });
 

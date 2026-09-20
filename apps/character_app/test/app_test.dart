@@ -47,7 +47,7 @@ void main() {
       await tester.pumpWidget(_app(repository: repository));
       await _enterApp(tester);
 
-      expect(find.text('Personnages'), findsOneWidget);
+      expect(find.text('Mes personnages'), findsOneWidget);
       expect(find.text('Brenna'), findsOneWidget);
       expect(find.text('Orsik'), findsOneWidget);
       expect(
@@ -61,9 +61,9 @@ void main() {
   testWidgets('crée un personnage depuis l\'achat de points', (tester) async {
     await tester.pumpWidget(_app());
     await _enterApp(tester);
-    expect(find.text('Aucun personnage pour l\'instant'), findsOneWidget);
+    expect(find.text('Créer un nouveau personnage'), findsOneWidget);
 
-    await tester.tap(find.text('Nouveau personnage'));
+    await tester.tap(find.text('Créer un nouveau personnage'));
     await tester.pumpAndSettle();
     expect(find.text('Points restants : 27 / 27'), findsOneWidget);
 
@@ -74,7 +74,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tharivol'), findsOneWidget);
-    expect(find.text('Aucun personnage pour l\'instant'), findsNothing);
   });
 
   testWidgets('lier un e-mail transforme le compte anonyme', (tester) async {

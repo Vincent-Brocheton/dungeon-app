@@ -76,7 +76,7 @@ void main() {
     await tester.pumpWidget(_app(admin: false));
     await tester.pumpAndSettle();
 
-    expect(find.text('Personnages'), findsOneWidget);
+    expect(find.text('Mes personnages'), findsOneWidget);
     expect(find.byIcon(Icons.admin_panel_settings_outlined), findsNothing);
   });
 }
