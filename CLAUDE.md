@@ -37,3 +37,11 @@ jusqu'à un run complet vert.
 
 Une fois la CI passée au vert une première fois en entier (push + tests + CI OK), lancer le
 skill `/security-review` sur la branche avant de considérer le dev terminé.
+
+## 6. Merge
+
+Dès que la CI est verte et que le security-review ne relève aucune faille (ou que les failles
+relevées sont corrigées et re-vérifiées), merger la PR sans redemander confirmation :
+`gh pr merge <numéro> --squash --delete-branch`.
+Si le security-review relève une faille, la corriger, repousser, revérifier CI + security-review
+avant de merger.
