@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/admin_species_doc.dart';
 import '../../router.dart';
 import '../../theme/app_theme.dart';
+import 'admin_compendium_tabs.dart';
 import 'admin_form_fields.dart';
 import 'admin_providers.dart';
 
@@ -143,7 +144,7 @@ class _AdminSpeciesEditorScreenState
       ),
       body: Column(
         children: [
-          const _CompendiumTabs(),
+          const AdminCompendiumTabs(current: AppRoutes.adminSpecies),
           Expanded(
             child: species.when(
               data: (list) {
@@ -208,72 +209,6 @@ class _AdminSpeciesEditorScreenState
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Onglets vers les autres éditeurs de compendium (écrans stub pour
-/// l'instant — voir `AdminEditorStubScreen`), + l'onglet Espèces courant.
-class _CompendiumTabs extends StatelessWidget {
-  const _CompendiumTabs();
-
-  static const _siblings = [
-    ('Classes', AppRoutes.adminClasses),
-    ('Sorts', AppRoutes.adminSpells),
-    ('Dons', AppRoutes.adminFeats),
-    ('Historiques', AppRoutes.adminBackgrounds),
-    ('Manifestations occultes', AppRoutes.adminInvocations),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppTheme.border)),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: AppTheme.accent, width: 2),
-                  ),
-                ),
-                child: Text(
-                  'Espèces',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.accent,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            for (final (label, path) in _siblings)
-              Padding(
-                padding: const EdgeInsets.only(right: 20),
-                child: InkWell(
-                  onTap: () => context.push(path),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      label,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textMuted,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }
