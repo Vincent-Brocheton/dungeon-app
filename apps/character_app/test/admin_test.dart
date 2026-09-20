@@ -69,6 +69,24 @@ void main() {
     },
   );
 
+  testWidgets(
+    'depuis le tableau de bord, une carte Compendium ouvre son écran (à venir)',
+    (tester) async {
+      appRouter.go(AppRoutes.home);
+      await tester.pumpWidget(_app(admin: true));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Espèces'), findsOneWidget);
+      await tester.tap(find.text('Espèces'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bientôt disponible'), findsOneWidget);
+    },
+  );
+
   testWidgets('un utilisateur non-admin ne voit pas l\'icône admin', (
     tester,
   ) async {
