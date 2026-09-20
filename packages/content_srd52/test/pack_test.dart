@@ -8,13 +8,20 @@ void main() {
   // `flutter test` s'exécute depuis la racine du paquet.
   final raw = File('assets/srd52/pack.json').readAsStringSync();
 
-  test('le pack embarqué se parse et correspond au schéma lu par le moteur', () {
-    final pack = parseContentPack(raw);
-    expect(pack.schemaVersion, supportedSchemaVersion);
-    expect(pack.id, 'srd-5.2');
-    expect(pack.license, 'CC-BY-4.0');
-    expect(pack.attribution, isNotEmpty, reason: 'CC-BY exige une attribution');
-  });
+  test(
+    'le pack embarqué se parse et correspond au schéma lu par le moteur',
+    () {
+      final pack = parseContentPack(raw);
+      expect(pack.schemaVersion, supportedSchemaVersion);
+      expect(pack.id, 'srd-5.2');
+      expect(pack.license, 'CC-BY-4.0');
+      expect(
+        pack.attribution,
+        isNotEmpty,
+        reason: 'CC-BY exige une attribution',
+      );
+    },
+  );
 
   test('les identifiants sont uniques', () {
     final pack = parseContentPack(raw);

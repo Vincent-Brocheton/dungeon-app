@@ -44,40 +44,38 @@ class CharacterDoc {
     String? backgroundId,
     DateTime? updatedAt,
     DateTime? deletedAt,
-  }) =>
-      CharacterDoc(
-        id: id,
-        name: name ?? this.name,
-        scores: scores ?? this.scores,
-        level: level ?? this.level,
-        speciesId: speciesId ?? this.speciesId,
-        backgroundId: backgroundId ?? this.backgroundId,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        deletedAt: deletedAt ?? this.deletedAt,
-        schemaVersion: schemaVersion,
-      );
+  }) => CharacterDoc(
+    id: id,
+    name: name ?? this.name,
+    scores: scores ?? this.scores,
+    level: level ?? this.level,
+    speciesId: speciesId ?? this.speciesId,
+    backgroundId: backgroundId ?? this.backgroundId,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt ?? this.deletedAt,
+    schemaVersion: schemaVersion,
+  );
 
   /// Forme sérialisée, sans type propre à un backend (les dates restent des [DateTime]).
   Map<String, Object?> toMap() => {
-        'schemaVersion': schemaVersion,
-        'name': name,
-        'level': level,
-        'speciesId': speciesId,
-        'backgroundId': backgroundId,
-        'abilityScores': {
-          for (final a in Ability.values) a.code: scores[a],
-        },
-        'createdAt': createdAt,
-        'updatedAt': updatedAt,
-        'deletedAt': deletedAt,
-      };
+    'schemaVersion': schemaVersion,
+    'name': name,
+    'level': level,
+    'speciesId': speciesId,
+    'backgroundId': backgroundId,
+    'abilityScores': {for (final a in Ability.values) a.code: scores[a]},
+    'createdAt': createdAt,
+    'updatedAt': updatedAt,
+    'deletedAt': deletedAt,
+  };
 
   /// Lit un document. Point d'entrée des futures migrations par `schemaVersion`.
   factory CharacterDoc.fromMap(String id, Map<String, Object?> map) {
     final rawScores =
-        (map['abilityScores'] as Map<Object?, Object?>?)?.cast<String, Object?>() ??
-            const <String, Object?>{};
+        (map['abilityScores'] as Map<Object?, Object?>?)
+            ?.cast<String, Object?>() ??
+        const <String, Object?>{};
     return CharacterDoc(
       id: id,
       name: map['name'] as String? ?? 'Sans nom',

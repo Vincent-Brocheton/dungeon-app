@@ -21,22 +21,27 @@ class AdminCharactersScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Admin · Personnages')),
       body: entries.when(
-        data: (list) => list.isEmpty
-            ? const Center(child: Text('Aucun personnage'))
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: list.length,
-                itemBuilder: (context, index) {
-                  final entry = list[index];
-                  return ListTile(
-                    leading: CircleAvatar(child: Text('${entry.doc.level}')),
-                    title: Text(entry.doc.name),
-                    subtitle: Text('Propriétaire : ${entry.ownerUid}'),
-                  );
-                },
-              ),
+        data:
+            (list) =>
+                list.isEmpty
+                    ? const Center(child: Text('Aucun personnage'))
+                    : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        final entry = list[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            child: Text('${entry.doc.level}'),
+                          ),
+                          title: Text(entry.doc.name),
+                          subtitle: Text('Propriétaire : ${entry.ownerUid}'),
+                        );
+                      },
+                    ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Chargement impossible : $error')),
+        error:
+            (error, _) => Center(child: Text('Chargement impossible : $error')),
       ),
     );
   }

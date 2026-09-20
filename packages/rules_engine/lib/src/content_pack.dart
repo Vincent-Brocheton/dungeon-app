@@ -81,11 +81,11 @@ class SpeciesDef {
 
   /// Lit une espèce depuis son JSON.
   factory SpeciesDef.fromJson(Map<String, dynamic> json) => SpeciesDef(
-        id: _requireString(json, 'id'),
-        name: _requireString(json, 'name'),
-        sizeOptions: _list(json, 'sizeOptions').cast<String>().toList(),
-        speed: _requireInt(json, 'speed'),
-      );
+    id: _requireString(json, 'id'),
+    name: _requireString(json, 'name'),
+    sizeOptions: _list(json, 'sizeOptions').cast<String>().toList(),
+    speed: _requireInt(json, 'speed'),
+  );
 
   /// Identifiant stable.
   final String id;
@@ -114,10 +114,8 @@ class BackgroundDef {
 
   /// Lit un Background depuis son JSON.
   factory BackgroundDef.fromJson(Map<String, dynamic> json) {
-    final abilities = _list(json, 'abilities')
-        .cast<String>()
-        .map(Ability.parse)
-        .toSet();
+    final abilities =
+        _list(json, 'abilities').cast<String>().map(Ability.parse).toSet();
     if (abilities.length != 3) {
       throw FormatException(
         'Background ${json['id']} : 3 caractéristiques attendues, ${abilities.length} reçues',

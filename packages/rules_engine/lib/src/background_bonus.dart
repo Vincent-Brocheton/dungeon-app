@@ -54,19 +54,19 @@ final class PlusTwoPlusOne extends BackgroundBonus {
 
   @override
   List<RuleViolation> validate(Set<Ability> allowed) => [
-        if (plusTwo == plusOne)
-          const RuleViolation(
-            'background_bonus.same_ability',
-            'Le +2 et le +1 doivent viser deux caractéristiques différentes',
-          ),
-        for (final ability in {plusTwo, plusOne})
-          if (!allowed.contains(ability))
-            RuleViolation(
-              'background_bonus.not_allowed',
-              '${ability.code} ne fait pas partie des caractéristiques du Background',
-              ability: ability,
-            ),
-      ];
+    if (plusTwo == plusOne)
+      const RuleViolation(
+        'background_bonus.same_ability',
+        'Le +2 et le +1 doivent viser deux caractéristiques différentes',
+      ),
+    for (final ability in {plusTwo, plusOne})
+      if (!allowed.contains(ability))
+        RuleViolation(
+          'background_bonus.not_allowed',
+          '${ability.code} ne fait pas partie des caractéristiques du Background',
+          ability: ability,
+        ),
+  ];
 }
 
 /// +1 sur les trois caractéristiques du Background.
@@ -82,17 +82,17 @@ final class PlusOneEach extends BackgroundBonus {
 
   @override
   List<RuleViolation> validate(Set<Ability> allowed) => [
-        if (abilities.length != 3)
-          RuleViolation(
-            'background_bonus.wrong_count',
-            'Le +1/+1/+1 vise exactement 3 caractéristiques, reçu ${abilities.length}',
-          ),
-        for (final ability in abilities)
-          if (!allowed.contains(ability))
-            RuleViolation(
-              'background_bonus.not_allowed',
-              '${ability.code} ne fait pas partie des caractéristiques du Background',
-              ability: ability,
-            ),
-      ];
+    if (abilities.length != 3)
+      RuleViolation(
+        'background_bonus.wrong_count',
+        'Le +1/+1/+1 vise exactement 3 caractéristiques, reçu ${abilities.length}',
+      ),
+    for (final ability in abilities)
+      if (!allowed.contains(ability))
+        RuleViolation(
+          'background_bonus.not_allowed',
+          '${ability.code} ne fait pas partie des caractéristiques du Background',
+          ability: ability,
+        ),
+  ];
 }

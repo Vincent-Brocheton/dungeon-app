@@ -30,29 +30,31 @@ class HomeScreen extends ConsumerWidget {
               onPressed: () => context.push(AppRoutes.admin),
             ),
           IconButton(
-            tooltip: isAnonymous
-                ? 'Compte anonyme : lie-le pour retrouver tes persos ailleurs'
-                : user!.label,
+            tooltip:
+                isAnonymous
+                    ? 'Compte anonyme : lie-le pour retrouver tes persos ailleurs'
+                    : user!.label,
             icon: Icon(
-              isAnonymous
-                  ? Icons.person_outline
-                  : Icons.verified_user_outlined,
+              isAnonymous ? Icons.person_outline : Icons.verified_user_outlined,
             ),
             onPressed: () => context.push(AppRoutes.account),
           ),
         ],
       ),
       body: characters.when(
-        data: (list) => list.isEmpty
-            ? const _EmptyState()
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: list.length,
-                itemBuilder: (context, index) =>
-                    _CharacterTile(doc: list[index]),
-              ),
+        data:
+            (list) =>
+                list.isEmpty
+                    ? const _EmptyState()
+                    : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: list.length,
+                      itemBuilder:
+                          (context, index) => _CharacterTile(doc: list[index]),
+                    ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Chargement impossible : $error')),
+        error:
+            (error, _) => Center(child: Text('Chargement impossible : $error')),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(AppRoutes.pointBuy),
@@ -110,19 +112,20 @@ class _CharacterTile extends ConsumerWidget {
         onPressed: () async {
           final confirmed = await showDialog<bool>(
             context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Supprimer ${doc.name} ?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Annuler'),
+            builder:
+                (context) => AlertDialog(
+                  title: Text('Supprimer ${doc.name} ?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Annuler'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Supprimer'),
+                    ),
+                  ],
                 ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Supprimer'),
-                ),
-              ],
-            ),
           );
           if (confirmed ?? false) {
             await ref.read(charactersControllerProvider).delete(doc.id);

@@ -14,24 +14,24 @@ class AbilityScores {
 
   /// Tous les scores à la même [value].
   const AbilityScores.all(int value)
-      : this(
-          strength: value,
-          dexterity: value,
-          constitution: value,
-          intelligence: value,
-          wisdom: value,
-          charisma: value,
-        );
+    : this(
+        strength: value,
+        dexterity: value,
+        constitution: value,
+        intelligence: value,
+        wisdom: value,
+        charisma: value,
+      );
 
   /// Construit depuis une map ; toute caractéristique absente vaut 10.
   factory AbilityScores.fromMap(Map<Ability, int> scores) => AbilityScores(
-        strength: scores[Ability.strength] ?? 10,
-        dexterity: scores[Ability.dexterity] ?? 10,
-        constitution: scores[Ability.constitution] ?? 10,
-        intelligence: scores[Ability.intelligence] ?? 10,
-        wisdom: scores[Ability.wisdom] ?? 10,
-        charisma: scores[Ability.charisma] ?? 10,
-      );
+    strength: scores[Ability.strength] ?? 10,
+    dexterity: scores[Ability.dexterity] ?? 10,
+    constitution: scores[Ability.constitution] ?? 10,
+    intelligence: scores[Ability.intelligence] ?? 10,
+    wisdom: scores[Ability.wisdom] ?? 10,
+    charisma: scores[Ability.charisma] ?? 10,
+  );
 
   /// Score de Force.
   final int strength;
@@ -53,26 +53,26 @@ class AbilityScores {
 
   /// Score de la caractéristique [ability].
   int operator [](Ability ability) => switch (ability) {
-        Ability.strength => strength,
-        Ability.dexterity => dexterity,
-        Ability.constitution => constitution,
-        Ability.intelligence => intelligence,
-        Ability.wisdom => wisdom,
-        Ability.charisma => charisma,
-      };
+    Ability.strength => strength,
+    Ability.dexterity => dexterity,
+    Ability.constitution => constitution,
+    Ability.intelligence => intelligence,
+    Ability.wisdom => wisdom,
+    Ability.charisma => charisma,
+  };
 
   /// Modificateur de la caractéristique [ability].
   int modifier(Ability ability) => abilityModifier(this[ability]);
 
   /// Copie avec le score de [ability] remplacé par [value].
   AbilityScores withScore(Ability ability, int value) => switch (ability) {
-        Ability.strength => copyWith(strength: value),
-        Ability.dexterity => copyWith(dexterity: value),
-        Ability.constitution => copyWith(constitution: value),
-        Ability.intelligence => copyWith(intelligence: value),
-        Ability.wisdom => copyWith(wisdom: value),
-        Ability.charisma => copyWith(charisma: value),
-      };
+    Ability.strength => copyWith(strength: value),
+    Ability.dexterity => copyWith(dexterity: value),
+    Ability.constitution => copyWith(constitution: value),
+    Ability.intelligence => copyWith(intelligence: value),
+    Ability.wisdom => copyWith(wisdom: value),
+    Ability.charisma => copyWith(charisma: value),
+  };
 
   /// Copie avec les scores fournis remplacés.
   AbilityScores copyWith({
@@ -82,15 +82,14 @@ class AbilityScores {
     int? intelligence,
     int? wisdom,
     int? charisma,
-  }) =>
-      AbilityScores(
-        strength: strength ?? this.strength,
-        dexterity: dexterity ?? this.dexterity,
-        constitution: constitution ?? this.constitution,
-        intelligence: intelligence ?? this.intelligence,
-        wisdom: wisdom ?? this.wisdom,
-        charisma: charisma ?? this.charisma,
-      );
+  }) => AbilityScores(
+    strength: strength ?? this.strength,
+    dexterity: dexterity ?? this.dexterity,
+    constitution: constitution ?? this.constitution,
+    intelligence: intelligence ?? this.intelligence,
+    wisdom: wisdom ?? this.wisdom,
+    charisma: charisma ?? this.charisma,
+  );
 
   /// Vue sous forme de map, dans l'ordre des caractéristiques.
   Map<Ability, int> toMap() => {for (final a in Ability.values) a: this[a]};
@@ -107,13 +106,13 @@ class AbilityScores {
 
   @override
   int get hashCode => Object.hash(
-        strength,
-        dexterity,
-        constitution,
-        intelligence,
-        wisdom,
-        charisma,
-      );
+    strength,
+    dexterity,
+    constitution,
+    intelligence,
+    wisdom,
+    charisma,
+  );
 
   @override
   String toString() =>

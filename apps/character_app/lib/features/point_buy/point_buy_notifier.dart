@@ -29,5 +29,6 @@ class PointBuyNotifier extends Notifier<AbilityScores> {
   void useStandardArray() => state = PointBuy.standardArray;
 }
 
-final pointBuyProvider =
-    NotifierProvider<PointBuyNotifier, AbilityScores>(PointBuyNotifier.new);
+final pointBuyProvider = NotifierProvider<PointBuyNotifier, AbilityScores>(
+  PointBuyNotifier.new,
+);

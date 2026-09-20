@@ -15,8 +15,9 @@ class InMemoryCharacterRepository implements CharacterRepository {
   final _controller = StreamController<void>.broadcast();
   var _counter = 0;
 
-  List<CharacterDoc> _visible() => (_docs.values.where((d) => !d.isDeleted).toList()
-    ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)));
+  List<CharacterDoc> _visible() =>
+      (_docs.values.where((d) => !d.isDeleted).toList()
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)));
 
   @override
   Stream<List<CharacterDoc>> watchAll(String uid) async* {

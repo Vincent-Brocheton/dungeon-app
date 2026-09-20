@@ -33,10 +33,11 @@ void main() {
       expect(pack.id, 'test-pack');
       expect(pack.speciesById('human')?.speed, 30);
       final background = pack.backgroundById('scribe-test')!;
-      expect(
-        background.abilities,
-        {Ability.intelligence, Ability.wisdom, Ability.charisma},
-      );
+      expect(background.abilities, {
+        Ability.intelligence,
+        Ability.wisdom,
+        Ability.charisma,
+      });
       expect(background.skills, ['history', 'arcana']);
     });
 

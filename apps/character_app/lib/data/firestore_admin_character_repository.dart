@@ -32,9 +32,10 @@ class FirestoreAdminCharacterRepository implements AdminCharacterRepository {
   }
 
   static Map<String, Object?> _fromFirestore(Map<String, dynamic> map) => {
-        for (final entry in map.entries)
-          entry.key: entry.value is Timestamp
+    for (final entry in map.entries)
+      entry.key:
+          entry.value is Timestamp
               ? (entry.value as Timestamp).toDate()
               : entry.value,
-      };
+  };
 }

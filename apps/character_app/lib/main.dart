@@ -12,7 +12,9 @@ Future<void> main() async {
 
   // Cache hors-ligne : activé par défaut sur mobile, à demander explicitement sur web.
   // Les écritures partent immédiatement en local et se synchronisent au retour du réseau.
-  FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+  );
 
   runApp(const ProviderScope(child: CharacterApp()));
 }

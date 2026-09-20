@@ -24,16 +24,16 @@ class FirestoreCharacterRepository implements CharacterRepository {
       );
 
   @override
-  Future<void> upsert(String uid, CharacterDoc doc) => _characters(uid)
-      .doc(doc.id)
-      .set(_toFirestore(doc.toMap()), SetOptions(merge: true));
+  Future<void> upsert(String uid, CharacterDoc doc) => _characters(
+    uid,
+  ).doc(doc.id).set(_toFirestore(doc.toMap()), SetOptions(merge: true));
 
   @override
   Future<void> softDelete(String uid, String id) =>
-      _characters(uid).doc(id).set(
-        {'deletedAt': Timestamp.now(), 'updatedAt': Timestamp.now()},
-        SetOptions(merge: true),
-      );
+      _characters(uid).doc(id).set({
+        'deletedAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
 
   @override
   Future<void> deleteAll(String uid) async {
@@ -53,16 +53,18 @@ class FirestoreCharacterRepository implements CharacterRepository {
   String newId() => _db.collection('users').doc().id;
 
   static Map<String, Object?> _toFirestore(Map<String, Object?> map) => {
-        for (final entry in map.entries)
-          entry.key: entry.value is DateTime
+    for (final entry in map.entries)
+      entry.key:
+          entry.value is DateTime
               ? Timestamp.fromDate(entry.value as DateTime)
               : entry.value,
-      };
+  };
 
   static Map<String, Object?> _fromFirestore(Map<String, dynamic> map) => {
-        for (final entry in map.entries)
-          entry.key: entry.value is Timestamp
+    for (final entry in map.entries)
+      entry.key:
+          entry.value is Timestamp
               ? (entry.value as Timestamp).toDate()
               : entry.value,
-      };
+  };
 }

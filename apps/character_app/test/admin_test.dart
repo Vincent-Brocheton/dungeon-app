@@ -17,43 +17,40 @@ import 'package:rules_engine/rules_engine.dart';
 import 'fakes/fake_auth_service.dart';
 
 CharacterDoc _doc(String id, String name) => CharacterDoc(
-      id: id,
-      name: name,
-      scores: PointBuy.standardArray,
-      createdAt: DateTime(2026, 9, 17),
-      updatedAt: DateTime(2026, 9, 17),
-    );
+  id: id,
+  name: name,
+  scores: PointBuy.standardArray,
+  createdAt: DateTime(2026, 9, 17),
+  updatedAt: DateTime(2026, 9, 17),
+);
 
 Widget _app({required bool admin}) => ProviderScope(
-      overrides: [
-        authServiceProvider.overrideWithValue(
-          FakeAuthService(
-            initial: const AppUser(
-              uid: 'me',
-              isAnonymous: false,
-              email: 'me@test.dev',
-            ),
-          ),
+  overrides: [
+    authServiceProvider.overrideWithValue(
+      FakeAuthService(
+        initial: const AppUser(
+          uid: 'me',
+          isAnonymous: false,
+          email: 'me@test.dev',
         ),
-        characterRepositoryProvider.overrideWithValue(
-          InMemoryCharacterRepository(),
-        ),
-        adminRepositoryProvider.overrideWithValue(
-          InMemoryAdminRepository(admins: admin ? {'me'} : {}),
-        ),
-        adminCharacterRepositoryProvider.overrideWithValue(
-          InMemoryAdminCharacterRepository(
-            seed: [
-              AdminCharacterEntry(
-                ownerUid: 'autre-uid',
-                doc: _doc('c1', 'Brenna'),
-              ),
-            ],
-          ),
-        ),
-      ],
-      child: const CharacterApp(),
-    );
+      ),
+    ),
+    characterRepositoryProvider.overrideWithValue(
+      InMemoryCharacterRepository(),
+    ),
+    adminRepositoryProvider.overrideWithValue(
+      InMemoryAdminRepository(admins: admin ? {'me'} : {}),
+    ),
+    adminCharacterRepositoryProvider.overrideWithValue(
+      InMemoryAdminCharacterRepository(
+        seed: [
+          AdminCharacterEntry(ownerUid: 'autre-uid', doc: _doc('c1', 'Brenna')),
+        ],
+      ),
+    ),
+  ],
+  child: const CharacterApp(),
+);
 
 void main() {
   testWidgets(
@@ -72,7 +69,9 @@ void main() {
     },
   );
 
-  testWidgets('un utilisateur non-admin ne voit pas l\'icône admin', (tester) async {
+  testWidgets('un utilisateur non-admin ne voit pas l\'icône admin', (
+    tester,
+  ) async {
     appRouter.go(AppRoutes.home);
     await tester.pumpWidget(_app(admin: false));
     await tester.pumpAndSettle();

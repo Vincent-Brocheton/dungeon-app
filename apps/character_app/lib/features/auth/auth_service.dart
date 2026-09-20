@@ -65,18 +65,17 @@ class FirebaseAuthService implements AuthService {
   @override
   Future<void> linkWithEmail(String email, String password) async {
     final user = _requireUser();
-    final credential =
-        EmailAuthProvider.credential(email: email, password: password);
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: password,
+    );
     await _guard(() => user.linkWithCredential(credential));
   }
 
   @override
   Future<void> signInWithEmail(String email, String password) => _guard(
-        () => _auth.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        ),
-      );
+    () => _auth.signInWithEmailAndPassword(email: email, password: password),
+  );
 
   @override
   Future<void> linkWithGoogle() async {
@@ -111,14 +110,15 @@ class FirebaseAuthService implements AuthService {
     return user;
   }
 
-  AppUser? _toAppUser(User? user) => user == null
-      ? null
-      : AppUser(
-          uid: user.uid,
-          isAnonymous: user.isAnonymous,
-          email: user.email,
-          displayName: user.displayName,
-        );
+  AppUser? _toAppUser(User? user) =>
+      user == null
+          ? null
+          : AppUser(
+            uid: user.uid,
+            isAnonymous: user.isAnonymous,
+            email: user.email,
+            displayName: user.displayName,
+          );
 
   /// Traduit les codes Firebase en messages utilisateur.
   Future<T> _guard<T>(Future<T> Function() action) async {
@@ -130,18 +130,17 @@ class FirebaseAuthService implements AuthService {
   }
 
   static String _message(String code) => switch (code) {
-        'email-already-in-use' || 'credential-already-in-use' =>
-          'Cet e-mail est déjà rattaché à un compte. Utilise « Se connecter ».',
-        'invalid-email' => 'Adresse e-mail invalide.',
-        'weak-password' => 'Mot de passe trop faible (6 caractères minimum).',
-        'wrong-password' ||
-        'user-not-found' ||
-        'invalid-credential' =>
-          'E-mail ou mot de passe incorrect.',
-        'requires-recent-login' =>
-          'Par sécurité, reconnecte-toi avant de supprimer le compte.',
-        'network-request-failed' => 'Pas de réseau : réessaie plus tard.',
-        'popup-closed-by-user' => 'Connexion annulée.',
-        _ => 'Erreur d\'authentification ($code).',
-      };
+    'email-already-in-use' || 'credential-already-in-use' =>
+      'Cet e-mail est déjà rattaché à un compte. Utilise « Se connecter ».',
+    'invalid-email' => 'Adresse e-mail invalide.',
+    'weak-password' => 'Mot de passe trop faible (6 caractères minimum).',
+    'wrong-password' ||
+    'user-not-found' ||
+    'invalid-credential' => 'E-mail ou mot de passe incorrect.',
+    'requires-recent-login' =>
+      'Par sécurité, reconnecte-toi avant de supprimer le compte.',
+    'network-request-failed' => 'Pas de réseau : réessaie plus tard.',
+    'popup-closed-by-user' => 'Connexion annulée.',
+    _ => 'Erreur d\'authentification ($code).',
+  };
 }

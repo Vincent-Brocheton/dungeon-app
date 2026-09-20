@@ -3,7 +3,7 @@ import 'admin_repository.dart';
 /// Implémentation en mémoire : tests de widgets et développement sans Firebase.
 class InMemoryAdminRepository implements AdminRepository {
   InMemoryAdminRepository({Set<String> admins = const {}})
-      : _admins = {...admins};
+    : _admins = {...admins};
 
   final Set<String> _admins;
 

@@ -52,7 +52,11 @@ class FakeAuthService implements AuthService {
 
   @override
   Future<void> signInWithGoogle() async {
-    _user = const AppUser(uid: 'google', isAnonymous: false, displayName: 'Google');
+    _user = const AppUser(
+      uid: 'google',
+      isAnonymous: false,
+      displayName: 'Google',
+    );
     _emit();
   }
 
