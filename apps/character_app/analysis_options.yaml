@@ -4,6 +4,8 @@ analyzer:
   exclude:
     - build/**
     - windows/**
+    - android/**
+    - web/**
   language:
     strict-casts: true
     strict-inference: true

@@ -49,8 +49,9 @@ dernières : `cd apps/character_app && flutter pub add firebase_core firebase_au
    `lib/firebase_options.dart`. Le fichier se commite (clés publiques côté client).
 3. `npm i -g firebase-tools`, `firebase login`, `cp infra/firebase/.firebaserc.example infra/firebase/.firebaserc`
    (mettre l'id du projet), puis `make deploy-rules`.
-4. Android : dans `apps/character_app/android/app/build.gradle.kts` (généré par `make bootstrap`),
-   mettre `minSdk = 23` (exigé par Firebase Auth).
+4. Android : `flutter.minSdkVersion` (Flutter ≥ 3.29) vaut déjà 24, au-dessus du minimum 23 exigé
+   par Firebase Auth — rien à changer dans `apps/character_app/android/app/build.gradle.kts`
+   (généré par `make bootstrap`).
 5. Web : dans Authentication → Settings → *Authorized domains*, ajouter le domaine Cloudflare Pages.
 6. Rôle admin : dans la console Firestore, crée un document `admins/{uid}` (n'importe quel champ,
    même vide) pour l'uid à promouvoir. Aucune écriture cliente n'est possible sur cette collection ;
