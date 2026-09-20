@@ -55,11 +55,11 @@ class CharactersController {
 
   Future<void> delete(String id) => _repo.softDelete(_uid(), id);
 
-  /// Efface toutes les données puis le compte, et rouvre une session anonyme.
+  /// Efface toutes les données puis le compte. L'écran Bienvenue reprend
+  /// la main : aucune session n'est recréée automatiquement.
   Future<void> deleteAccount() async {
     final auth = _ref.read(authServiceProvider);
     await _repo.deleteAll(_uid());
     await auth.deleteAccount();
-    await auth.ensureSignedIn();
   }
 }

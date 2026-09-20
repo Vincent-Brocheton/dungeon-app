@@ -53,23 +53,42 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               onEmail: () => setState(() => _showEmailForm = true),
             );
 
-    if (!isWide) {
-      return Scaffold(body: SafeArea(child: Center(child: content)));
-    }
+    final scaffold =
+        !isWide
+            ? Scaffold(
+              body: SafeArea(
+                child: Center(child: SingleChildScrollView(child: content)),
+              ),
+            )
+            : Scaffold(
+              body: Row(
+                children: [
+                  Expanded(
+                    flex: 11,
+                    child: ColoredBox(
+                      color: AppTheme.surface,
+                      child: const Center(
+                        child: SingleChildScrollView(child: _BrandPanel()),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 9,
+                    child: Center(child: SingleChildScrollView(child: content)),
+                  ),
+                ],
+              ),
+            );
 
-    return Scaffold(
-      body: Row(
-        children: [
-          Expanded(
-            flex: 11,
-            child: ColoredBox(
-              color: AppTheme.surface,
-              child: const Center(child: _BrandPanel()),
-            ),
-          ),
-          Expanded(flex: 9, child: Center(child: content)),
-        ],
-      ),
+    // Le retour système doit revenir à Bienvenue depuis le formulaire
+    // e-mail, jamais quitter l'app : ce sous-arbre n'a pas de route
+    // parente vers laquelle "revenir" (cf. `_WelcomeNavigator`).
+    return PopScope<void>(
+      canPop: !_showEmailForm,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) setState(() => _showEmailForm = false);
+      },
+      child: scaffold,
     );
   }
 }
@@ -176,12 +195,15 @@ class _WelcomeContent extends StatelessWidget {
             Row(
               children: [
                 const Expanded(child: Divider(color: AppTheme.border)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'ou connecte-toi',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textMuted,
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'ou connecte-toi',
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textMuted,
+                      ),
                     ),
                   ),
                 ),
@@ -210,9 +232,9 @@ class _WelcomeContent extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Un compte anonyme est créé automatiquement. Relie-le à '
-              'Google ou à un e-mail depuis les réglages pour retrouver '
-              'tes personnages sur un autre appareil.',
+              'Un compte anonyme sera créé quand tu commenceras à jouer. '
+              'Relie-le à Google ou à un e-mail depuis les réglages pour '
+              'retrouver tes personnages sur un autre appareil.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.textMuted,
@@ -226,9 +248,8 @@ class _WelcomeContent extends StatelessWidget {
   }
 }
 
-/// Formulaire e-mail, affiché à la place du contenu par défaut de
-/// [WelcomeScreen] (pas de dialogue : cet écran n'a pas encore de
-/// `Navigator` — il précède le routeur, cf. `_AuthGate`).
+/// Formulaire e-mail, affiché en place plutôt qu'en dialogue (plus simple
+/// que pousser une route sur `_WelcomeNavigator` pour un seul écran).
 /// Créer un compte (anonyme + liaison) ou se connecter à un compte
 /// existant : voir `AuthService.linkWithEmail`/`signInWithEmail`.
 class _EmailAuthForm extends StatefulWidget {
@@ -255,6 +276,10 @@ class _EmailAuthFormState extends State<_EmailAuthForm> {
   }
 
   Future<void> _run(Future<void> Function() action) async {
+    // Capturé avant le premier await : réussir `ensureSignedIn()` fait
+    // basculer `_AuthGate` vers l'app et démonte ce widget avant que
+    // `linkWithEmail` échoue — `context` ne serait alors plus valide.
+    final messenger = ScaffoldMessenger.of(context);
     setState(() {
       _busy = true;
       _error = null;
@@ -262,6 +287,10 @@ class _EmailAuthFormState extends State<_EmailAuthForm> {
     try {
       await action();
     } on Exception catch (e) {
+      // Le SnackBar (messager capté au-dessus de `_AuthGate`) est la seule
+      // garantie fiable : le texte inline peut être écrasé dès la frame
+      // suivante si `ensureSignedIn()` a déjà réussi entre-temps.
+      messenger.showSnackBar(SnackBar(content: Text('$e')));
       if (mounted) setState(() => _error = '$e');
     } finally {
       if (mounted) setState(() => _busy = false);

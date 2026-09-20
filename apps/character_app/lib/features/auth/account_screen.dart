@@ -30,12 +30,15 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     try {
       await action();
       if (mounted && success != null) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(success)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(success)));
       }
     } on Exception catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -56,7 +59,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           Card(
             child: ListTile(
               leading: Icon(
-                isAnonymous ? Icons.person_outline : Icons.verified_user_outlined,
+                isAnonymous
+                    ? Icons.person_outline
+                    : Icons.verified_user_outlined,
               ),
               title: Text(user?.label ?? 'Connexion…'),
               subtitle: Text(
@@ -84,9 +89,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: _busy
-                  ? null
-                  : () => _run(
+              onPressed:
+                  _busy
+                      ? null
+                      : () => _run(
                         () => auth.linkWithEmail(
                           _email.text.trim(),
                           _password.text,
@@ -98,9 +104,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             ),
             const SizedBox(height: 8),
             OutlinedButton(
-              onPressed: _busy
-                  ? null
-                  : () => _run(
+              onPressed:
+                  _busy
+                      ? null
+                      : () => _run(
                         () => auth.signInWithEmail(
                           _email.text.trim(),
                           _password.text,
@@ -112,9 +119,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             if (kIsWeb) ...[
               const SizedBox(height: 8),
               OutlinedButton.icon(
-                onPressed: _busy
-                    ? null
-                    : () => _run(
+                onPressed:
+                    _busy
+                        ? null
+                        : () => _run(
                           auth.linkWithGoogle,
                           success: 'Compte Google lié.',
                         ),
@@ -124,12 +132,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             ],
           ] else ...[
             OutlinedButton.icon(
-              onPressed: _busy
-                  ? null
-                  : () => _run(() async {
-                        await auth.signOut();
-                        await auth.ensureSignedIn();
-                      }, success: 'Déconnecté.'),
+              onPressed:
+                  _busy
+                      ? null
+                      : () => _run(auth.signOut, success: 'Déconnecté.'),
               icon: const Icon(Icons.logout),
               label: const Text('Se déconnecter'),
             ),
@@ -151,23 +157,24 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Supprimer définitivement ?'),
-        content: const Text(
-          'Tous tes personnages seront effacés sur tous tes appareils. '
-          'Cette action est irréversible.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Supprimer définitivement ?'),
+            content: const Text(
+              'Tous tes personnages seront effacés sur tous tes appareils. '
+              'Cette action est irréversible.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Annuler'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Tout supprimer'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Tout supprimer'),
-          ),
-        ],
-      ),
     );
     if (confirmed ?? false) {
       await _run(

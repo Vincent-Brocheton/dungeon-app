@@ -38,22 +38,25 @@ Future<void> _enterApp(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('démarre en anonyme et liste les personnages', (tester) async {
-    final repository = InMemoryCharacterRepository(
-      seed: [_doc('c1', 'Brenna'), _doc('c2', 'Orsik')],
-    );
-    await tester.pumpWidget(_app(repository: repository));
-    await _enterApp(tester);
+  testWidgets(
+    'Commencer à jouer ouvre une session anonyme et liste les personnages',
+    (tester) async {
+      final repository = InMemoryCharacterRepository(
+        seed: [_doc('c1', 'Brenna'), _doc('c2', 'Orsik')],
+      );
+      await tester.pumpWidget(_app(repository: repository));
+      await _enterApp(tester);
 
-    expect(find.text('Personnages'), findsOneWidget);
-    expect(find.text('Brenna'), findsOneWidget);
-    expect(find.text('Orsik'), findsOneWidget);
-    expect(
-      find.byIcon(Icons.person_outline),
-      findsOneWidget,
-      reason: 'compte anonyme',
-    );
-  });
+      expect(find.text('Personnages'), findsOneWidget);
+      expect(find.text('Brenna'), findsOneWidget);
+      expect(find.text('Orsik'), findsOneWidget);
+      expect(
+        find.byIcon(Icons.person_outline),
+        findsOneWidget,
+        reason: 'compte anonyme',
+      );
+    },
+  );
 
   testWidgets('crée un personnage depuis l\'achat de points', (tester) async {
     await tester.pumpWidget(_app());

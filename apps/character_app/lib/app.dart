@@ -10,13 +10,15 @@ import 'theme/app_theme.dart';
 class CharacterApp extends StatelessWidget {
   const CharacterApp({super.key});
 
+  static final _theme = AppTheme.dark();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       // Nom provisoire : ne pas utiliser « Dungeons & Dragons » (marque déposée).
       title: 'Grimoire',
-      theme: AppTheme.dark(),
-      darkTheme: AppTheme.dark(),
+      theme: _theme,
+      themeMode: ThemeMode.dark,
       routerConfig: appRouter,
       builder: (context, child) => _AuthGate(child: child!),
     );
