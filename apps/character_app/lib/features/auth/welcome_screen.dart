@@ -196,6 +196,9 @@ class _WelcomeContent extends StatelessWidget {
               children: [
                 const Expanded(child: Divider(color: AppTheme.border)),
                 Flexible(
+                  // Le texte doit garder la quasi-totalité de la place :
+                  // les séparateurs n'ont besoin que d'un filet de largeur.
+                  flex: 8,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(

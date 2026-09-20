@@ -40,6 +40,15 @@ service cloud.firestore {
       }
     }
 
+    // Le bloc imbriqué ci-dessus couvre les gets et les requêtes scopées à
+    // un seul utilisateur, mais Firestore exige ce wildcard récursif pour
+    // valider une requête collectionGroup('characters') (admin uniquement,
+    // toujours en lecture seule) : sans lui, la requête cross-utilisateurs
+    // échoue en PERMISSION_DENIED même quand isAdmin() est vrai.
+    match /{path=**}/characters/{characterId} {
+      allow read: if isAdmin();
+    }
+
     // Tout le reste est fermé.
     match /{document=**} {
       allow read, write: if false;
