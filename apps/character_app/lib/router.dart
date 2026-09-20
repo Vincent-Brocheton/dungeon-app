@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'features/admin/admin_dashboard_screen.dart';
 import 'features/admin/admin_editor_stub_screen.dart';
 import 'features/admin/admin_species_editor_screen.dart';
+import 'features/admin/admin_subspecies_editor_screen.dart';
 import 'features/auth/account_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/point_buy/point_buy_screen.dart';
@@ -48,9 +49,7 @@ final appRouter = GoRouter(
             ),
             GoRoute(
               path: 'subspecies',
-              builder:
-                  (context, state) =>
-                      const AdminEditorStubScreen(title: 'Sous-espèces'),
+              builder: (context, state) => const AdminSubspeciesEditorScreen(),
             ),
             GoRoute(
               path: 'classes',

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/admin_species_doc.dart';
 import '../../router.dart';
 import '../../theme/app_theme.dart';
+import 'admin_form_fields.dart';
 import 'admin_providers.dart';
 
 /// Éditeur d'espèces : liste (pack SRD + surcharges admin) à gauche, fiche
@@ -458,7 +459,7 @@ class _SpeciesForm extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: _LabeledDropdown<SpeciesSource>(
+                  child: AdminLabeledDropdown<SpeciesSource>(
                     label: 'Source',
                     value: source,
                     items: SpeciesSource.values,
@@ -468,7 +469,7 @@ class _SpeciesForm extends StatelessWidget {
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: _LabeledField(
+                  child: AdminLabeledField(
                     label: 'Ouvrage / édition',
                     controller: sourcebook,
                     hint: 'ex. Guide de Xanathar',
@@ -481,7 +482,7 @@ class _SpeciesForm extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _LabeledDropdown<String>(
+                child: AdminLabeledDropdown<String>(
                   label: 'Taille',
                   value: size,
                   items: const ['Petite', 'Moyenne'],
@@ -491,11 +492,11 @@ class _SpeciesForm extends StatelessWidget {
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: _LabeledField(label: 'Vitesse', controller: speed),
+                child: AdminLabeledField(label: 'Vitesse', controller: speed),
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: _LabeledField(label: 'Vision', controller: vision),
+                child: AdminLabeledField(label: 'Vision', controller: vision),
               ),
             ],
           ),
@@ -543,102 +544,17 @@ class _SpeciesForm extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _LabeledField(label: 'Langues', controller: languages),
+          AdminLabeledField(label: 'Langues', controller: languages),
           const SizedBox(height: 14),
-          _LabeledField(label: 'Traits', controller: traits, maxLines: 3),
+          AdminLabeledField(label: 'Traits', controller: traits, maxLines: 3),
           const SizedBox(height: 14),
-          _LabeledField(
+          AdminLabeledField(
             label: 'Description',
             controller: description,
             maxLines: 5,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _LabeledField extends StatelessWidget {
-  const _LabeledField({
-    required this.label,
-    required this.controller,
-    this.hint,
-    this.maxLines = 1,
-  });
-
-  final String label;
-  final TextEditingController controller;
-  final String? hint;
-  final int maxLines;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: AppTheme.textMuted,
-          ),
-        ),
-        const SizedBox(height: 5),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          decoration: InputDecoration(hintText: hint, isDense: true),
-        ),
-      ],
-    );
-  }
-}
-
-class _LabeledDropdown<T> extends StatelessWidget {
-  const _LabeledDropdown({
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.labelOf,
-    required this.onChanged,
-  });
-
-  final String label;
-  final T value;
-  final List<T> items;
-  final String Function(T) labelOf;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: AppTheme.textMuted,
-          ),
-        ),
-        const SizedBox(height: 5),
-        DropdownButtonFormField<T>(
-          initialValue: value,
-          isDense: true,
-          isExpanded: true,
-          decoration: const InputDecoration(isDense: true),
-          items: [
-            for (final item in items)
-              DropdownMenuItem(
-                value: item,
-                child: Text(labelOf(item), overflow: TextOverflow.ellipsis),
-              ),
-          ],
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
-        ),
-      ],
     );
   }
 }

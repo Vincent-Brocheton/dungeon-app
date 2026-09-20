@@ -32,6 +32,14 @@ service cloud.firestore {
         && d.updatedAt is timestamp;
     }
 
+    function validSubspecies() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['name', 'parentSpeciesId', 'updatedAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.parentSpeciesId is string && d.parentSpeciesId.size() > 0
+        && d.updatedAt is timestamp;
+    }
+
     match /admins/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow write: if false;
@@ -46,6 +54,10 @@ service cloud.firestore {
 
     match /content/species/items/{speciesId} {
       allow write: if isAdmin() && validSpecies();
+    }
+
+    match /content/subspecies/items/{subspeciesId} {
+      allow write: if isAdmin() && validSubspecies();
     }
 
     match /users/{uid} {
