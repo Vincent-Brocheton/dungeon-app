@@ -11,22 +11,31 @@ import 'package:rules_engine/rules_engine.dart';
 import 'fakes/fake_auth_service.dart';
 
 CharacterDoc _doc(String id, String name) => CharacterDoc(
-      id: id,
-      name: name,
-      scores: PointBuy.standardArray,
-      createdAt: DateTime(2026, 9, 17),
-      updatedAt: DateTime(2026, 9, 17),
-    );
+  id: id,
+  name: name,
+  scores: PointBuy.standardArray,
+  createdAt: DateTime(2026, 9, 17),
+  updatedAt: DateTime(2026, 9, 17),
+);
 
 Widget _app({InMemoryCharacterRepository? repository, FakeAuthService? auth}) =>
     ProviderScope(
       overrides: [
         authServiceProvider.overrideWithValue(auth ?? FakeAuthService()),
-        characterRepositoryProvider
-            .overrideWithValue(repository ?? InMemoryCharacterRepository()),
+        characterRepositoryProvider.overrideWithValue(
+          repository ?? InMemoryCharacterRepository(),
+        ),
       ],
       child: const CharacterApp(),
     );
+
+/// Passe l'écran Bienvenue (aucune session au tout premier pump) pour
+/// atteindre l'écran Personnages, comme le ferait un joueur.
+Future<void> _enterApp(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Commencer à jouer'));
+  await tester.pumpAndSettle();
+}
 
 void main() {
   testWidgets('démarre en anonyme et liste les personnages', (tester) async {
@@ -34,18 +43,21 @@ void main() {
       seed: [_doc('c1', 'Brenna'), _doc('c2', 'Orsik')],
     );
     await tester.pumpWidget(_app(repository: repository));
-    await tester.pumpAndSettle();
+    await _enterApp(tester);
 
     expect(find.text('Personnages'), findsOneWidget);
     expect(find.text('Brenna'), findsOneWidget);
     expect(find.text('Orsik'), findsOneWidget);
-    expect(find.byIcon(Icons.person_outline), findsOneWidget,
-        reason: 'compte anonyme');
+    expect(
+      find.byIcon(Icons.person_outline),
+      findsOneWidget,
+      reason: 'compte anonyme',
+    );
   });
 
   testWidgets('crée un personnage depuis l\'achat de points', (tester) async {
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _enterApp(tester);
     expect(find.text('Aucun personnage pour l\'instant'), findsOneWidget);
 
     await tester.tap(find.text('Nouveau personnage'));
@@ -64,7 +76,7 @@ void main() {
 
   testWidgets('lier un e-mail transforme le compte anonyme', (tester) async {
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _enterApp(tester);
 
     await tester.tap(find.byIcon(Icons.person_outline));
     await tester.pumpAndSettle();

@@ -9,19 +9,14 @@ final authServiceProvider = Provider<AuthService>(
   (ref) => FirebaseAuthService(FirebaseAuth.instance),
 );
 
-/// Au démarrage : session anonyme si personne n'est connecté.
-final authBootstrapProvider = FutureProvider<AppUser>(
-  (ref) => ref.watch(authServiceProvider).ensureSignedIn(),
-);
-
-/// Utilisateur courant, mis à jour à chaque liaison / connexion / déconnexion.
+/// Utilisateur courant. `null` tant qu'aucune session n'est ouverte —
+/// c'est ce qui affiche l'écran Bienvenue. Mis à jour à chaque liaison,
+/// connexion ou déconnexion.
 final authStateProvider = StreamProvider<AppUser?>(
   (ref) => ref.watch(authServiceProvider).authStateChanges(),
 );
 
-/// `uid` courant, ou `null` entre deux sessions.
+/// `uid` courant, ou `null` tant qu'aucune session n'est ouverte.
 final currentUidProvider = Provider<String?>(
-  (ref) =>
-      ref.watch(authStateProvider).value?.uid ??
-      ref.watch(authBootstrapProvider).value?.uid,
+  (ref) => ref.watch(authStateProvider).value?.uid,
 );

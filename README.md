@@ -56,11 +56,14 @@ dernières : `cd apps/character_app && flutter pub add firebase_core firebase_au
    même vide) pour l'uid à promouvoir. Aucune écriture cliente n'est possible sur cette collection ;
    c'est la seule façon de désigner un admin.
 
-Fonctionnement : session **anonyme** au premier lancement, persos écrits en local et synchronisés
-par le SDK Firestore (cache hors-ligne activé dans `main.dart`). L'écran « Mon compte » lie la
-session à un e-mail ou à Google **sans changer d'`uid`**, donc sans migration. Google Sign-In est
-câblé sur le web (popup) ; sur Android il faut ajouter `google_sign_in` et l'empreinte SHA-1 dans
-la console — prévu en phase 4. La suppression de compte efface les documents puis l'utilisateur.
+Fonctionnement : tant qu'aucune session n'existe, l'écran **Bienvenue** (`WelcomeScreen`) propose
+« Commencer à jouer » (session anonyme), Google (web) ou e-mail — rien n'est créé avant ce choix.
+Une session déjà ouverte (anonyme ou liée) saute directement à l'écran Personnages. Les persos sont
+écrits en local et synchronisés par le SDK Firestore (cache hors-ligne activé dans `main.dart`).
+L'écran « Mon compte » lie ensuite la session à un e-mail ou à Google **sans changer d'`uid`**, donc
+sans migration. Google Sign-In est câblé sur le web (popup) ; sur Android il faut ajouter
+`google_sign_in` et l'empreinte SHA-1 dans la console — prévu en phase 4. La suppression de compte
+efface les documents puis l'utilisateur.
 
 Le code ne touche Firebase qu'à travers `AuthService` et `CharacterRepository` ; les tests de
 widgets tournent avec `FakeAuthService` et `InMemoryCharacterRepository`, sans réseau.
