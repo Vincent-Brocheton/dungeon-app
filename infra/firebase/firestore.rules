@@ -66,6 +66,11 @@ service cloud.firestore {
       allow write: if isAdmin() && validSpecies();
     }
 
+    // Même raison : pas de champ propre aux dons à valider côté règles.
+    match /content/feats/items/{featId} {
+      allow write: if isAdmin() && validSpecies();
+    }
+
     match /users/{uid} {
       allow read, write: if isOwner(uid);
 
