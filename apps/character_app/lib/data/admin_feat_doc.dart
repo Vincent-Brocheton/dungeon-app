@@ -1,22 +1,5 @@
 import 'admin_species_doc.dart' show SpeciesSource;
 
-/// Un bonus de caractéristique accordé par un don (ex. Constitution +1),
-/// appliqué automatiquement à la fiche.
-class FeatAbilityBonus {
-  const FeatAbilityBonus({required this.ability, required this.amount});
-
-  final String ability;
-  final int amount;
-
-  Map<String, Object?> toMap() => {'ability': ability, 'amount': amount};
-
-  factory FeatAbilityBonus.fromMap(Map<String, Object?> map) =>
-      FeatAbilityBonus(
-        ability: map['ability'] as String? ?? 'Force',
-        amount: map['amount'] as int? ?? 1,
-      );
-}
-
 /// Un don : `content/feats/{id}` dans Firestore. Comme les sorts, aucun don
 /// n'existe dans le pack SRD statique — tout est admin-créé.
 class AdminFeatDoc {
@@ -26,23 +9,52 @@ class AdminFeatDoc {
     required this.updatedAt,
     this.source = SpeciesSource.homebrew,
     this.sourcebook = '',
-    this.category = 'Général',
-    this.prerequisite = '',
+    this.summary = '',
+    this.category = 'Don général',
+    this.levelMinimum = 1,
+    this.otherPrerequisites = '',
     this.repeatable = false,
-    this.abilityBonuses = const [],
+    this.eligibleAbilities = const [
+      'Force',
+      'Dextérité',
+      'Constitution',
+      'Intelligence',
+      'Sagesse',
+      'Charisme',
+    ],
+    this.pointsToDistribute = 2,
+    this.distribution = defaultDistribution,
+    this.maxValue = 20,
     this.effect = '',
   });
+
+  static const defaultDistribution =
+      'Une seule, ou 1 sur deux caractéristiques différentes';
 
   final String id;
   final String name;
   final SpeciesSource source;
   final String sourcebook;
+  final String summary;
 
-  /// « Origine », « Général », « Combat » ou « Épique ».
+  /// « Don d'origine », « Don général », « Don de style de combat » ou
+  /// « Don de faveur épique ».
   final String category;
-  final String prerequisite;
+  final int levelMinimum;
+
+  /// Texte libre (ex. « Force ou Dextérité 13 ou plus »).
+  final String otherPrerequisites;
   final bool repeatable;
-  final List<FeatAbilityBonus> abilityBonuses;
+
+  /// Caractéristiques que le joueur peut choisir pour le bonus ci-dessous.
+  final List<String> eligibleAbilities;
+  final int pointsToDistribute;
+
+  /// « Sur une seule caractéristique », « Une seule, ou 1 sur deux
+  /// caractéristiques différentes » ou « Répartis librement (1 par
+  /// caractéristique) ».
+  final String distribution;
+  final int maxValue;
   final String effect;
   final DateTime updatedAt;
 
@@ -50,10 +62,15 @@ class AdminFeatDoc {
     'name': name,
     'source': source.name,
     'sourcebook': sourcebook,
+    'summary': summary,
     'category': category,
-    'prerequisite': prerequisite,
+    'levelMinimum': levelMinimum,
+    'otherPrerequisites': otherPrerequisites,
     'repeatable': repeatable,
-    'abilityBonuses': [for (final b in abilityBonuses) b.toMap()],
+    'eligibleAbilities': eligibleAbilities,
+    'pointsToDistribute': pointsToDistribute,
+    'distribution': distribution,
+    'maxValue': maxValue,
     'effect': effect,
     'updatedAt': updatedAt,
   };
@@ -64,13 +81,18 @@ class AdminFeatDoc {
         name: map['name'] as String? ?? 'Sans nom',
         source: SpeciesSource.fromName(map['source'] as String?),
         sourcebook: map['sourcebook'] as String? ?? '',
-        category: map['category'] as String? ?? 'Général',
-        prerequisite: map['prerequisite'] as String? ?? '',
+        summary: map['summary'] as String? ?? '',
+        category: map['category'] as String? ?? 'Don général',
+        levelMinimum: map['levelMinimum'] as int? ?? 1,
+        otherPrerequisites: map['otherPrerequisites'] as String? ?? '',
         repeatable: map['repeatable'] as bool? ?? false,
-        abilityBonuses: [
-          for (final raw in (map['abilityBonuses'] as List?) ?? const [])
-            FeatAbilityBonus.fromMap((raw as Map).cast<String, Object?>()),
+        eligibleAbilities: [
+          for (final a in (map['eligibleAbilities'] as List?) ?? const [])
+            a as String,
         ],
+        pointsToDistribute: map['pointsToDistribute'] as int? ?? 2,
+        distribution: map['distribution'] as String? ?? defaultDistribution,
+        maxValue: map['maxValue'] as int? ?? 20,
         effect: map['effect'] as String? ?? '',
         updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       );

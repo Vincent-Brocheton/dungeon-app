@@ -9,7 +9,12 @@ import 'admin_compendium_tabs.dart';
 import 'admin_form_fields.dart';
 import 'admin_providers.dart';
 
-const _categories = ['Origine', 'Général', 'Combat', 'Épique'];
+const _categories = [
+  "Don d'origine",
+  'Don général',
+  'Don de style de combat',
+  'Don de faveur épique',
+];
 
 const _abilities = [
   'Force',
@@ -20,10 +25,39 @@ const _abilities = [
   'Charisme',
 ];
 
-/// Éditeur de dons : liste à gauche, fiche éditable à droite. Reprend
-/// `FeatsEditorNoModal.dc.html` — sans sidebar ni import CSV (bouton
-/// présent, annonce juste qu'il arrive, même choix que les éditeurs
-/// précédents). Aucun don dans le pack SRD statique : tout est admin-créé.
+const _distributions = [
+  'Sur une seule caractéristique',
+  AdminFeatDoc.defaultDistribution,
+  'Répartis librement (1 par caractéristique)',
+];
+
+/// Regroupe par catégorie, sauf le contenu homebrew qui a son propre groupe
+/// (peu importe la catégorie choisie) : plus facile à retrouver et à gérer
+/// séparément du contenu SRD/officiel, qui lui reste organisé par catégorie
+/// réelle de jeu.
+String _groupKey(AdminFeatDoc f) =>
+    f.source == SpeciesSource.homebrew ? 'Homebrew' : f.category;
+
+String _groupLabel(String key) => switch (key) {
+  "Don d'origine" => "Dons d'origine",
+  'Don général' => 'Dons généraux',
+  'Don de style de combat' => 'Dons de style de combat',
+  'Don de faveur épique' => 'Dons de faveur épique',
+  _ => key,
+};
+
+const _groupOrder = [..._categories, 'Homebrew'];
+
+String _sourceSubtitle(SpeciesSource source) => switch (source) {
+  SpeciesSource.srd => 'Contenu SRD 5.2 · modifiable',
+  SpeciesSource.official => 'Contenu officiel · modifiable',
+  SpeciesSource.homebrew => 'Don créé pour ta table · modifiable',
+};
+
+/// Éditeur de dons : liste (groupée par catégorie) à gauche, fiche éditable
+/// à droite. Reprend `FeatsEditorNoModal.dc.html` — sans sidebar ni import
+/// CSV (bouton présent, annonce juste qu'il arrive). Aucun don dans le pack
+/// SRD statique : tout est admin-créé.
 class AdminFeatEditorScreen extends ConsumerStatefulWidget {
   const AdminFeatEditorScreen({super.key});
 
@@ -40,12 +74,17 @@ class _AdminFeatEditorScreenState extends ConsumerState<AdminFeatEditorScreen> {
   final _search = TextEditingController();
   final _name = TextEditingController();
   final _sourcebook = TextEditingController();
-  final _prerequisite = TextEditingController();
+  final _summary = TextEditingController();
+  final _levelMinimum = TextEditingController(text: '1');
+  final _otherPrerequisites = TextEditingController();
+  final _pointsToDistribute = TextEditingController(text: '2');
+  final _maxValue = TextEditingController(text: '20');
   final _effect = TextEditingController();
   var _source = SpeciesSource.homebrew;
-  var _category = 'Général';
+  var _category = 'Don général';
   var _repeatable = false;
-  var _abilityBonuses = const <FeatAbilityBonus>[];
+  var _eligibleAbilities = List<String>.of(_abilities);
+  var _distribution = AdminFeatDoc.defaultDistribution;
 
   @override
   void dispose() {
@@ -53,7 +92,11 @@ class _AdminFeatEditorScreenState extends ConsumerState<AdminFeatEditorScreen> {
       _search,
       _name,
       _sourcebook,
-      _prerequisite,
+      _summary,
+      _levelMinimum,
+      _otherPrerequisites,
+      _pointsToDistribute,
+      _maxValue,
       _effect,
     ]) {
       controller.dispose();
@@ -67,12 +110,17 @@ class _AdminFeatEditorScreenState extends ConsumerState<AdminFeatEditorScreen> {
       _isNewDraft = false;
       _name.text = doc.name;
       _sourcebook.text = doc.sourcebook;
-      _prerequisite.text = doc.prerequisite;
+      _summary.text = doc.summary;
+      _levelMinimum.text = '${doc.levelMinimum}';
+      _otherPrerequisites.text = doc.otherPrerequisites;
+      _pointsToDistribute.text = '${doc.pointsToDistribute}';
+      _maxValue.text = '${doc.maxValue}';
       _effect.text = doc.effect;
       _source = doc.source;
       _category = doc.category;
       _repeatable = doc.repeatable;
-      _abilityBonuses = doc.abilityBonuses;
+      _eligibleAbilities = List.of(doc.eligibleAbilities);
+      _distribution = doc.distribution;
     });
   }
 
@@ -83,12 +131,17 @@ class _AdminFeatEditorScreenState extends ConsumerState<AdminFeatEditorScreen> {
       _isNewDraft = true;
       _name.clear();
       _sourcebook.clear();
-      _prerequisite.clear();
+      _summary.clear();
+      _levelMinimum.text = '1';
+      _otherPrerequisites.clear();
+      _pointsToDistribute.text = '2';
+      _maxValue.text = '20';
       _effect.clear();
       _source = SpeciesSource.homebrew;
-      _category = 'Général';
+      _category = 'Don général';
       _repeatable = false;
-      _abilityBonuses = const [];
+      _eligibleAbilities = List.of(_abilities);
+      _distribution = AdminFeatDoc.defaultDistribution;
     });
   }
 
@@ -105,10 +158,16 @@ class _AdminFeatEditorScreenState extends ConsumerState<AdminFeatEditorScreen> {
               name: _name.text.trim(),
               source: _source,
               sourcebook: _sourcebook.text.trim(),
+              summary: _summary.text.trim(),
               category: _category,
-              prerequisite: _prerequisite.text.trim(),
+              levelMinimum: int.tryParse(_levelMinimum.text.trim()) ?? 1,
+              otherPrerequisites: _otherPrerequisites.text.trim(),
               repeatable: _repeatable,
-              abilityBonuses: _abilityBonuses,
+              eligibleAbilities: _eligibleAbilities,
+              pointsToDistribute:
+                  int.tryParse(_pointsToDistribute.text.trim()) ?? 2,
+              distribution: _distribution,
+              maxValue: int.tryParse(_maxValue.text.trim()) ?? 20,
               effect: _effect.text.trim(),
               updatedAt: DateTime.now(),
             ),
@@ -188,18 +247,26 @@ class _AdminFeatEditorScreenState extends ConsumerState<AdminFeatEditorScreen> {
                                 source: _source,
                                 category: _category,
                                 repeatable: _repeatable,
-                                abilityBonuses: _abilityBonuses,
+                                eligibleAbilities: _eligibleAbilities,
+                                distribution: _distribution,
                                 onSourceChanged:
                                     (s) => setState(() => _source = s),
                                 onCategoryChanged:
                                     (v) => setState(() => _category = v),
                                 onRepeatableChanged:
                                     (v) => setState(() => _repeatable = v),
-                                onAbilityBonusesChanged:
-                                    (v) => setState(() => _abilityBonuses = v),
+                                onEligibleAbilitiesChanged:
+                                    (v) =>
+                                        setState(() => _eligibleAbilities = v),
+                                onDistributionChanged:
+                                    (v) => setState(() => _distribution = v),
                                 name: _name,
                                 sourcebook: _sourcebook,
-                                prerequisite: _prerequisite,
+                                summary: _summary,
+                                levelMinimum: _levelMinimum,
+                                otherPrerequisites: _otherPrerequisites,
+                                pointsToDistribute: _pointsToDistribute,
+                                maxValue: _maxValue,
                                 effect: _effect,
                                 saving: _saving,
                                 onSave: _save,
@@ -238,6 +305,19 @@ class _FeatList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final grouped = <String, List<AdminFeatDoc>>{};
+    for (final item in items) {
+      (grouped[_groupKey(item)] ??= []).add(item);
+    }
+    for (final list in grouped.values) {
+      list.sort((a, b) => a.name.compareTo(b.name));
+    }
+    final groupKeys = [
+      for (final key in _groupOrder)
+        if (grouped.containsKey(key)) key,
+    ];
+
     return Column(
       children: [
         Padding(
@@ -253,77 +333,91 @@ class _FeatList extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: ListView.separated(
+          child: ListView(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-            itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 6),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final active = item.id == selectedId;
-              return InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () => onSelect(item),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border.all(
-                      color: active ? AppTheme.accent : AppTheme.border,
-                      width: active ? 2 : 1,
+            children: [
+              for (final key in groupKeys) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
+                  child: Text(
+                    _groupLabel(key).toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppTheme.textMuted,
+                      letterSpacing: 0.05,
                     ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppTheme.border),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              item.source.shortLabel,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppTheme.textMuted,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item.category,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textMuted,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-              );
-            },
+                for (final item in grouped[key]!) ...[
+                  _FeatTile(
+                    item: item,
+                    active: item.id == selectedId,
+                    onTap: () => onSelect(item),
+                  ),
+                  const SizedBox(height: 6),
+                ],
+              ],
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FeatTile extends StatelessWidget {
+  const _FeatTile({
+    required this.item,
+    required this.active,
+    required this.onTap,
+  });
+
+  final AdminFeatDoc item;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          border: Border.all(
+            color: active ? AppTheme.accent : AppTheme.border,
+            width: active ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                item.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppTheme.border),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                item.source.shortLabel,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppTheme.textMuted,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -335,14 +429,20 @@ class _FeatForm extends StatelessWidget {
     required this.source,
     required this.category,
     required this.repeatable,
-    required this.abilityBonuses,
+    required this.eligibleAbilities,
+    required this.distribution,
     required this.onSourceChanged,
     required this.onCategoryChanged,
     required this.onRepeatableChanged,
-    required this.onAbilityBonusesChanged,
+    required this.onEligibleAbilitiesChanged,
+    required this.onDistributionChanged,
     required this.name,
     required this.sourcebook,
-    required this.prerequisite,
+    required this.summary,
+    required this.levelMinimum,
+    required this.otherPrerequisites,
+    required this.pointsToDistribute,
+    required this.maxValue,
     required this.effect,
     required this.saving,
     required this.onSave,
@@ -352,14 +452,20 @@ class _FeatForm extends StatelessWidget {
   final SpeciesSource source;
   final String category;
   final bool repeatable;
-  final List<FeatAbilityBonus> abilityBonuses;
+  final List<String> eligibleAbilities;
+  final String distribution;
   final ValueChanged<SpeciesSource> onSourceChanged;
   final ValueChanged<String> onCategoryChanged;
   final ValueChanged<bool> onRepeatableChanged;
-  final ValueChanged<List<FeatAbilityBonus>> onAbilityBonusesChanged;
+  final ValueChanged<List<String>> onEligibleAbilitiesChanged;
+  final ValueChanged<String> onDistributionChanged;
   final TextEditingController name;
   final TextEditingController sourcebook;
-  final TextEditingController prerequisite;
+  final TextEditingController summary;
+  final TextEditingController levelMinimum;
+  final TextEditingController otherPrerequisites;
+  final TextEditingController pointsToDistribute;
+  final TextEditingController maxValue;
   final TextEditingController effect;
   final bool saving;
   final VoidCallback onSave;
@@ -394,16 +500,17 @@ class _FeatForm extends StatelessWidget {
               ),
             ],
           ),
-          if (isNew)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                'Nouveau contenu, pas encore enregistré',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textMuted,
-                ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              isNew
+                  ? 'Nouveau contenu, pas encore enregistré'
+                  : _sourceSubtitle(source),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.textMuted,
               ),
             ),
+          ),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(14),
@@ -435,7 +542,10 @@ class _FeatForm extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
+          AdminLabeledField(label: 'Résumé', controller: summary),
+          const SizedBox(height: 14),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: AdminLabeledDropdown<String>(
@@ -449,9 +559,18 @@ class _FeatForm extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: AdminLabeledField(
-                  label: 'Prérequis',
-                  controller: prerequisite,
-                  hint: 'ex. Niveau 4+',
+                  label: 'Niveau minimum',
+                  controller: levelMinimum,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 2,
+                child: AdminLabeledField(
+                  key: const Key('feat-other-prerequisites-field'),
+                  label: 'Autres prérequis',
+                  controller: otherPrerequisites,
+                  hint: 'ex. Force ou Dextérité 13 ou plus',
                 ),
               ),
               const SizedBox(width: 14),
@@ -467,9 +586,100 @@ class _FeatForm extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          _AbilityBonusesEditor(
-            bonuses: abilityBonuses,
-            onChanged: onAbilityBonusesChanged,
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              border: Border.all(color: AppTheme.border),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'BONUS DE CARACTÉRISTIQUE (appliqué automatiquement à la '
+                  'fiche)',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'CARACTÉRISTIQUES ÉLIGIBLES',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  children: [
+                    for (final a in _abilities)
+                      _AbilityCheckbox(
+                        label: a,
+                        checked: eligibleAbilities.contains(a),
+                        onChanged: (checked) {
+                          final next = List<String>.of(eligibleAbilities);
+                          if (checked) {
+                            if (!next.contains(a)) next.add(a);
+                          } else {
+                            next.remove(a);
+                          }
+                          onEligibleAbilitiesChanged(next);
+                        },
+                      ),
+                    _AbilityCheckbox(
+                      label: 'Toutes',
+                      accent: true,
+                      checked: eligibleAbilities.length == _abilities.length,
+                      onChanged:
+                          (checked) => onEligibleAbilitiesChanged(
+                            checked ? List.of(_abilities) : const [],
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AdminLabeledField(
+                        label: 'Points à répartir',
+                        controller: pointsToDistribute,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: AdminLabeledDropdown<String>(
+                        label: 'Répartition',
+                        value: distribution,
+                        items: _distributions,
+                        labelOf: (s) => s,
+                        onChanged: onDistributionChanged,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AdminLabeledField(
+                        label: 'Maximum',
+                        controller: maxValue,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Choix fait par le joueur à l'attribution du don ; la "
+                  'valeur et le modificateur sont recalculés automatiquement '
+                  'sur la fiche.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           AdminLabeledField(label: 'Effet', controller: effect, maxLines: 6),
@@ -479,115 +689,44 @@ class _FeatForm extends StatelessWidget {
   }
 }
 
-/// Liste dynamique de bonus de caractéristique : ajouter/retirer des lignes.
-/// Le montant est un menu déroulant (+1 à +4) plutôt qu'un champ libre — les
-/// dons n'accordent quasiment jamais plus que ça, et ça évite de gérer un
-/// contrôleur de texte par ligne ajoutée/retirée.
-class _AbilityBonusesEditor extends StatelessWidget {
-  const _AbilityBonusesEditor({required this.bonuses, required this.onChanged});
+class _AbilityCheckbox extends StatelessWidget {
+  const _AbilityCheckbox({
+    required this.label,
+    required this.checked,
+    required this.onChanged,
+    this.accent = false,
+  });
 
-  final List<FeatAbilityBonus> bonuses;
-  final ValueChanged<List<FeatAbilityBonus>> onChanged;
+  final String label;
+  final bool checked;
+  final bool accent;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: () => onChanged(!checked),
+      borderRadius: BorderRadius.circular(6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: Checkbox(
+              value: checked,
+              onChanged: (v) => onChanged(v ?? false),
+            ),
+          ),
+          const SizedBox(width: 6),
           Text(
-            'BONUS DE CARACTÉRISTIQUE (appliqué automatiquement à la fiche)',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: AppTheme.textMuted,
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: accent ? AppTheme.accent : AppTheme.textPrimary,
+              fontWeight: accent ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed:
-                  () => onChanged([
-                    ...bonuses,
-                    const FeatAbilityBonus(ability: 'Force', amount: 1),
-                  ]),
-              icon: const Icon(Icons.add, size: 14),
-              label: const Text('Ajouter un bonus'),
-            ),
-          ),
-          for (var i = 0; i < bonuses.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: DropdownButtonFormField<String>(
-                      initialValue: bonuses[i].ability,
-                      isDense: true,
-                      isExpanded: true,
-                      decoration: const InputDecoration(isDense: true),
-                      items: [
-                        for (final a in _abilities)
-                          DropdownMenuItem(
-                            value: a,
-                            child: Text(a, overflow: TextOverflow.ellipsis),
-                          ),
-                      ],
-                      onChanged: (v) {
-                        if (v == null) return;
-                        final next = [...bonuses];
-                        next[i] = FeatAbilityBonus(
-                          ability: v,
-                          amount: bonuses[i].amount,
-                        );
-                        onChanged(next);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('+', style: theme.textTheme.bodyMedium),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 1,
-                    child: DropdownButtonFormField<int>(
-                      initialValue: bonuses[i].amount,
-                      isDense: true,
-                      isExpanded: true,
-                      decoration: const InputDecoration(isDense: true),
-                      items: [
-                        for (final n in const [1, 2, 3, 4])
-                          DropdownMenuItem(value: n, child: Text('$n')),
-                      ],
-                      onChanged: (v) {
-                        if (v == null) return;
-                        final next = [...bonuses];
-                        next[i] = FeatAbilityBonus(
-                          ability: bonuses[i].ability,
-                          amount: v,
-                        );
-                        onChanged(next);
-                      },
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Retirer ce bonus',
-                    icon: const Icon(Icons.close, size: 16),
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () {
-                      final next = [...bonuses]..removeAt(i);
-                      onChanged(next);
-                    },
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
