@@ -60,6 +60,12 @@ service cloud.firestore {
       allow write: if isAdmin() && validSubspecies();
     }
 
+    // validSpecies() ne vérifie que name + updatedAt : générique, réutilisée
+    // ici (pas de champ propre aux sorts à valider côté règles).
+    match /content/spells/items/{spellId} {
+      allow write: if isAdmin() && validSpecies();
+    }
+
     match /users/{uid} {
       allow read, write: if isOwner(uid);
 

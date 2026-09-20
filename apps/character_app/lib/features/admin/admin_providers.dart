@@ -6,11 +6,14 @@ import '../../data/admin_character_repository.dart';
 import '../../data/admin_repository.dart';
 import '../../data/admin_species_doc.dart';
 import '../../data/admin_species_repository.dart';
+import '../../data/admin_spell_doc.dart';
+import '../../data/admin_spell_repository.dart';
 import '../../data/admin_subspecies_doc.dart';
 import '../../data/admin_subspecies_repository.dart';
 import '../../data/firestore_admin_character_repository.dart';
 import '../../data/firestore_admin_repository.dart';
 import '../../data/firestore_admin_species_repository.dart';
+import '../../data/firestore_admin_spell_repository.dart';
 import '../../data/firestore_admin_subspecies_repository.dart';
 import '../../providers/content_providers.dart';
 import '../auth/auth_providers.dart';
@@ -77,4 +80,15 @@ final adminSubspeciesRepositoryProvider = Provider<AdminSubspeciesRepository>(
 /// contrairement aux espèces.
 final allSubspeciesProvider = StreamProvider<List<AdminSubspeciesDoc>>(
   (ref) => ref.watch(adminSubspeciesRepositoryProvider).watchAll(),
+);
+
+/// Dépôt des sorts édités par un admin ; remplacé par
+/// `InMemoryAdminSpellRepository` dans les tests.
+final adminSpellRepositoryProvider = Provider<AdminSpellRepository>(
+  (ref) => FirestoreAdminSpellRepository(FirebaseFirestore.instance),
+);
+
+/// Aucun sort dans le pack SRD statique : pas de fusion nécessaire.
+final allSpellsProvider = StreamProvider<List<AdminSpellDoc>>(
+  (ref) => ref.watch(adminSpellRepositoryProvider).watchAll(),
 );
