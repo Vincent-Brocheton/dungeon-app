@@ -25,9 +25,27 @@ service cloud.firestore {
         && (!('level' in d) || (d.level is int && d.level >= 1 && d.level <= 20));
     }
 
+    function validSpecies() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['name', 'updatedAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.updatedAt is timestamp;
+    }
+
     match /admins/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow write: if false;
+    }
+
+    // Contenu de règles édité par un admin (espèces, puis classes/dons/sorts
+    // à mesure qu'ils seront bâtis) : tout utilisateur authentifié lit (la
+    // création de personnage en aura besoin), seul un admin écrit.
+    match /content/{document=**} {
+      allow read: if request.auth != null;
+    }
+
+    match /content/species/items/{speciesId} {
+      allow write: if isAdmin() && validSpecies();
     }
 
     match /users/{uid} {
