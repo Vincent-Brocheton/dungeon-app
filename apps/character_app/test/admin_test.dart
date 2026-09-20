@@ -70,7 +70,8 @@ void main() {
   );
 
   testWidgets(
-    'depuis le tableau de bord, une carte Compendium ouvre son écran (à venir)',
+    'depuis le tableau de bord, une carte Compendium encore à venir ouvre '
+    'son écran stub',
     (tester) async {
       appRouter.go(AppRoutes.home);
       await tester.pumpWidget(_app(admin: true));
@@ -79,8 +80,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.text('Espèces'), findsOneWidget);
-      await tester.tap(find.text('Espèces'));
+      expect(find.text('Classes'), findsOneWidget);
+      await tester.tap(find.text('Classes'));
       await tester.pumpAndSettle();
 
       expect(find.text('Bientôt disponible'), findsOneWidget);

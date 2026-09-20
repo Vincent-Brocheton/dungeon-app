@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import 'features/admin/admin_dashboard_screen.dart';
 import 'features/admin/admin_editor_stub_screen.dart';
+import 'features/admin/admin_species_editor_screen.dart';
 import 'features/auth/account_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/point_buy/point_buy_screen.dart';
@@ -43,9 +44,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: 'species',
-              builder:
-                  (context, state) =>
-                      const AdminEditorStubScreen(title: 'Espèces'),
+              builder: (context, state) => const AdminSpeciesEditorScreen(),
             ),
             GoRoute(
               path: 'subspecies',
