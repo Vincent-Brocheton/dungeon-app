@@ -45,3 +45,11 @@ relevées sont corrigées et re-vérifiées), merger la PR sans redemander confi
 `gh pr merge <numéro> --squash --delete-branch`.
 Si le security-review relève une faille, la corriger, repousser, revérifier CI + security-review
 avant de merger.
+
+## 7. Déploiement Firestore
+
+Si la PR mergée modifie `infra/firebase/firestore.rules` (ou `firestore.indexes.json`), déployer
+tout de suite après le merge, sans redemander confirmation :
+`cd infra/firebase && firebase deploy --only firestore:rules --project dungeon-app-353e2`
+(remplacer `firestore:rules` par `firestore:rules,firestore:indexes` si les index ont aussi changé).
+La CI ne déploie rien : ces fichiers ne prennent effet qu'après ce déploiement manuel.
