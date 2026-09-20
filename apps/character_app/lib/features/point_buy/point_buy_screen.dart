@@ -35,9 +35,8 @@ class PointBuyScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: violations.isEmpty
-            ? () => _save(context, ref, scores)
-            : null,
+        onPressed:
+            violations.isEmpty ? () => _save(context, ref, scores) : null,
         icon: const Icon(Icons.save_outlined),
         label: const Text('Enregistrer'),
       ),
@@ -47,10 +46,13 @@ class PointBuyScreen extends ConsumerWidget {
           Card(
             child: ListTile(
               leading: Icon(
-                violations.isEmpty ? Icons.check_circle_outline : Icons.error_outline,
-                color: violations.isEmpty
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.error,
+                violations.isEmpty
+                    ? Icons.check_circle_outline
+                    : Icons.error_outline,
+                color:
+                    violations.isEmpty
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.error,
               ),
               title: Text('Points restants : $remaining / ${PointBuy.budget}'),
               subtitle: Text(
@@ -81,13 +83,44 @@ Future<void> _save(
   WidgetRef ref,
   AbilityScores scores,
 ) async {
-  final controller = TextEditingController();
   final name = await showDialog<String>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => const _NameDialog(),
+  );
+  if (name == null || name.trim().isEmpty) return;
+
+  await ref
+      .read(charactersControllerProvider)
+      .create(name: name, scores: scores);
+  ref.read(pointBuyProvider.notifier).reset();
+  if (context.mounted) context.pop();
+}
+
+/// Son propre `State` possède le contrôleur : le framework ne le dispose
+/// qu'une fois le widget réellement retiré de l'arbre, après l'animation
+/// de fermeture — jamais pendant qu'elle reconstruit encore le `TextField`.
+class _NameDialog extends StatefulWidget {
+  const _NameDialog();
+
+  @override
+  State<_NameDialog> createState() => _NameDialogState();
+}
+
+class _NameDialogState extends State<_NameDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
       title: const Text('Nom du personnage'),
       content: TextField(
-        controller: controller,
+        controller: _controller,
         autofocus: true,
         textCapitalization: TextCapitalization.words,
         decoration: const InputDecoration(hintText: 'Ex. Brenna la Rousse'),
@@ -99,20 +132,12 @@ Future<void> _save(
           child: const Text('Annuler'),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(context, controller.text),
+          onPressed: () => Navigator.pop(context, _controller.text),
           child: const Text('Créer'),
         ),
       ],
-    ),
-  );
-  controller.dispose();
-  if (name == null || name.trim().isEmpty) return;
-
-  await ref
-      .read(charactersControllerProvider)
-      .create(name: name, scores: scores);
-  ref.read(pointBuyProvider.notifier).reset();
-  if (context.mounted) context.pop();
+    );
+  }
 }
 
 class _AbilityRow extends StatelessWidget {
@@ -179,11 +204,11 @@ class _AbilityRow extends StatelessWidget {
 
   // Les libellés vivront dans l'i18n (V1) ; en attendant, en dur ici, pas dans le moteur.
   static String _label(Ability ability) => switch (ability) {
-        Ability.strength => 'Force',
-        Ability.dexterity => 'Dextérité',
-        Ability.constitution => 'Constitution',
-        Ability.intelligence => 'Intelligence',
-        Ability.wisdom => 'Sagesse',
-        Ability.charisma => 'Charisme',
-      };
+    Ability.strength => 'Force',
+    Ability.dexterity => 'Dextérité',
+    Ability.constitution => 'Constitution',
+    Ability.intelligence => 'Intelligence',
+    Ability.wisdom => 'Sagesse',
+    Ability.charisma => 'Charisme',
+  };
 }
