@@ -103,6 +103,13 @@ service cloud.firestore {
       allow write: if isAdmin() && validSpecies();
     }
 
+    // PNJ : fiches de scène du MJ, hors de content/ — ni lisibles ni
+    // modifiables par les joueurs.
+    match /npcs/{npcId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && validSpecies();
+    }
+
     match /users/{uid} {
       allow read, write: if isOwner(uid);
 

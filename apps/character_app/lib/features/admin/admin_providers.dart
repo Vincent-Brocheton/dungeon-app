@@ -9,6 +9,8 @@ import '../../data/admin_invocation_doc.dart';
 import '../../data/admin_invocation_repository.dart';
 import '../../data/admin_monster_doc.dart';
 import '../../data/admin_monster_repository.dart';
+import '../../data/admin_npc_doc.dart';
+import '../../data/admin_npc_repository.dart';
 import '../../data/admin_repository.dart';
 import '../../data/admin_class_doc.dart';
 import '../../data/admin_class_repository.dart';
@@ -28,6 +30,7 @@ import '../../data/firestore_admin_class_repository.dart';
 import '../../data/firestore_admin_feat_repository.dart';
 import '../../data/firestore_admin_invocation_repository.dart';
 import '../../data/firestore_admin_monster_repository.dart';
+import '../../data/firestore_admin_npc_repository.dart';
 import '../../data/firestore_admin_repository.dart';
 import '../../data/firestore_admin_species_repository.dart';
 import '../../data/firestore_admin_spell_repository.dart';
@@ -196,4 +199,14 @@ final adminMonsterRepositoryProvider = Provider<AdminMonsterRepository>(
 /// Aucun monstre dans le pack SRD statique : pas de fusion nécessaire.
 final allMonstersProvider = StreamProvider<List<AdminMonsterDoc>>(
   (ref) => ref.watch(adminMonsterRepositoryProvider).watchAll(),
+);
+
+/// Dépôt des PNJ ; remplacé par `InMemoryAdminNpcRepository` dans les tests.
+final adminNpcRepositoryProvider = Provider<AdminNpcRepository>(
+  (ref) => FirestoreAdminNpcRepository(FirebaseFirestore.instance),
+);
+
+/// Tous les PNJ, en temps réel (lisibles par les seuls admins).
+final allNpcsProvider = StreamProvider<List<AdminNpcDoc>>(
+  (ref) => ref.watch(adminNpcRepositoryProvider).watchAll(),
 );
