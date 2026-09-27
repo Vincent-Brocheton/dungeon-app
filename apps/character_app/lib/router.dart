@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import 'features/admin/admin_class_editor_screen.dart';
 import 'features/admin/admin_dashboard_screen.dart';
 import 'features/admin/admin_editor_stub_screen.dart';
 import 'features/admin/admin_feat_editor_screen.dart';
@@ -55,9 +56,7 @@ final appRouter = GoRouter(
             ),
             GoRoute(
               path: 'classes',
-              builder:
-                  (context, state) =>
-                      const AdminEditorStubScreen(title: 'Classes'),
+              builder: (context, state) => const AdminClassEditorScreen(),
             ),
             GoRoute(
               path: 'subclasses',
