@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/admin_character_entry.dart';
 import '../../data/admin_character_repository.dart';
 import '../../data/admin_repository.dart';
+import '../../data/admin_class_doc.dart';
+import '../../data/admin_class_repository.dart';
 import '../../data/admin_feat_doc.dart';
 import '../../data/admin_feat_repository.dart';
 import '../../data/admin_species_doc.dart';
@@ -13,6 +15,7 @@ import '../../data/admin_spell_repository.dart';
 import '../../data/admin_subspecies_doc.dart';
 import '../../data/admin_subspecies_repository.dart';
 import '../../data/firestore_admin_character_repository.dart';
+import '../../data/firestore_admin_class_repository.dart';
 import '../../data/firestore_admin_feat_repository.dart';
 import '../../data/firestore_admin_repository.dart';
 import '../../data/firestore_admin_species_repository.dart';
@@ -105,4 +108,15 @@ final adminFeatRepositoryProvider = Provider<AdminFeatRepository>(
 /// Aucun don dans le pack SRD statique : pas de fusion nécessaire.
 final allFeatsProvider = StreamProvider<List<AdminFeatDoc>>(
   (ref) => ref.watch(adminFeatRepositoryProvider).watchAll(),
+);
+
+/// Dépôt des classes éditées par un admin ; remplacé par
+/// `InMemoryAdminClassRepository` dans les tests.
+final adminClassRepositoryProvider = Provider<AdminClassRepository>(
+  (ref) => FirestoreAdminClassRepository(FirebaseFirestore.instance),
+);
+
+/// Aucune classe dans le pack SRD statique : pas de fusion nécessaire.
+final allClassesProvider = StreamProvider<List<AdminClassDoc>>(
+  (ref) => ref.watch(adminClassRepositoryProvider).watchAll(),
 );
