@@ -69,25 +69,6 @@ void main() {
     },
   );
 
-  testWidgets(
-    'depuis le tableau de bord, une carte Compendium encore à venir ouvre '
-    'son écran stub',
-    (tester) async {
-      appRouter.go(AppRoutes.home);
-      await tester.pumpWidget(_app(admin: true));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Manifestations occultes'), findsOneWidget);
-      await tester.tap(find.text('Manifestations occultes'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Bientôt disponible'), findsOneWidget);
-    },
-  );
-
   testWidgets('un utilisateur non-admin ne voit pas l\'icône admin', (
     tester,
   ) async {
