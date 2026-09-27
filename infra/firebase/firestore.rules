@@ -98,6 +98,11 @@ service cloud.firestore {
       allow write: if isAdmin() && validSpecies();
     }
 
+    // Idem pour les monstres.
+    match /content/monsters/items/{monsterId} {
+      allow write: if isAdmin() && validSpecies();
+    }
+
     match /users/{uid} {
       allow read, write: if isOwner(uid);
 
