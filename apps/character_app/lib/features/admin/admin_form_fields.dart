@@ -156,3 +156,63 @@ class AdminLinkCard extends StatelessWidget {
     );
   }
 }
+
+/// Case à cocher libellée (caractéristiques éligibles des dons, historiques).
+class AdminCheckbox extends StatelessWidget {
+  const AdminCheckbox({
+    super.key,
+    this.checkboxKey,
+    required this.label,
+    required this.checked,
+    required this.onChanged,
+    this.accent = false,
+    this.enabled = true,
+  });
+
+  final String label;
+  final bool checked;
+  final bool accent;
+
+  /// `false` : grisée, ne réagit plus (ex. quota de cases atteint).
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  /// Clé posée sur la `Checkbox` elle-même (tests).
+  final Key? checkboxKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: enabled ? () => onChanged(!checked) : null,
+      borderRadius: BorderRadius.circular(6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: Checkbox(
+              key: checkboxKey,
+              value: checked,
+              onChanged: enabled ? (v) => onChanged(v ?? false) : null,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color:
+                  !enabled
+                      ? AppTheme.textMuted
+                      : accent
+                      ? AppTheme.accent
+                      : AppTheme.textPrimary,
+              fontWeight: accent ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

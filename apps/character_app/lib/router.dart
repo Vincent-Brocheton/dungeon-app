@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import 'features/admin/admin_background_editor_screen.dart';
 import 'features/admin/admin_class_editor_screen.dart';
 import 'features/admin/admin_dashboard_screen.dart';
 import 'features/admin/admin_editor_stub_screen.dart';
@@ -74,9 +75,7 @@ final appRouter = GoRouter(
             ),
             GoRoute(
               path: 'backgrounds',
-              builder:
-                  (context, state) =>
-                      const AdminEditorStubScreen(title: 'Historiques'),
+              builder: (context, state) => const AdminBackgroundEditorScreen(),
             ),
             GoRoute(
               path: 'invocations',

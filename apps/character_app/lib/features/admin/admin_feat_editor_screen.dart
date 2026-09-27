@@ -616,7 +616,7 @@ class _FeatForm extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     for (final a in _abilities)
-                      _AbilityCheckbox(
+                      AdminCheckbox(
                         label: a,
                         checked: eligibleAbilities.contains(a),
                         onChanged: (checked) {
@@ -629,7 +629,7 @@ class _FeatForm extends StatelessWidget {
                           onEligibleAbilitiesChanged(next);
                         },
                       ),
-                    _AbilityCheckbox(
+                    AdminCheckbox(
                       label: 'Toutes',
                       accent: true,
                       checked: eligibleAbilities.length == _abilities.length,
@@ -683,50 +683,6 @@ class _FeatForm extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           AdminLabeledField(label: 'Effet', controller: effect, maxLines: 6),
-        ],
-      ),
-    );
-  }
-}
-
-class _AbilityCheckbox extends StatelessWidget {
-  const _AbilityCheckbox({
-    required this.label,
-    required this.checked,
-    required this.onChanged,
-    this.accent = false,
-  });
-
-  final String label;
-  final bool checked;
-  final bool accent;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: () => onChanged(!checked),
-      borderRadius: BorderRadius.circular(6),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 20,
-            height: 20,
-            child: Checkbox(
-              value: checked,
-              onChanged: (v) => onChanged(v ?? false),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: accent ? AppTheme.accent : AppTheme.textPrimary,
-              fontWeight: accent ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
         ],
       ),
     );

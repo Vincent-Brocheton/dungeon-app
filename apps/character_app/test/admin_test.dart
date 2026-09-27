@@ -80,8 +80,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.text('Historiques'), findsOneWidget);
-      await tester.tap(find.text('Historiques'));
+      expect(find.text('Manifestations occultes'), findsOneWidget);
+      await tester.tap(find.text('Manifestations occultes'));
       await tester.pumpAndSettle();
 
       expect(find.text('Bientôt disponible'), findsOneWidget);
