@@ -1,3 +1,4 @@
+import 'admin_class_doc.dart' show levelTexts;
 import 'admin_species_doc.dart' show SpeciesSource;
 
 /// Une sous-classe (rattachée à une classe parente, ex. École d'Évocation
@@ -14,6 +15,7 @@ class AdminSubclassDoc {
     this.level = 3,
     this.features = '',
     this.description = '',
+    this.levelFeatures = const [],
   });
 
   final String id;
@@ -28,7 +30,33 @@ class AdminSubclassDoc {
   /// Résumé des aptitudes principales, texte libre.
   final String features;
   final String description;
+
+  /// Aptitudes de sous-classe par niveau (index 0 = niveau 1).
+  final List<String> levelFeatures;
   final DateTime updatedAt;
+
+  AdminSubclassDoc copyWith({
+    String? name,
+    String? parentClassId,
+    SpeciesSource? source,
+    String? sourcebook,
+    int? level,
+    String? features,
+    String? description,
+    List<String>? levelFeatures,
+    DateTime? updatedAt,
+  }) => AdminSubclassDoc(
+    id: id,
+    name: name ?? this.name,
+    parentClassId: parentClassId ?? this.parentClassId,
+    source: source ?? this.source,
+    sourcebook: sourcebook ?? this.sourcebook,
+    level: level ?? this.level,
+    features: features ?? this.features,
+    description: description ?? this.description,
+    levelFeatures: levelFeatures ?? this.levelFeatures,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 
   Map<String, Object?> toMap() => {
     'name': name,
@@ -38,6 +66,7 @@ class AdminSubclassDoc {
     'level': level,
     'features': features,
     'description': description,
+    'levelFeatures': levelFeatures,
     'updatedAt': updatedAt,
   };
 
@@ -51,6 +80,7 @@ class AdminSubclassDoc {
         level: map['level'] as int? ?? 3,
         features: map['features'] as String? ?? '',
         description: map['description'] as String? ?? '',
+        levelFeatures: levelTexts(map['levelFeatures']),
         updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       );
 }
