@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rules_engine/rules_engine.dart';
 
-import '../../data/admin_class_doc.dart';
 import '../../data/admin_monster_doc.dart';
 import '../../data/admin_species_doc.dart';
 import '../../router.dart';
@@ -10,6 +8,7 @@ import '../../theme/app_theme.dart';
 import 'admin_compendium_tabs.dart';
 import 'admin_form_fields.dart';
 import 'admin_providers.dart';
+import 'admin_stat_block_fields.dart';
 
 /// Blocs d'entrées du bloc de stats : clé dans `toMap`, titre, bouton.
 const _sections = [
@@ -19,8 +18,6 @@ const _sections = [
   ('reactions', 'Réactions', '+ Ajouter'),
   ('legendaryActions', 'Actions légendaires', '+ Ajouter'),
 ];
-
-const _abilityShort = ['For', 'Dex', 'Con', 'Int', 'Sag', 'Cha'];
 
 /// Libellés et champs texte de la fiche, dans l'ordre d'affichage des
 /// défenses (clés de `AdminMonsterDoc.toMap`).
@@ -34,34 +31,6 @@ const _defenseFields = [
   ('senses', 'Sens', 'ex. Vision dans le noir 18 m, Perception passive 14'),
   ('languages', 'Langues', '—'),
 ];
-
-String _signed(int value) => value >= 0 ? '+$value' : '$value';
-
-/// Entrée en cours d'édition ; `uid` identifie ses champs même quand une
-/// entrée précédente est retirée.
-class _EntryDraft {
-  _EntryDraft(this.uid, MonsterEntry entry)
-    : name = entry.name,
-      text = entry.text,
-      roll = entry.roll,
-      saveAbility = entry.saveAbility,
-      dc = entry.dc;
-
-  final int uid;
-  String name;
-  String text;
-  String roll;
-  String saveAbility;
-  String dc;
-
-  MonsterEntry toEntry() => MonsterEntry(
-    name: name.trim(),
-    text: text.trim(),
-    roll: roll,
-    saveAbility: saveAbility,
-    dc: dc.trim(),
-  );
-}
 
 /// Éditeur de monstres (blocs de stats) : liste groupée par type à gauche,
 /// fiche éditable à droite. Reprend `MonstersEditorNoModal.dc.html` — sans
@@ -93,8 +62,7 @@ class _AdminMonsterEditorScreenState
   var _source = SpeciesSource.homebrew;
   var _type = 'Humanoïde';
   var _alignment = 'Neutre';
-  final _entries = <String, List<_EntryDraft>>{};
-  var _nextUid = 0;
+  final _entries = <String, List<EntryDraft>>{};
 
   @override
   void dispose() {
@@ -133,7 +101,7 @@ class _AdminMonsterEditorScreenState
           for (final e in (map[key]! as List).map(
             (m) => MonsterEntry.fromMap(m as Map),
           ))
-            _EntryDraft(_nextUid++, e),
+            EntryDraft(e),
         ];
       }
     });
@@ -147,7 +115,7 @@ class _AdminMonsterEditorScreenState
     );
   }
 
-  int _score(int i) => int.tryParse(_scores[i].text.trim()) ?? 10;
+  int _score(int i) => AdminAbilityScores.scoreOf(_scores[i]);
 
   Future<void> _save() async {
     final id = _selectedId;
@@ -494,50 +462,7 @@ class _AdminMonsterEditorScreenState
             ),
           ),
           vgap,
-          AdminPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'CARACTÉRISTIQUES (MODIFICATEURS CALCULÉS AUTOMATIQUEMENT)',
-                  style: label,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    for (var i = 0; i < 6; i++) ...[
-                      if (i > 0) gap,
-                      Expanded(
-                        child: Column(
-                          key: Key(
-                            'monster-ability-${AdminClassDoc.abilities[i]}',
-                          ),
-                          children: [
-                            Text(_abilityShort[i], style: label),
-                            const SizedBox(height: 4),
-                            TextField(
-                              controller: _scores[i],
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              onChanged: (_) => setState(() {}),
-                              decoration: const InputDecoration(isDense: true),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _signed(abilityModifier(_score(i))),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: AppTheme.accent,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
+          AdminAbilityScores(controllers: _scores, keyPrefix: 'monster'),
           vgap,
           for (var i = 0; i < _defenseFields.length; i += 2) ...[
             Row(
@@ -554,7 +479,13 @@ class _AdminMonsterEditorScreenState
             vgap,
           ],
           for (final (key, title, addLabel) in _sections) ...[
-            _buildSection(key, title, addLabel),
+            AdminEntriesPanel(
+              section: key,
+              title: title,
+              addLabel: addLabel,
+              entries: _entries[key]!,
+              withResolution: key == 'actions',
+            ),
             vgap,
           ],
           AdminLabeledField(
@@ -562,137 +493,6 @@ class _AdminMonsterEditorScreenState
             controller: _texts['description']!,
             maxLines: 5,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSection(String key, String title, String addLabel) {
-    final theme = Theme.of(context);
-    final entries = _entries[key]!;
-    return AdminPanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppTheme.textMuted,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed:
-                    () => setState(
-                      () => entries.add(
-                        _EntryDraft(
-                          _nextUid++,
-                          const MonsterEntry(name: '', text: ''),
-                        ),
-                      ),
-                    ),
-                child: Text(addLabel),
-              ),
-            ],
-          ),
-          for (var i = 0; i < entries.length; i++)
-            KeyedSubtree(
-              key: ValueKey('entry-${entries[i].uid}'),
-              child: _buildEntry(key, i, entries),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEntry(String section, int i, List<_EntryDraft> entries) {
-    final entry = entries[i];
-    const gap = SizedBox(width: 12);
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  key: Key('$section-name-$i'),
-                  initialValue: entry.name,
-                  onChanged: (v) => entry.name = v,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    hintText: 'Nom',
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: 'Retirer',
-                icon: const Icon(Icons.close, size: 16),
-                onPressed: () => setState(() => entries.removeAt(i)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          TextFormField(
-            key: Key('$section-text-$i'),
-            initialValue: entry.text,
-            onChanged: (v) => entry.text = v,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              isDense: true,
-              hintText: 'Description',
-            ),
-          ),
-          // Résolution automatique : seulement pour les actions.
-          if (section == 'actions') ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: AdminLabeledDropdown<String>(
-                    key: Key('$section-roll-$i'),
-                    label: 'Jet imposé',
-                    value: entry.roll,
-                    items: MonsterEntry.rolls,
-                    labelOf: (r) => r,
-                    onChanged: (r) => setState(() => entry.roll = r),
-                  ),
-                ),
-                if (entry.roll == 'Sauvegarde') ...[
-                  gap,
-                  Expanded(
-                    child: AdminLabeledDropdown<String>(
-                      label: 'Caractéristique de la cible',
-                      value: entry.saveAbility,
-                      items: AdminClassDoc.abilities,
-                      labelOf: (a) => a,
-                      onChanged: (a) => setState(() => entry.saveAbility = a),
-                    ),
-                  ),
-                  gap,
-                  Expanded(
-                    child: TextFormField(
-                      initialValue: entry.dc,
-                      onChanged: (v) => entry.dc = v,
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        labelText: 'DD (vide = calculé)',
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
         ],
       ),
     );

@@ -43,7 +43,16 @@ class AdminDashboardScreen extends ConsumerWidget {
     final srdPack = ref.watch(srdPackProvider).value;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tableau de bord')),
+      appBar: AppBar(
+        title: const Text('Tableau de bord'),
+        actions: [
+          IconButton(
+            tooltip: 'PNJ',
+            icon: const Icon(Icons.groups_outlined),
+            onPressed: () => context.push(AppRoutes.adminNpcs),
+          ),
+        ],
+      ),
       body: entries.when(
         data:
             (list) => SingleChildScrollView(
