@@ -30,6 +30,10 @@ class AdminClassEditorScreen extends ConsumerStatefulWidget {
 class _AdminClassEditorScreenState
     extends ConsumerState<AdminClassEditorScreen> {
   String? _selectedId;
+
+  /// Document chargé : enregistrer part de lui pour ne pas écraser les
+  /// champs édités ailleurs (table de progression).
+  AdminClassDoc? _loaded;
   var _isNewDraft = false;
   var _saving = false;
 
@@ -66,6 +70,7 @@ class _AdminClassEditorScreenState
   void _load(AdminClassDoc doc, {required bool isNew}) {
     setState(() {
       _selectedId = doc.id;
+      _loaded = doc;
       _isNewDraft = isNew;
       _name.text = doc.name;
       _sourcebook.text = doc.sourcebook;
@@ -91,15 +96,23 @@ class _AdminClassEditorScreenState
   }
 
   Future<void> _save() async {
-    final id = _selectedId;
-    if (id == null || _name.text.trim().isEmpty) return;
+    final loaded = _loaded;
+    if (loaded == null || _name.text.trim().isEmpty) return;
+    // Dernière version connue (la progression a pu être enregistrée depuis
+    // le chargement), sinon le brouillon.
+    final latest =
+        ref
+            .read(allClassesProvider)
+            .value
+            ?.where((c) => c.id == loaded.id)
+            .firstOrNull ??
+        loaded;
     setState(() => _saving = true);
     try {
       await ref
           .read(adminClassRepositoryProvider)
           .upsert(
-            AdminClassDoc(
-              id: id,
+            latest.copyWith(
               name: _name.text.trim(),
               source: _source,
               sourcebook: _sourcebook.text.trim(),
@@ -210,6 +223,11 @@ class _AdminClassEditorScreenState
             .map((sub) => sub.name)
             .join(', ') ??
         '';
+    final progressionRoute =
+        Uri(
+          path: AppRoutes.adminLevelProgression,
+          queryParameters: {'classId': _selectedId},
+        ).toString();
     return SingleChildScrollView(
       key: ValueKey(_selectedId),
       padding: const EdgeInsets.all(24),
@@ -407,12 +425,12 @@ class _AdminClassEditorScreenState
             route: AppRoutes.adminSubclasses,
           ),
           const SizedBox(height: 14),
-          const AdminLinkCard(
+          AdminLinkCard(
             text:
                 'Configurer les aptitudes, ASI/Don et sorts débloqués niveau '
                 'par niveau (1 à 20)',
             action: 'Table de progression',
-            route: AppRoutes.adminLevelProgression,
+            route: progressionRoute,
           ),
           const SizedBox(height: 14),
           AdminLabeledField(

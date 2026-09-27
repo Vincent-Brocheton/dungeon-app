@@ -30,6 +30,10 @@ class AdminSubclassEditorScreen extends ConsumerStatefulWidget {
 class _AdminSubclassEditorScreenState
     extends ConsumerState<AdminSubclassEditorScreen> {
   String? _selectedId;
+
+  /// Document chargé : enregistrer part de lui pour ne pas écraser les
+  /// aptitudes par niveau (table de progression).
+  AdminSubclassDoc? _loaded;
   var _isNewDraft = false;
   var _saving = false;
   String? _parentFilter;
@@ -60,6 +64,7 @@ class _AdminSubclassEditorScreenState
   void _load(AdminSubclassDoc doc, {required bool isNew}) {
     setState(() {
       _selectedId = doc.id;
+      _loaded = doc;
       _isNewDraft = isNew;
       _name.text = doc.name;
       _sourcebook.text = doc.sourcebook;
@@ -86,17 +91,25 @@ class _AdminSubclassEditorScreenState
   }
 
   Future<void> _save() async {
-    final id = _selectedId;
-    if (id == null || _name.text.trim().isEmpty || _parentClassId.isEmpty) {
+    final loaded = _loaded;
+    if (loaded == null || _name.text.trim().isEmpty || _parentClassId.isEmpty) {
       return;
     }
+    // Dernière version connue (la progression a pu être enregistrée depuis
+    // le chargement), sinon le brouillon.
+    final latest =
+        ref
+            .read(allSubclassesProvider)
+            .value
+            ?.where((s) => s.id == loaded.id)
+            .firstOrNull ??
+        loaded;
     setState(() => _saving = true);
     try {
       await ref
           .read(adminSubclassRepositoryProvider)
           .upsert(
-            AdminSubclassDoc(
-              id: id,
+            latest.copyWith(
               name: _name.text.trim(),
               parentClassId: _parentClassId,
               source: _source,
@@ -259,6 +272,14 @@ class _AdminSubclassEditorScreenState
   Widget _buildForm(List<AdminClassDoc> classList) {
     final theme = Theme.of(context);
     const gap = SizedBox(width: 14);
+    final progressionRoute =
+        Uri(
+          path: AppRoutes.adminLevelProgression,
+          queryParameters: {
+            'classId': _parentClassId,
+            'subclassId': _selectedId,
+          },
+        ).toString();
     return SingleChildScrollView(
       key: ValueKey(_selectedId),
       padding: const EdgeInsets.all(24),
@@ -370,12 +391,12 @@ class _AdminSubclassEditorScreenState
             controller: _features,
           ),
           const SizedBox(height: 14),
-          const AdminLinkCard(
+          AdminLinkCard(
             text:
                 'Configurer les aptitudes niveau par niveau de cette '
                 'sous-classe',
             action: 'Table de progression',
-            route: AppRoutes.adminLevelProgression,
+            route: progressionRoute,
           ),
           const SizedBox(height: 14),
           AdminLabeledField(

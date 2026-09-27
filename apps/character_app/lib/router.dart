@@ -4,6 +4,7 @@ import 'features/admin/admin_class_editor_screen.dart';
 import 'features/admin/admin_dashboard_screen.dart';
 import 'features/admin/admin_editor_stub_screen.dart';
 import 'features/admin/admin_feat_editor_screen.dart';
+import 'features/admin/admin_level_progression_editor_screen.dart';
 import 'features/admin/admin_species_editor_screen.dart';
 import 'features/admin/admin_subclass_editor_screen.dart';
 import 'features/admin/admin_spell_editor_screen.dart';
@@ -87,8 +88,9 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'level-progression',
               builder:
-                  (context, state) => const AdminEditorStubScreen(
-                    title: 'Tables de progression',
+                  (context, state) => AdminLevelProgressionEditorScreen(
+                    initialClassId: state.uri.queryParameters['classId'],
+                    initialSubclassId: state.uri.queryParameters['subclassId'],
                   ),
             ),
           ],
