@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/admin_background_doc.dart';
+import '../../data/admin_background_repository.dart';
 import '../../data/admin_character_entry.dart';
 import '../../data/admin_character_repository.dart';
 import '../../data/admin_repository.dart';
@@ -16,6 +18,7 @@ import '../../data/admin_subclass_doc.dart';
 import '../../data/admin_subclass_repository.dart';
 import '../../data/admin_subspecies_doc.dart';
 import '../../data/admin_subspecies_repository.dart';
+import '../../data/firestore_admin_background_repository.dart';
 import '../../data/firestore_admin_character_repository.dart';
 import '../../data/firestore_admin_class_repository.dart';
 import '../../data/firestore_admin_feat_repository.dart';
@@ -26,6 +29,7 @@ import '../../data/firestore_admin_subclass_repository.dart';
 import '../../data/firestore_admin_subspecies_repository.dart';
 import '../../providers/content_providers.dart';
 import '../auth/auth_providers.dart';
+import 'background_merge.dart';
 import 'species_merge.dart';
 
 /// Dépôt du rôle admin ; remplacé par `InMemoryAdminRepository` dans les tests.
@@ -134,3 +138,34 @@ final adminSubclassRepositoryProvider = Provider<AdminSubclassRepository>(
 final allSubclassesProvider = StreamProvider<List<AdminSubclassDoc>>(
   (ref) => ref.watch(adminSubclassRepositoryProvider).watchAll(),
 );
+
+/// Dépôt des historiques édités par un admin ; remplacé par
+/// `InMemoryAdminBackgroundRepository` dans les tests.
+final adminBackgroundRepositoryProvider = Provider<AdminBackgroundRepository>(
+  (ref) => FirestoreAdminBackgroundRepository(FirebaseFirestore.instance),
+);
+
+final _backgroundOverridesProvider = StreamProvider<List<AdminBackgroundDoc>>(
+  (ref) => ref.watch(adminBackgroundRepositoryProvider).watchAll(),
+);
+
+/// Pack SRD statique fusionné aux surcharges admin (`content/backgrounds`) :
+/// voir `mergeBackgrounds`. Même états de chargement/erreur que
+/// [allSpeciesProvider].
+final allBackgroundsProvider = Provider<AsyncValue<List<AdminBackgroundDoc>>>((
+  ref,
+) {
+  final pack = ref.watch(srdPackProvider);
+  final overrides = ref.watch(_backgroundOverridesProvider);
+  return pack.when(
+    data:
+        (pack) => overrides.when(
+          data:
+              (overrides) => AsyncValue.data(mergeBackgrounds(pack, overrides)),
+          loading: () => const AsyncValue.loading(),
+          error: AsyncValue.error,
+        ),
+    loading: () => const AsyncValue.loading(),
+    error: AsyncValue.error,
+  );
+});
