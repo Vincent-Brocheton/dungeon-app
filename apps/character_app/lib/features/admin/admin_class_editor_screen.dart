@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../data/admin_class_doc.dart';
 import '../../data/admin_species_doc.dart';
@@ -18,9 +17,7 @@ String _sourceSubtitle(SpeciesSource source) => switch (source) {
 
 /// Éditeur de classes : liste à gauche, fiche éditable à droite. Reprend
 /// `ClassesEditorNoModal.dc.html` — sans sidebar ni import CSV (bouton
-/// présent, annonce juste qu'il arrive), et sans le champ « Sous-classes »
-/// en lecture seule : les sous-classes n'existent pas encore, la carte de
-/// navigation vers leur éditeur suffit. Aucune classe dans le pack SRD
+/// présent, annonce juste qu'il arrive). Aucune classe dans le pack SRD
 /// statique : tout est admin-créé.
 class AdminClassEditorScreen extends ConsumerStatefulWidget {
   const AdminClassEditorScreen({super.key});
@@ -205,6 +202,14 @@ class _AdminClassEditorScreenState
   Widget _buildForm(BuildContext context) {
     final theme = Theme.of(context);
     const gap = SizedBox(width: 14);
+    final subclassNames =
+        ref
+            .watch(allSubclassesProvider)
+            .value
+            ?.where((sub) => sub.parentClassId == _selectedId)
+            .map((sub) => sub.name)
+            .join(', ') ??
+        '';
     return SingleChildScrollView(
       key: ValueKey(_selectedId),
       padding: const EdgeInsets.all(24),
@@ -245,7 +250,7 @@ class _AdminClassEditorScreenState
             ),
           ),
           const SizedBox(height: 20),
-          _Panel(
+          AdminPanel(
             child: Row(
               children: [
                 Expanded(
@@ -329,7 +334,7 @@ class _AdminClassEditorScreenState
             ],
           ),
           const SizedBox(height: 14),
-          _Panel(
+          AdminPanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -381,14 +386,28 @@ class _AdminClassEditorScreenState
             ),
           ),
           const SizedBox(height: 14),
-          const _LinkCard(
+          InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Sous-classes',
+              isDense: true,
+              enabled: false,
+            ),
+            child: Text(
+              subclassNames.isEmpty ? "Aucune pour l'instant" : subclassNames,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textMuted,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          const AdminLinkCard(
             text:
                 'Ajouter, éditer ou importer les sous-classes de cette classe',
             action: 'Sous-classes',
             route: AppRoutes.adminSubclasses,
           ),
           const SizedBox(height: 14),
-          const _LinkCard(
+          const AdminLinkCard(
             text:
                 'Configurer les aptitudes, ASI/Don et sorts débloqués niveau '
                 'par niveau (1 à 20)',
@@ -402,67 +421,6 @@ class _AdminClassEditorScreenState
             maxLines: 5,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Panel extends StatelessWidget {
-  const _Panel({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: AppTheme.surface,
-      border: Border.all(color: AppTheme.border),
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: child,
-  );
-}
-
-class _LinkCard extends StatelessWidget {
-  const _LinkCard({
-    required this.text,
-    required this.action,
-    required this.route,
-  });
-
-  final String text;
-  final String action;
-  final String route;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: () => context.push(route),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          border: Border.all(color: AppTheme.border),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Expanded(child: Text(text, style: theme.textTheme.bodySmall)),
-            const SizedBox(width: 10),
-            Text(
-              action,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.accent,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.arrow_forward, size: 14, color: AppTheme.accent),
-          ],
-        ),
       ),
     );
   }

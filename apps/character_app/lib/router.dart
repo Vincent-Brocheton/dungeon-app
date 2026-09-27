@@ -5,6 +5,7 @@ import 'features/admin/admin_dashboard_screen.dart';
 import 'features/admin/admin_editor_stub_screen.dart';
 import 'features/admin/admin_feat_editor_screen.dart';
 import 'features/admin/admin_species_editor_screen.dart';
+import 'features/admin/admin_subclass_editor_screen.dart';
 import 'features/admin/admin_spell_editor_screen.dart';
 import 'features/admin/admin_subspecies_editor_screen.dart';
 import 'features/auth/account_screen.dart';
@@ -60,9 +61,7 @@ final appRouter = GoRouter(
             ),
             GoRoute(
               path: 'subclasses',
-              builder:
-                  (context, state) =>
-                      const AdminEditorStubScreen(title: 'Sous-classes'),
+              builder: (context, state) => const AdminSubclassEditorScreen(),
             ),
             GoRoute(
               path: 'spells',
