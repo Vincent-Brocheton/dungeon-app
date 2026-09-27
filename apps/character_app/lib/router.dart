@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'features/admin/admin_background_editor_screen.dart';
 import 'features/admin/admin_class_editor_screen.dart';
 import 'features/admin/admin_dashboard_screen.dart';
-import 'features/admin/admin_editor_stub_screen.dart';
 import 'features/admin/admin_feat_editor_screen.dart';
+import 'features/admin/admin_invocation_editor_screen.dart';
 import 'features/admin/admin_level_progression_editor_screen.dart';
 import 'features/admin/admin_species_editor_screen.dart';
 import 'features/admin/admin_subclass_editor_screen.dart';
@@ -79,10 +79,7 @@ final appRouter = GoRouter(
             ),
             GoRoute(
               path: 'invocations',
-              builder:
-                  (context, state) => const AdminEditorStubScreen(
-                    title: 'Manifestations occultes',
-                  ),
+              builder: (context, state) => const AdminInvocationEditorScreen(),
             ),
             GoRoute(
               path: 'level-progression',

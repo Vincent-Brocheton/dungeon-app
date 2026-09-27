@@ -4,9 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../router.dart';
 import '../../theme/app_theme.dart';
 
-/// Onglets partagés par les éditeurs de compendium (espèces, sorts, puis
-/// les éditeurs à venir) : navigue entre eux, met en avant l'onglet courant.
-/// Les onglets encore sans vrai éditeur mènent à `AdminEditorStubScreen`.
+/// Onglets partagés par les éditeurs de compendium : navigue entre eux,
+/// met en avant l'onglet courant.
 class AdminCompendiumTabs extends StatelessWidget {
   const AdminCompendiumTabs({super.key, required this.current});
 

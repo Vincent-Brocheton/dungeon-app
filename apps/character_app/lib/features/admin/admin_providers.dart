@@ -5,6 +5,8 @@ import '../../data/admin_background_doc.dart';
 import '../../data/admin_background_repository.dart';
 import '../../data/admin_character_entry.dart';
 import '../../data/admin_character_repository.dart';
+import '../../data/admin_invocation_doc.dart';
+import '../../data/admin_invocation_repository.dart';
 import '../../data/admin_repository.dart';
 import '../../data/admin_class_doc.dart';
 import '../../data/admin_class_repository.dart';
@@ -22,6 +24,7 @@ import '../../data/firestore_admin_background_repository.dart';
 import '../../data/firestore_admin_character_repository.dart';
 import '../../data/firestore_admin_class_repository.dart';
 import '../../data/firestore_admin_feat_repository.dart';
+import '../../data/firestore_admin_invocation_repository.dart';
 import '../../data/firestore_admin_repository.dart';
 import '../../data/firestore_admin_species_repository.dart';
 import '../../data/firestore_admin_spell_repository.dart';
@@ -169,3 +172,14 @@ final allBackgroundsProvider = Provider<AsyncValue<List<AdminBackgroundDoc>>>((
     error: AsyncValue.error,
   );
 });
+
+/// Dépôt des manifestations occultes éditées par un admin ; remplacé par
+/// `InMemoryAdminInvocationRepository` dans les tests.
+final adminInvocationRepositoryProvider = Provider<AdminInvocationRepository>(
+  (ref) => FirestoreAdminInvocationRepository(FirebaseFirestore.instance),
+);
+
+/// Aucune manifestation dans le pack SRD statique : pas de fusion nécessaire.
+final allInvocationsProvider = StreamProvider<List<AdminInvocationDoc>>(
+  (ref) => ref.watch(adminInvocationRepositoryProvider).watchAll(),
+);
