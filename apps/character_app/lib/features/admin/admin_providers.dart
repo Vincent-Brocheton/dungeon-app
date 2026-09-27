@@ -12,6 +12,8 @@ import '../../data/admin_species_doc.dart';
 import '../../data/admin_species_repository.dart';
 import '../../data/admin_spell_doc.dart';
 import '../../data/admin_spell_repository.dart';
+import '../../data/admin_subclass_doc.dart';
+import '../../data/admin_subclass_repository.dart';
 import '../../data/admin_subspecies_doc.dart';
 import '../../data/admin_subspecies_repository.dart';
 import '../../data/firestore_admin_character_repository.dart';
@@ -20,6 +22,7 @@ import '../../data/firestore_admin_feat_repository.dart';
 import '../../data/firestore_admin_repository.dart';
 import '../../data/firestore_admin_species_repository.dart';
 import '../../data/firestore_admin_spell_repository.dart';
+import '../../data/firestore_admin_subclass_repository.dart';
 import '../../data/firestore_admin_subspecies_repository.dart';
 import '../../providers/content_providers.dart';
 import '../auth/auth_providers.dart';
@@ -119,4 +122,15 @@ final adminClassRepositoryProvider = Provider<AdminClassRepository>(
 /// Aucune classe dans le pack SRD statique : pas de fusion nécessaire.
 final allClassesProvider = StreamProvider<List<AdminClassDoc>>(
   (ref) => ref.watch(adminClassRepositoryProvider).watchAll(),
+);
+
+/// Dépôt des sous-classes éditées par un admin ; remplacé par
+/// `InMemoryAdminSubclassRepository` dans les tests.
+final adminSubclassRepositoryProvider = Provider<AdminSubclassRepository>(
+  (ref) => FirestoreAdminSubclassRepository(FirebaseFirestore.instance),
+);
+
+/// Aucune sous-classe dans le pack SRD statique : pas de fusion nécessaire.
+final allSubclassesProvider = StreamProvider<List<AdminSubclassDoc>>(
+  (ref) => ref.watch(adminSubclassRepositoryProvider).watchAll(),
 );

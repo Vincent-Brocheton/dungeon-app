@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../theme/app_theme.dart';
 
@@ -88,6 +89,70 @@ class AdminLabeledDropdown<T> extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+/// Encadré de regroupement des fiches de compendium (ex. source + ouvrage).
+class AdminPanel extends StatelessWidget {
+  const AdminPanel({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: AppTheme.surface,
+      border: Border.all(color: AppTheme.border),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: child,
+  );
+}
+
+/// Carte de navigation vers un éditeur lié (ex. sous-classes d'une classe).
+class AdminLinkCard extends StatelessWidget {
+  const AdminLinkCard({
+    super.key,
+    required this.text,
+    required this.action,
+    required this.route,
+  });
+
+  final String text;
+  final String action;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => context.push(route),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          border: Border.all(color: AppTheme.border),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Expanded(child: Text(text, style: theme.textTheme.bodySmall)),
+            const SizedBox(width: 10),
+            Text(
+              action,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.accent,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_forward, size: 14, color: AppTheme.accent),
+          ],
+        ),
+      ),
     );
   }
 }

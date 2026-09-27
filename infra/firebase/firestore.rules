@@ -40,6 +40,14 @@ service cloud.firestore {
         && d.updatedAt is timestamp;
     }
 
+    function validSubclass() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['name', 'parentClassId', 'updatedAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.parentClassId is string && d.parentClassId.size() > 0
+        && d.updatedAt is timestamp;
+    }
+
     match /admins/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow write: if false;
@@ -74,6 +82,10 @@ service cloud.firestore {
     // Idem pour les classes.
     match /content/classes/items/{classId} {
       allow write: if isAdmin() && validSpecies();
+    }
+
+    match /content/subclasses/items/{subclassId} {
+      allow write: if isAdmin() && validSubclass();
     }
 
     match /users/{uid} {

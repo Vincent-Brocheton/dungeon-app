@@ -80,8 +80,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.text('Sous-classes'), findsOneWidget);
-      await tester.tap(find.text('Sous-classes'));
+      expect(find.text('Historiques'), findsOneWidget);
+      await tester.tap(find.text('Historiques'));
       await tester.pumpAndSettle();
 
       expect(find.text('Bientôt disponible'), findsOneWidget);
