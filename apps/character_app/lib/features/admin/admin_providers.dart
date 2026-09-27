@@ -7,6 +7,8 @@ import '../../data/admin_character_entry.dart';
 import '../../data/admin_character_repository.dart';
 import '../../data/admin_invocation_doc.dart';
 import '../../data/admin_invocation_repository.dart';
+import '../../data/admin_monster_doc.dart';
+import '../../data/admin_monster_repository.dart';
 import '../../data/admin_repository.dart';
 import '../../data/admin_class_doc.dart';
 import '../../data/admin_class_repository.dart';
@@ -25,6 +27,7 @@ import '../../data/firestore_admin_character_repository.dart';
 import '../../data/firestore_admin_class_repository.dart';
 import '../../data/firestore_admin_feat_repository.dart';
 import '../../data/firestore_admin_invocation_repository.dart';
+import '../../data/firestore_admin_monster_repository.dart';
 import '../../data/firestore_admin_repository.dart';
 import '../../data/firestore_admin_species_repository.dart';
 import '../../data/firestore_admin_spell_repository.dart';
@@ -182,4 +185,15 @@ final adminInvocationRepositoryProvider = Provider<AdminInvocationRepository>(
 /// Aucune manifestation dans le pack SRD statique : pas de fusion nécessaire.
 final allInvocationsProvider = StreamProvider<List<AdminInvocationDoc>>(
   (ref) => ref.watch(adminInvocationRepositoryProvider).watchAll(),
+);
+
+/// Dépôt des monstres édités par un admin ; remplacé par
+/// `InMemoryAdminMonsterRepository` dans les tests.
+final adminMonsterRepositoryProvider = Provider<AdminMonsterRepository>(
+  (ref) => FirestoreAdminMonsterRepository(FirebaseFirestore.instance),
+);
+
+/// Aucun monstre dans le pack SRD statique : pas de fusion nécessaire.
+final allMonstersProvider = StreamProvider<List<AdminMonsterDoc>>(
+  (ref) => ref.watch(adminMonsterRepositoryProvider).watchAll(),
 );

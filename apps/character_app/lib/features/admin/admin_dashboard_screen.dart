@@ -16,8 +16,7 @@ import 'admin_providers.dart';
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
-  /// Les 9 éditeurs de compendium : route (sous `/admin`) et libellé.
-  /// Écrans encore à bâtir (sous-projet 2) ; la navigation existe déjà.
+  /// Les éditeurs de compendium : route (sous `/admin`) et libellé.
   static const _compendiumSections = [
     (AppRoutes.adminSpecies, 'Espèces'),
     (AppRoutes.adminSubspecies, 'Sous-espèces'),
@@ -27,6 +26,7 @@ class AdminDashboardScreen extends ConsumerWidget {
     (AppRoutes.adminFeats, 'Dons'),
     (AppRoutes.adminBackgrounds, 'Historiques'),
     (AppRoutes.adminInvocations, 'Manifestations occultes'),
+    (AppRoutes.adminMonsters, 'Monstres'),
     (AppRoutes.adminLevelProgression, 'Tables de progression'),
   ];
 

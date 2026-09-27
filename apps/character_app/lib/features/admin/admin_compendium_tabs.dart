@@ -19,6 +19,7 @@ class AdminCompendiumTabs extends StatelessWidget {
     ('Dons', AppRoutes.adminFeats),
     ('Historiques', AppRoutes.adminBackgrounds),
     ('Manifestations occultes', AppRoutes.adminInvocations),
+    ('Monstres', AppRoutes.adminMonsters),
   ];
 
   @override

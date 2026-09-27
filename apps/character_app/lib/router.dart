@@ -6,6 +6,7 @@ import 'features/admin/admin_dashboard_screen.dart';
 import 'features/admin/admin_feat_editor_screen.dart';
 import 'features/admin/admin_invocation_editor_screen.dart';
 import 'features/admin/admin_level_progression_editor_screen.dart';
+import 'features/admin/admin_monster_editor_screen.dart';
 import 'features/admin/admin_species_editor_screen.dart';
 import 'features/admin/admin_subclass_editor_screen.dart';
 import 'features/admin/admin_spell_editor_screen.dart';
@@ -28,6 +29,7 @@ abstract final class AppRoutes {
   static const adminFeats = '/admin/feats';
   static const adminBackgrounds = '/admin/backgrounds';
   static const adminInvocations = '/admin/invocations';
+  static const adminMonsters = '/admin/monsters';
   static const adminLevelProgression = '/admin/level-progression';
 }
 
@@ -80,6 +82,10 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'invocations',
               builder: (context, state) => const AdminInvocationEditorScreen(),
+            ),
+            GoRoute(
+              path: 'monsters',
+              builder: (context, state) => const AdminMonsterEditorScreen(),
             ),
             GoRoute(
               path: 'level-progression',
