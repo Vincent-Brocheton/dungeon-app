@@ -1,10 +1,11 @@
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// Un historique (PHB 2024 : 3 caractéristiques, un Don d'Origine, 2
 /// compétences, 1 outil) tel qu'édité par un admin : `content/backgrounds/{id}`
 /// dans Firestore. Fusionné avec le pack SRD statique comme les espèces
 /// (voir `mergeBackgrounds`).
-class AdminBackgroundDoc {
+class AdminBackgroundDoc implements ContentDoc {
   const AdminBackgroundDoc({
     required this.id,
     required this.name,
@@ -19,6 +20,7 @@ class AdminBackgroundDoc {
     this.description = '',
   });
 
+  @override
   final String id;
   final String name;
   final SpeciesSource source;
@@ -35,6 +37,7 @@ class AdminBackgroundDoc {
   final String description;
   final DateTime updatedAt;
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'source': source.name,

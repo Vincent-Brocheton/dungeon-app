@@ -10,12 +10,6 @@ import 'admin_compendium_tabs.dart';
 import 'admin_form_fields.dart';
 import 'admin_providers.dart';
 
-String _sourceSubtitle(SpeciesSource source) => switch (source) {
-  SpeciesSource.srd => 'Contenu SRD 5.2 · modifiable',
-  SpeciesSource.official => 'Contenu officiel · modifiable',
-  SpeciesSource.homebrew => 'Historique créé pour ta table · modifiable',
-};
-
 /// Éditeur d'historiques : liste (pack SRD + surcharges admin) à gauche,
 /// fiche éditable à droite. Reprend `BackgroundsEditorNoModal.dc.html` —
 /// sans sidebar ni import CSV (bouton présent, annonce juste qu'il arrive).
@@ -193,7 +187,6 @@ class _AdminBackgroundEditorScreenState
   }
 
   Widget _buildList(List<AdminBackgroundDoc> items) {
-    final theme = Theme.of(context);
     return Column(
       children: [
         Padding(
@@ -216,51 +209,11 @@ class _AdminBackgroundEditorScreenState
             itemBuilder: (context, index) {
               final item = items[index];
               final active = item.id == _selectedId;
-              return InkWell(
-                borderRadius: BorderRadius.circular(8),
+              return AdminListTile(
+                name: item.name,
+                badge: item.source.shortLabel,
+                active: active,
                 onTap: () => _load(item, isNew: false),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border.all(
-                      color: active ? AppTheme.accent : AppTheme.border,
-                      width: active ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppTheme.border),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.source.shortLabel,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.textMuted,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             },
           ),
@@ -308,7 +261,7 @@ class _AdminBackgroundEditorScreenState
             child: Text(
               _isNewDraft
                   ? 'Nouveau contenu, pas encore enregistré'
-                  : _sourceSubtitle(_source),
+                  : adminSourceSubtitle(_source, 'Historique créé'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.textMuted,
               ),

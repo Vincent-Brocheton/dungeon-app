@@ -1,10 +1,11 @@
 import 'admin_class_doc.dart' show levelTexts;
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// Une sous-classe (rattachée à une classe parente, ex. École d'Évocation
 /// pour Magicien) : `content/subclasses/{id}` dans Firestore. Aucune dans le
 /// pack SRD statique — tout est admin-créé, comme les classes.
-class AdminSubclassDoc {
+class AdminSubclassDoc implements ContentDoc {
   const AdminSubclassDoc({
     required this.id,
     required this.name,
@@ -18,6 +19,7 @@ class AdminSubclassDoc {
     this.levelFeatures = const [],
   });
 
+  @override
   final String id;
   final String name;
   final String parentClassId;
@@ -58,6 +60,7 @@ class AdminSubclassDoc {
     updatedAt: updatedAt ?? this.updatedAt,
   );
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'parentClassId': parentClassId,

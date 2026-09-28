@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../data/admin_species_doc.dart';
 import '../../router.dart';
@@ -231,7 +230,6 @@ class _SpeciesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Column(
       children: [
         Padding(
@@ -254,52 +252,11 @@ class _SpeciesList extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               final active = item.id == selectedId;
-              return InkWell(
-                borderRadius: BorderRadius.circular(8),
+              return AdminListTile(
+                name: item.name,
+                badge: item.source.shortLabel,
+                active: active,
                 onTap: () => onSelect(item),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border.all(
-                      color: active ? AppTheme.accent : AppTheme.border,
-                      width: active ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppTheme.border),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.source.shortLabel,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.textMuted,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             },
           ),
@@ -436,47 +393,12 @@ class _SpeciesForm extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () => context.push(AppRoutes.adminSubspecies),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                border: Border.all(color: AppTheme.border),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Gérer les variantes rattachées à cette espèce '
-                      '(ex. Haut-Elfe, Elfe des Bois…)',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Sous-espèces',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.accent,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_forward,
-                        size: 14,
-                        color: AppTheme.accent,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          const AdminLinkCard(
+            text:
+                'Gérer les variantes rattachées à cette espèce '
+                '(ex. Haut-Elfe, Elfe des Bois…)',
+            action: 'Sous-espèces',
+            route: AppRoutes.adminSubspecies,
           ),
           const SizedBox(height: 14),
           AdminLabeledField(label: 'Langues', controller: languages),

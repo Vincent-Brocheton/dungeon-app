@@ -1,3 +1,5 @@
+import 'content_repository.dart';
+
 /// Origine du contenu d'une espèce, affichée en badge dans l'éditeur.
 enum SpeciesSource {
   srd('SRD 5.2 (contenu ouvert)', 'SRD'),
@@ -20,7 +22,7 @@ enum SpeciesSource {
 /// `mergeSpecies` dans `admin_providers.dart`) — une espèce du pack sans
 /// document ici reste en lecture · dès qu'un admin l'enregistre, ce document
 /// prend le dessus, y compris pour une espèce d'origine SRD.
-class AdminSpeciesDoc {
+class AdminSpeciesDoc implements ContentDoc {
   const AdminSpeciesDoc({
     required this.id,
     required this.name,
@@ -35,6 +37,7 @@ class AdminSpeciesDoc {
     this.description = '',
   });
 
+  @override
   final String id;
   final String name;
   final SpeciesSource source;
@@ -72,6 +75,7 @@ class AdminSpeciesDoc {
     updatedAt: updatedAt ?? this.updatedAt,
   );
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'source': source.name,

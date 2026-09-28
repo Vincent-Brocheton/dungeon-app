@@ -1,32 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'admin_subclass_doc.dart';
-import 'admin_subclass_repository.dart';
+import 'content_repository.dart';
 
-/// `content/subclasses/items/{id}` — un document par sous-classe.
-class FirestoreAdminSubclassRepository implements AdminSubclassRepository {
-  FirestoreAdminSubclassRepository(this._db);
+/// Une collection Firestore, un document par [ContentDoc]. Les `DateTime`
+/// de premier niveau sont stockés en `Timestamp`.
+class FirestoreContentRepository<T extends ContentDoc>
+    implements ContentRepository<T> {
+  FirestoreContentRepository(this._collection, this._fromMap);
 
-  final FirebaseFirestore _db;
-
-  CollectionReference<Map<String, dynamic>> get _subclasses =>
-      _db.collection('content').doc('subclasses').collection('items');
+  final CollectionReference<Map<String, dynamic>> _collection;
+  final T Function(String id, Map<String, Object?> map) _fromMap;
 
   @override
-  Stream<List<AdminSubclassDoc>> watchAll() => _subclasses.snapshots().map(
+  Stream<List<T>> watchAll() => _collection.snapshots().map(
     (snapshot) => [
       for (final doc in snapshot.docs)
-        AdminSubclassDoc.fromMap(doc.id, _fromFirestore(doc.data())),
+        _fromMap(doc.id, _fromFirestore(doc.data())),
     ],
   );
 
   @override
-  Future<void> upsert(AdminSubclassDoc doc) => _subclasses
+  Future<void> upsert(T doc) => _collection
       .doc(doc.id)
       .set(_toFirestore(doc.toMap()), SetOptions(merge: true));
 
   @override
-  String newId() => _subclasses.doc().id;
+  String newId() => _collection.doc().id;
 
   static Map<String, Object?> _toFirestore(Map<String, Object?> map) => {
     for (final entry in map.entries)

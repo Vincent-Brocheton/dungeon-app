@@ -1,9 +1,10 @@
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// Un sort : `content/spells/{id}` dans Firestore. Comme les sous-espèces,
 /// aucun sort n'existe dans le pack SRD statique — tout est admin-créé, pas
 /// de fusion à faire.
-class AdminSpellDoc {
+class AdminSpellDoc implements ContentDoc {
   const AdminSpellDoc({
     required this.id,
     required this.name,
@@ -23,6 +24,7 @@ class AdminSpellDoc {
     this.description = '',
   });
 
+  @override
   final String id;
   final String name;
   final SpeciesSource source;
@@ -50,6 +52,7 @@ class AdminSpellDoc {
   final String description;
   final DateTime updatedAt;
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'source': source.name,
