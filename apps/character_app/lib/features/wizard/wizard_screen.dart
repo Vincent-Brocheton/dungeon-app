@@ -17,8 +17,10 @@ import 'wizard_rules.dart';
 
 const _steps = [
   'Classe',
+  'Équipement (classe)',
   'Espèce',
   'Historique',
+  'Équipement (historique)',
   'Langues',
   'Caractéristiques',
   'Alignement',
@@ -59,12 +61,13 @@ List<Ability> _abilitiesOf(AdminBackgroundDoc? doc) => [
     if (abilityFromLabel(label) case final a?) a,
 ];
 
-/// Assistant de création de personnage (niveau 1) : classe, espèce et
-/// sous-espèce, historique et répartition de son bonus, langues,
-/// caractéristiques (valeurs standard, 4d6 ou achat de points), alignement,
-/// puis finalisation avec les statistiques calculées. Reprend les maquettes
-/// `Wizard*.dc.html` — sans les deux étapes d'équipement (à venir), ni
-/// brouillon : le personnage n'est enregistré qu'à la dernière étape.
+/// Assistant de création de personnage (niveau 1) : classe et son
+/// équipement, espèce et sous-espèce, historique (bonus, équipement),
+/// langues, caractéristiques (valeurs standard, 4d6 ou achat de points),
+/// alignement, puis finalisation avec les statistiques calculées. Reprend
+/// les maquettes `Wizard*.dc.html` — équipement enregistré en texte (en
+/// attendant l'inventaire), sans brouillon : le personnage n'est enregistré
+/// qu'à la dernière étape.
 class WizardScreen extends ConsumerStatefulWidget {
   const WizardScreen({super.key});
 
@@ -82,6 +85,9 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
   String? _speciesId;
   String? _subspeciesId;
   String? _backgroundId;
+
+  /// Or de départ plutôt que le paquetage de la classe.
+  var _takeGold = false;
   var _evenSpread = false;
   Ability? _plusTwo;
   Ability? _plusOne;
@@ -146,15 +152,16 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
 
   bool get _stepValid => switch (_step) {
     0 => _class != null,
-    1 => _speciesDoc != null,
-    2 => _background != null && _bonus != null,
-    3 => _languages.length == languagesToChoose,
-    4 =>
+    1 || 4 => true,
+    2 => _speciesDoc != null,
+    3 => _background != null && _bonus != null,
+    5 => _languages.length == languagesToChoose,
+    6 =>
       _baseScores != null &&
           (_method != _Method.pointBuy ||
               PointBuy.validate(_pointBuy).isEmpty) &&
           (_bonus?.validateCap(_baseScores!).isEmpty ?? true),
-    5 => _alignment != null,
+    7 => _alignment != null,
     _ => _name.text.trim().isNotEmpty,
   };
 
@@ -187,6 +194,8 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
             backgroundId: _backgroundId,
             alignment: _alignment,
             languages: ['Commun', ..._languages],
+            equipment: _equipment.$1,
+            gold: _equipment.$2,
           );
       if (mounted) context.pop();
     } finally {
@@ -260,11 +269,13 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
                   children: switch (_step) {
                     0 => _classStep(),
-                    1 => _speciesStep(),
-                    2 => _backgroundStep(),
-                    3 => _languagesStep(),
-                    4 => _abilitiesStep(),
-                    5 => _alignmentStep(),
+                    1 => _classEquipmentStep(),
+                    2 => _speciesStep(),
+                    3 => _backgroundStep(),
+                    4 => _backgroundEquipmentStep(),
+                    5 => _languagesStep(),
+                    6 => _abilitiesStep(),
+                    7 => _alignmentStep(),
                     _ => _summaryStep(),
                   },
                 ),
@@ -341,11 +352,89 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
         onTap:
             () => setState(() {
               _classId = c.id;
+              _takeGold = false;
               // La répartition par défaut dépend de la classe.
               _assigned = null;
             }),
       ),
   ];
+
+  /// Objets et or de départ : paquetage de la classe (ou son or), plus
+  /// l'équipement fixe de l'historique.
+  (List<String>, int) get _equipment {
+    final cls = _class;
+    final (classItems, classGold) = parseEquipment(
+      cls?.startingEquipment ?? '',
+    );
+    final (bgItems, bgGold) = parseEquipment(_background?.equipment ?? '');
+    return _takeGold
+        ? (bgItems, (cls?.startingGold ?? 0) + bgGold)
+        : ([...classItems, ...bgItems], classGold + bgGold);
+  }
+
+  List<Widget> _classEquipmentStep() {
+    final cls = _class!;
+    final hasPack = cls.startingEquipment.trim().isNotEmpty;
+    final hasGold = cls.startingGold > 0;
+    return [
+      _heading(
+        'Équipement de départ (classe)',
+        hasPack && hasGold
+            ? "Le ${cls.name} propose un choix entre un paquetage d'objets ou "
+                "de l'or à dépenser toi-même."
+            : 'Équipement proposé par la classe ${cls.name}.',
+      ),
+      if (!hasPack && !hasGold)
+        _empty(
+          "Aucun équipement de départ n'est défini pour cette classe : "
+          "ton MJ pourra te l'attribuer plus tard.",
+        ),
+      if (hasPack)
+        _Option(
+          title: 'Paquetage de la classe',
+          subtitle: cls.startingEquipment,
+          selected: !_takeGold,
+          onTap: () => setState(() => _takeGold = false),
+        ),
+      if (hasGold)
+        _Option(
+          title: '${cls.startingGold} po',
+          subtitle:
+              "Achète ton propre équipement de départ auprès d'un "
+              'marchand.',
+          selected: _takeGold || !hasPack,
+          onTap: () => setState(() => _takeGold = true),
+        ),
+    ];
+  }
+
+  List<Widget> _backgroundEquipmentStep() {
+    final bg = _background!;
+    final (items, gold) = parseEquipment(bg.equipment);
+    return [
+      _heading(
+        'Équipement de départ (historique)',
+        "L'historique ${bg.name} fournit un équipement fixe, sans choix à "
+            'faire.',
+      ),
+      if (items.isEmpty && gold == 0)
+        _empty("Aucun équipement n'est défini pour cet historique.")
+      else
+        _Panel(
+          title: 'Équipement ${bg.name}',
+          lines: [
+            if (items.isNotEmpty) items.join(', '),
+            if (gold > 0) '$gold po',
+          ],
+        ),
+      const SizedBox(height: 8),
+      Text(
+        "Contrairement à l'équipement de classe, un historique n'offre pas "
+        "d'alternative en or.",
+        style: _muted,
+      ),
+    ];
+  }
 
   List<Widget> _speciesStep() {
     final species = _speciesDoc;
@@ -819,6 +908,14 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
                   '${_signed(stats.saves[a]!.$1)}'
                   '${stats.saves[a]!.$2 ? '★' : ''}',
           ].join(' · '),
+        ],
+      ),
+      const SizedBox(height: 8),
+      _Panel(
+        title: 'Équipement',
+        lines: [
+          if (_equipment.$1.isNotEmpty) _equipment.$1.join(', '),
+          'Or : ${_equipment.$2} po',
         ],
       ),
       const SizedBox(height: 8),

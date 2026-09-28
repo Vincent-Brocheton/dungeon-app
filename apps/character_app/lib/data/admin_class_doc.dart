@@ -44,6 +44,8 @@ class AdminClassDoc implements ContentDoc {
     this.spellcaster = false,
     this.spellcastingAbility = 'Intelligence',
     this.description = '',
+    this.startingEquipment = '',
+    this.startingGold = 0,
     this.levelFeatures = const [],
     this.asiLevels = defaultAsiLevels,
     this.resourceColumns = const [],
@@ -86,6 +88,12 @@ class AdminClassDoc implements ContentDoc {
   final String spellcastingAbility;
   final String description;
 
+  /// Paquetage de départ, objets séparés par des virgules.
+  final String startingEquipment;
+
+  /// Or proposé à la place du paquetage (po).
+  final int startingGold;
+
   /// Aptitudes de classe par niveau (index 0 = niveau 1), voir [levelTexts].
   final List<String> levelFeatures;
 
@@ -107,6 +115,8 @@ class AdminClassDoc implements ContentDoc {
     bool? spellcaster,
     String? spellcastingAbility,
     String? description,
+    String? startingEquipment,
+    int? startingGold,
     List<String>? levelFeatures,
     List<int>? asiLevels,
     List<ResourceColumn>? resourceColumns,
@@ -125,6 +135,8 @@ class AdminClassDoc implements ContentDoc {
     spellcaster: spellcaster ?? this.spellcaster,
     spellcastingAbility: spellcastingAbility ?? this.spellcastingAbility,
     description: description ?? this.description,
+    startingEquipment: startingEquipment ?? this.startingEquipment,
+    startingGold: startingGold ?? this.startingGold,
     levelFeatures: levelFeatures ?? this.levelFeatures,
     asiLevels: asiLevels ?? this.asiLevels,
     resourceColumns: resourceColumns ?? this.resourceColumns,
@@ -145,6 +157,8 @@ class AdminClassDoc implements ContentDoc {
     'spellcaster': spellcaster,
     'spellcastingAbility': spellcastingAbility,
     'description': description,
+    'startingEquipment': startingEquipment,
+    'startingGold': startingGold,
     'levelFeatures': levelFeatures,
     'asiLevels': asiLevels,
     'resourceColumns': [for (final c in resourceColumns) c.toMap()],
@@ -167,6 +181,8 @@ class AdminClassDoc implements ContentDoc {
         spellcastingAbility:
             map['spellcastingAbility'] as String? ?? 'Intelligence',
         description: map['description'] as String? ?? '',
+        startingEquipment: map['startingEquipment'] as String? ?? '',
+        startingGold: map['startingGold'] as int? ?? 0,
         levelFeatures: levelTexts(map['levelFeatures']),
         asiLevels:
             map['asiLevels'] == null
