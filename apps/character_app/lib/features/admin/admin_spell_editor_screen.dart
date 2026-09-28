@@ -547,7 +547,11 @@ class _SpellForm extends StatelessWidget {
                         label: 'Effet si réussite',
                         value: onSuccessOption,
                         items: _onSuccessOptions,
-                        labelOf: (s) => s,
+                        labelOf:
+                            (s) =>
+                                s == 'Effet réduit'
+                                    ? "Effet réduit (préciser dans l'effet)"
+                                    : s,
                         onChanged: onSuccessChanged,
                       ),
                     ),

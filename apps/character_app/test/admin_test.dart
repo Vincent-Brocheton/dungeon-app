@@ -1,9 +1,11 @@
 import 'package:character_app/app.dart';
 import 'package:character_app/data/admin_character_entry.dart';
+import 'package:character_app/data/admin_feat_doc.dart';
 import 'package:character_app/data/character_doc.dart';
 import 'package:character_app/data/in_memory_admin_character_repository.dart';
 import 'package:character_app/data/in_memory_admin_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
+import 'package:character_app/data/in_memory_content_repository.dart';
 import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
@@ -15,6 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import 'fakes/fake_auth_service.dart';
+
+final _now = DateTime(2026, 9, 17);
 
 CharacterDoc _doc(String id, String name) => CharacterDoc(
   id: id,
@@ -48,6 +52,13 @@ Widget _app({required bool admin}) => ProviderScope(
         ],
       ),
     ),
+    adminFeatRepositoryProvider.overrideWithValue(
+      InMemoryContentRepository<AdminFeatDoc>(
+        seed: [
+          AdminFeatDoc(id: 'f1', name: 'Lame du Crépuscule', updatedAt: _now),
+        ],
+      ),
+    ),
   ],
   child: const CharacterApp(),
 );
@@ -66,6 +77,9 @@ void main() {
 
       expect(find.text('Brenna'), findsOneWidget);
       expect(find.textContaining('autre-uid'), findsOneWidget);
+      expect(find.text('Niv. 1'), findsOneWidget);
+      // Carte « Dons » : un don maison.
+      expect(find.text('1 Homebrew'), findsOneWidget);
     },
   );
 

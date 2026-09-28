@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/admin_class_doc.dart';
 import '../../data/admin_species_doc.dart';
+import '../../data/admin_subclass_doc.dart';
 import '../../router.dart';
 import '../../theme/app_theme.dart';
 import 'admin_compendium_tabs.dart';
@@ -209,14 +210,14 @@ class _AdminClassEditorScreenState
   Widget _buildForm(BuildContext context) {
     final theme = Theme.of(context);
     const gap = SizedBox(width: 14);
-    final subclassNames =
-        ref
-            .watch(allSubclassesProvider)
-            .value
-            ?.where((sub) => sub.parentClassId == _selectedId)
-            .map((sub) => sub.name)
-            .join(', ') ??
-        '';
+    final subclasses = [
+      for (final sub
+          in ref.watch(allSubclassesProvider).value ??
+              const <AdminSubclassDoc>[])
+        if (sub.parentClassId == _selectedId) sub,
+    ];
+    final subclassLevels = {for (final sub in subclasses) sub.level};
+    final subclassNames = subclasses.map((sub) => sub.name).join(', ');
     final progressionRoute =
         Uri(
           path: AppRoutes.adminLevelProgression,
@@ -399,8 +400,12 @@ class _AdminClassEditorScreenState
           ),
           const SizedBox(height: 14),
           InputDecorator(
-            decoration: const InputDecoration(
-              labelText: 'Sous-classes',
+            decoration: InputDecoration(
+              labelText:
+                  subclassLevels.length == 1
+                      ? 'Sous-classes (choisies au niveau '
+                          '${subclassLevels.single})'
+                      : 'Sous-classes',
               isDense: true,
               enabled: false,
             ),

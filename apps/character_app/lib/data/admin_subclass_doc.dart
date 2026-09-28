@@ -23,6 +23,7 @@ class AdminSubclassDoc implements ContentDoc {
   final String id;
   final String name;
   final String parentClassId;
+  @override
   final SpeciesSource source;
   final String sourcebook;
 

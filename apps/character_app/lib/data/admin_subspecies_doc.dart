@@ -24,6 +24,7 @@ class AdminSubspeciesDoc implements ContentDoc {
   final String id;
   final String name;
   final String parentSpeciesId;
+  @override
   final SpeciesSource source;
   final String sourcebook;
 

@@ -109,6 +109,7 @@ class AdminNpcDoc implements ContentDoc {
   @override
   final String id;
   final String name;
+  @override
   final SpeciesSource source;
   final String sourcebook;
 

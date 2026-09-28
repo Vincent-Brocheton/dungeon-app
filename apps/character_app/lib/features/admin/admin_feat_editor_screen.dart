@@ -505,7 +505,7 @@ class _FeatForm extends StatelessWidget {
                 flex: 2,
                 child: AdminLabeledField(
                   key: const Key('feat-other-prerequisites-field'),
-                  label: 'Autres prérequis',
+                  label: 'Autres prérequis (texte libre)',
                   controller: otherPrerequisites,
                   hint: 'ex. Force ou Dextérité 13 ou plus',
                 ),

@@ -13,6 +13,7 @@ import 'package:character_app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import 'fakes/fake_auth_service.dart';
 
 Widget _app(InMemoryContentRepository<AdminMonsterDoc> monsters) =>
@@ -76,7 +77,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.byTooltip('Nouveau contenu'));
+    await tester.tap(find.byTooltip('Nouveau monstre'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('monster-name-field')),
@@ -103,7 +104,7 @@ void main() {
     expect(saved.actions.single.name, 'Morsure');
     expect(saved.actions.single.roll, 'Sauvegarde');
 
-    await tester.tap(find.byTooltip('Nouveau contenu'));
+    await tester.tap(find.byTooltip('Nouveau monstre'));
     await tester.pumpAndSettle();
     expect(find.text('Loup-garou'), findsOneWidget);
     expect(find.text('FP 3 · Monstruosité'), findsOneWidget);
