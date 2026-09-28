@@ -39,6 +39,8 @@ class _AdminClassEditorScreenState
   final _skills = TextEditingController();
   final _resource = TextEditingController();
   final _description = TextEditingController();
+  final _startingEquipment = TextEditingController();
+  final _startingGold = TextEditingController();
   var _source = SpeciesSource.homebrew;
   var _hitDie = 'd8';
   var _primaryAbility = 'Force';
@@ -56,6 +58,8 @@ class _AdminClassEditorScreenState
       _skills,
       _resource,
       _description,
+      _startingEquipment,
+      _startingGold,
     ]) {
       controller.dispose();
     }
@@ -73,6 +77,8 @@ class _AdminClassEditorScreenState
       _skills.text = doc.skills;
       _resource.text = doc.resource;
       _description.text = doc.description;
+      _startingEquipment.text = doc.startingEquipment;
+      _startingGold.text = doc.startingGold == 0 ? '' : '${doc.startingGold}';
       _source = doc.source;
       _hitDie = doc.hitDie;
       _primaryAbility = doc.primaryAbility;
@@ -120,6 +126,8 @@ class _AdminClassEditorScreenState
               spellcaster: _spellcaster,
               spellcastingAbility: _spellcastingAbility,
               description: _description.text.trim(),
+              startingEquipment: _startingEquipment.text.trim(),
+              startingGold: int.tryParse(_startingGold.text.trim()) ?? 0,
               updatedAt: DateTime.now(),
             ),
           );
@@ -430,6 +438,27 @@ class _AdminClassEditorScreenState
                 'par niveau (1 à 20)',
             action: 'Table de progression',
             route: progressionRoute,
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: AdminLabeledField(
+                  label: 'Équipement de départ (paquetage)',
+                  controller: _startingEquipment,
+                  hint: 'ex. Cotte de mailles, Épée longue, Bouclier',
+                ),
+              ),
+              gap,
+              Expanded(
+                child: AdminLabeledField(
+                  label: 'Ou or de départ (po)',
+                  controller: _startingGold,
+                  hint: 'ex. 155',
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
           AdminLabeledField(

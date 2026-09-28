@@ -136,3 +136,21 @@ List<String> suggestedLanguages(String speciesLanguages) {
       if (text.contains(l.toLowerCase())) l,
   ];
 }
+
+/// Sépare un texte d'équipement (« Tenue de voyage, Corde, 14 po ») en
+/// objets et pièces d'or.
+(List<String>, int) parseEquipment(String text) {
+  final items = <String>[];
+  var gold = 0;
+  for (final part in text.split(',')) {
+    final item = part.trim();
+    if (item.isEmpty) continue;
+    final po = RegExp(r'^(\d+)\s*po$').firstMatch(item);
+    if (po != null) {
+      gold += int.parse(po.group(1)!);
+    } else {
+      items.add(item);
+    }
+  }
+  return (items, gold);
+}

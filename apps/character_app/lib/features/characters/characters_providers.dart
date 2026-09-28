@@ -47,6 +47,8 @@ class CharactersController {
     String? backgroundId,
     String? alignment,
     List<String> languages = const [],
+    List<String> equipment = const [],
+    int gold = 0,
   }) async {
     final now = DateTime.now();
     final doc = CharacterDoc(
@@ -59,6 +61,8 @@ class CharactersController {
       backgroundId: backgroundId,
       alignment: alignment,
       languages: languages,
+      equipment: equipment,
+      gold: gold,
       createdAt: now,
       updatedAt: now,
     );

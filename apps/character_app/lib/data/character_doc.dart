@@ -18,6 +18,8 @@ class CharacterDoc {
     this.subspeciesId,
     this.alignment,
     this.languages = const [],
+    this.equipment = const [],
+    this.gold = 0,
     this.deletedAt,
     this.schemaVersion = currentSchemaVersion,
   });
@@ -39,6 +41,12 @@ class CharacterDoc {
 
   /// Langues parlées, Commun compris.
   final List<String> languages;
+
+  /// Équipement de départ, un objet par entrée (en attendant l'inventaire).
+  final List<String> equipment;
+
+  /// Pièces d'or.
+  final int gold;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -58,6 +66,8 @@ class CharacterDoc {
     String? subspeciesId,
     String? alignment,
     List<String>? languages,
+    List<String>? equipment,
+    int? gold,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) => CharacterDoc(
@@ -71,6 +81,8 @@ class CharacterDoc {
     subspeciesId: subspeciesId ?? this.subspeciesId,
     alignment: alignment ?? this.alignment,
     languages: languages ?? this.languages,
+    equipment: equipment ?? this.equipment,
+    gold: gold ?? this.gold,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt ?? this.deletedAt,
@@ -88,6 +100,8 @@ class CharacterDoc {
     'subspeciesId': subspeciesId,
     'alignment': alignment,
     'languages': languages,
+    'equipment': equipment,
+    'gold': gold,
     'abilityScores': {for (final a in Ability.values) a.code: scores[a]},
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -116,6 +130,10 @@ class CharacterDoc {
       languages: [
         for (final l in (map['languages'] as List?) ?? const []) l as String,
       ],
+      equipment: [
+        for (final e in (map['equipment'] as List?) ?? const []) e as String,
+      ],
+      gold: map['gold'] as int? ?? 0,
       createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       deletedAt: map['deletedAt'] as DateTime?,

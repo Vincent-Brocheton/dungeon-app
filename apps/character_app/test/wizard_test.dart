@@ -50,6 +50,8 @@ Widget _app(InMemoryCharacterRepository characters) => ProviderScope(
             updatedAt: _now,
             hitDie: 'd10',
             savingThrows: 'Force, Constitution',
+            startingEquipment: 'Cotte de mailles, Épée longue, Bouclier',
+            startingGold: 155,
           ),
         ],
       ),
@@ -63,6 +65,7 @@ Widget _app(InMemoryCharacterRepository characters) => ProviderScope(
             updatedAt: _now,
             abilities: const ['Force', 'Dextérité', 'Constitution'],
             originFeat: 'Attaque en Save',
+            equipment: 'Tenue de voyage, Insigne de rang, 14 po',
           ),
         ],
       ),
@@ -93,8 +96,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Choisis une classe'), findsOneWidget);
-    expect(find.text('Étape 1/7'), findsOneWidget);
+    expect(find.text('Étape 1/9'), findsOneWidget);
     await tester.tap(find.text('Guerrier'));
+    await tester.pumpAndSettle();
+    await _continue(tester);
+
+    // Paquetage de la classe plutôt que 155 po.
+    expect(find.text('Équipement de départ (classe)'), findsOneWidget);
+    expect(find.text('155 po'), findsOneWidget);
+    await tester.tap(find.text('Paquetage de la classe'));
     await tester.pumpAndSettle();
     await _continue(tester);
 
@@ -106,6 +116,9 @@ void main() {
     expect(find.text('Choisis un historique'), findsOneWidget);
     await tester.tap(find.text('Soldat'));
     await tester.pumpAndSettle();
+    await _continue(tester);
+
+    expect(find.text('Équipement de départ (historique)'), findsOneWidget);
     await _continue(tester);
 
     expect(find.text('Choisis tes langues'), findsOneWidget);
@@ -146,5 +159,13 @@ void main() {
     expect(saved.languages, ['Commun', 'Naine', 'Orc']);
     expect(saved.scores.strength, 17);
     expect(saved.scores.dexterity, 14);
+    expect(saved.equipment, [
+      'Cotte de mailles',
+      'Épée longue',
+      'Bouclier',
+      'Tenue de voyage',
+      'Insigne de rang',
+    ]);
+    expect(saved.gold, 14);
   });
 }

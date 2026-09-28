@@ -65,4 +65,15 @@ void main() {
     expect(suggestedLanguages('Commun, Naine'), ['Naine']);
     expect(suggestedLanguages(''), isEmpty);
   });
+
+  test('équipement : objets séparés par des virgules, or extrait', () {
+    final (items, gold) = parseEquipment(
+      'Tenue de voyage, Insigne de rang,  14 po, Corde (15 m)',
+    );
+    expect(items, ['Tenue de voyage', 'Insigne de rang', 'Corde (15 m)']);
+    expect(gold, 14);
+    final (none, noGold) = parseEquipment('');
+    expect(none, isEmpty);
+    expect(noGold, 0);
+  });
 }
