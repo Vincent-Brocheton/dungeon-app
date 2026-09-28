@@ -24,6 +24,8 @@ import '../../data/admin_subclass_doc.dart';
 import '../../data/admin_subclass_repository.dart';
 import '../../data/admin_subspecies_doc.dart';
 import '../../data/admin_subspecies_repository.dart';
+import '../../data/admin_table_doc.dart';
+import '../../data/admin_table_repository.dart';
 import '../../data/firestore_admin_background_repository.dart';
 import '../../data/firestore_admin_character_repository.dart';
 import '../../data/firestore_admin_class_repository.dart';
@@ -36,6 +38,7 @@ import '../../data/firestore_admin_species_repository.dart';
 import '../../data/firestore_admin_spell_repository.dart';
 import '../../data/firestore_admin_subclass_repository.dart';
 import '../../data/firestore_admin_subspecies_repository.dart';
+import '../../data/firestore_admin_table_repository.dart';
 import '../../providers/content_providers.dart';
 import '../auth/auth_providers.dart';
 import 'background_merge.dart';
@@ -209,4 +212,15 @@ final adminNpcRepositoryProvider = Provider<AdminNpcRepository>(
 /// Tous les PNJ, en temps réel (lisibles par les seuls admins).
 final allNpcsProvider = StreamProvider<List<AdminNpcDoc>>(
   (ref) => ref.watch(adminNpcRepositoryProvider).watchAll(),
+);
+
+/// Dépôt de la table du MJ ; remplacé par `InMemoryAdminTableRepository`
+/// dans les tests.
+final adminTableRepositoryProvider = Provider<AdminTableRepository>(
+  (ref) => FirestoreAdminTableRepository(FirebaseFirestore.instance),
+);
+
+/// La table du MJ, `null` tant qu'elle n'a jamais été enregistrée.
+final adminTableProvider = StreamProvider<AdminTableDoc?>(
+  (ref) => ref.watch(adminTableRepositoryProvider).watch(),
 );

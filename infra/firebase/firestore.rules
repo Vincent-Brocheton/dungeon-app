@@ -110,6 +110,12 @@ service cloud.firestore {
       allow write: if isAdmin() && validSpecies();
     }
 
+    // Table du MJ (paramètres, journal privé) : réservée aux admins.
+    match /table/{docId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && validSpecies();
+    }
+
     match /users/{uid} {
       allow read, write: if isOwner(uid);
 

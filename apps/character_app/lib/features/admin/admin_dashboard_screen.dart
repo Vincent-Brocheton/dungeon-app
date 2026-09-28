@@ -47,6 +47,11 @@ class AdminDashboardScreen extends ConsumerWidget {
         title: const Text('Tableau de bord'),
         actions: [
           IconButton(
+            tooltip: 'Ma table',
+            icon: const Icon(Icons.table_restaurant_outlined),
+            onPressed: () => context.push(AppRoutes.adminTable),
+          ),
+          IconButton(
             tooltip: 'PNJ',
             icon: const Icon(Icons.groups_outlined),
             onPressed: () => context.push(AppRoutes.adminNpcs),
