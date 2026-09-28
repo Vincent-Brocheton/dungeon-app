@@ -29,7 +29,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Nouveau personnage',
             icon: const Icon(Icons.add),
-            onPressed: () => context.push(AppRoutes.pointBuy),
+            onPressed: () => context.push(AppRoutes.newCharacter),
           ),
           if (ref.watch(isAdminProvider).value ?? false)
             IconButton(
@@ -70,6 +70,8 @@ class _CharacterList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final srdPack = ref.watch(srdPackProvider).value;
+    final species = ref.watch(allSpeciesProvider).value;
+    final classes = ref.watch(allClassesProvider).value;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -80,10 +82,16 @@ class _CharacterList extends ConsumerWidget {
           for (final doc in list)
             _CharacterCard(
               doc: doc,
+              className:
+                  classes?.where((c) => c.id == doc.classId).firstOrNull?.name,
               speciesName:
                   doc.speciesId == null
                       ? null
-                      : srdPack?.speciesById(doc.speciesId!)?.name,
+                      : species
+                              ?.where((s) => s.id == doc.speciesId)
+                              .firstOrNull
+                              ?.name ??
+                          srdPack?.speciesById(doc.speciesId!)?.name,
             ),
           const _CreateCard(),
         ],
@@ -93,16 +101,21 @@ class _CharacterList extends ConsumerWidget {
 }
 
 class _CharacterCard extends ConsumerWidget {
-  const _CharacterCard({required this.doc, required this.speciesName});
+  const _CharacterCard({
+    required this.doc,
+    required this.className,
+    required this.speciesName,
+  });
 
   final CharacterDoc doc;
+  final String? className;
   final String? speciesName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final subtitle = [
-      'Niveau ${doc.level}',
+      className == null ? 'Niveau ${doc.level}' : '$className ${doc.level}',
       if (speciesName != null) speciesName!,
     ].join(' · ');
 
@@ -198,7 +211,7 @@ class _CreateCard extends StatelessWidget {
     final theme = Theme.of(context);
     return InkWell(
       borderRadius: BorderRadius.circular(10),
-      onTap: () => context.push(AppRoutes.pointBuy),
+      onTap: () => context.push(AppRoutes.newCharacter),
       child: Container(
         width: 340,
         height: 72,

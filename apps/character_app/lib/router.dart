@@ -15,12 +15,12 @@ import 'features/admin/admin_subspecies_editor_screen.dart';
 import 'features/admin/admin_table_screen.dart';
 import 'features/auth/account_screen.dart';
 import 'features/home/home_screen.dart';
-import 'features/point_buy/point_buy_screen.dart';
+import 'features/wizard/wizard_screen.dart';
 
 /// Routes de l'app. Les chemins sont aussi les URL sur le web.
 abstract final class AppRoutes {
   static const home = '/';
-  static const pointBuy = '/point-buy';
+  static const newCharacter = '/new-character';
   static const account = '/account';
   static const admin = '/admin';
   static const adminSpecies = '/admin/species';
@@ -44,8 +44,8 @@ final appRouter = GoRouter(
       builder: (context, state) => const HomeScreen(),
       routes: [
         GoRoute(
-          path: 'point-buy',
-          builder: (context, state) => const PointBuyScreen(),
+          path: 'new-character',
+          builder: (context, state) => const WizardScreen(),
         ),
         GoRoute(
           path: 'account',
