@@ -14,6 +14,10 @@ class CharacterDoc {
     this.level = 1,
     this.speciesId,
     this.backgroundId,
+    this.classId,
+    this.subspeciesId,
+    this.alignment,
+    this.languages = const [],
     this.deletedAt,
     this.schemaVersion = currentSchemaVersion,
   });
@@ -27,6 +31,14 @@ class CharacterDoc {
   final int level;
   final String? speciesId;
   final String? backgroundId;
+  final String? classId;
+  final String? subspeciesId;
+
+  /// Ex. « Loyal Bon ».
+  final String? alignment;
+
+  /// Langues parlées, Commun compris.
+  final List<String> languages;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -42,6 +54,10 @@ class CharacterDoc {
     int? level,
     String? speciesId,
     String? backgroundId,
+    String? classId,
+    String? subspeciesId,
+    String? alignment,
+    List<String>? languages,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) => CharacterDoc(
@@ -51,6 +67,10 @@ class CharacterDoc {
     level: level ?? this.level,
     speciesId: speciesId ?? this.speciesId,
     backgroundId: backgroundId ?? this.backgroundId,
+    classId: classId ?? this.classId,
+    subspeciesId: subspeciesId ?? this.subspeciesId,
+    alignment: alignment ?? this.alignment,
+    languages: languages ?? this.languages,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt ?? this.deletedAt,
@@ -64,6 +84,10 @@ class CharacterDoc {
     'level': level,
     'speciesId': speciesId,
     'backgroundId': backgroundId,
+    'classId': classId,
+    'subspeciesId': subspeciesId,
+    'alignment': alignment,
+    'languages': languages,
     'abilityScores': {for (final a in Ability.values) a.code: scores[a]},
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -86,6 +110,12 @@ class CharacterDoc {
       level: map['level'] as int? ?? 1,
       speciesId: map['speciesId'] as String?,
       backgroundId: map['backgroundId'] as String?,
+      classId: map['classId'] as String?,
+      subspeciesId: map['subspeciesId'] as String?,
+      alignment: map['alignment'] as String?,
+      languages: [
+        for (final l in (map['languages'] as List?) ?? const []) l as String,
+      ],
       createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       deletedAt: map['deletedAt'] as DateTime?,

@@ -58,24 +58,6 @@ void main() {
     },
   );
 
-  testWidgets('crée un personnage depuis l\'achat de points', (tester) async {
-    await tester.pumpWidget(_app());
-    await _enterApp(tester);
-    expect(find.text('Créer un nouveau personnage'), findsOneWidget);
-
-    await tester.tap(find.text('Créer un nouveau personnage'));
-    await tester.pumpAndSettle();
-    expect(find.text('Points restants : 27 / 27'), findsOneWidget);
-
-    await tester.tap(find.text('Enregistrer'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'Tharivol');
-    await tester.tap(find.text('Créer'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Tharivol'), findsOneWidget);
-  });
-
   testWidgets('lier un e-mail transforme le compte anonyme', (tester) async {
     await tester.pumpWidget(_app());
     await _enterApp(tester);

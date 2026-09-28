@@ -37,15 +37,28 @@ class CharactersController {
     return uid;
   }
 
+  /// Crée un personnage niveau 1 à partir des choix de l'assistant.
   Future<CharacterDoc> create({
     required String name,
     required AbilityScores scores,
+    String? classId,
+    String? speciesId,
+    String? subspeciesId,
+    String? backgroundId,
+    String? alignment,
+    List<String> languages = const [],
   }) async {
     final now = DateTime.now();
     final doc = CharacterDoc(
       id: _repo.newId(),
       name: name.trim(),
       scores: scores,
+      classId: classId,
+      speciesId: speciesId,
+      subspeciesId: subspeciesId,
+      backgroundId: backgroundId,
+      alignment: alignment,
+      languages: languages,
       createdAt: now,
       updatedAt: now,
     );
