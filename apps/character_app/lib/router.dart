@@ -12,6 +12,7 @@ import 'features/admin/admin_species_editor_screen.dart';
 import 'features/admin/admin_subclass_editor_screen.dart';
 import 'features/admin/admin_spell_editor_screen.dart';
 import 'features/admin/admin_subspecies_editor_screen.dart';
+import 'features/admin/admin_table_screen.dart';
 import 'features/auth/account_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/point_buy/point_buy_screen.dart';
@@ -32,6 +33,7 @@ abstract final class AppRoutes {
   static const adminInvocations = '/admin/invocations';
   static const adminMonsters = '/admin/monsters';
   static const adminNpcs = '/admin/npcs';
+  static const adminTable = '/admin/table';
   static const adminLevelProgression = '/admin/level-progression';
 }
 
@@ -84,6 +86,10 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'invocations',
               builder: (context, state) => const AdminInvocationEditorScreen(),
+            ),
+            GoRoute(
+              path: 'table',
+              builder: (context, state) => const AdminTableScreen(),
             ),
             GoRoute(
               path: 'npcs',
