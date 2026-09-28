@@ -2,43 +2,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/admin_background_doc.dart';
-import '../../data/admin_background_repository.dart';
 import '../../data/admin_character_entry.dart';
 import '../../data/admin_character_repository.dart';
 import '../../data/admin_invocation_doc.dart';
-import '../../data/admin_invocation_repository.dart';
 import '../../data/admin_monster_doc.dart';
-import '../../data/admin_monster_repository.dart';
 import '../../data/admin_npc_doc.dart';
-import '../../data/admin_npc_repository.dart';
 import '../../data/admin_repository.dart';
 import '../../data/admin_class_doc.dart';
-import '../../data/admin_class_repository.dart';
 import '../../data/admin_feat_doc.dart';
-import '../../data/admin_feat_repository.dart';
 import '../../data/admin_species_doc.dart';
-import '../../data/admin_species_repository.dart';
 import '../../data/admin_spell_doc.dart';
-import '../../data/admin_spell_repository.dart';
 import '../../data/admin_subclass_doc.dart';
-import '../../data/admin_subclass_repository.dart';
 import '../../data/admin_subspecies_doc.dart';
-import '../../data/admin_subspecies_repository.dart';
 import '../../data/admin_table_doc.dart';
+import '../../data/content_repository.dart';
 import '../../data/admin_table_repository.dart';
-import '../../data/firestore_admin_background_repository.dart';
 import '../../data/firestore_admin_character_repository.dart';
-import '../../data/firestore_admin_class_repository.dart';
-import '../../data/firestore_admin_feat_repository.dart';
-import '../../data/firestore_admin_invocation_repository.dart';
-import '../../data/firestore_admin_monster_repository.dart';
-import '../../data/firestore_admin_npc_repository.dart';
 import '../../data/firestore_admin_repository.dart';
-import '../../data/firestore_admin_species_repository.dart';
-import '../../data/firestore_admin_spell_repository.dart';
-import '../../data/firestore_admin_subclass_repository.dart';
-import '../../data/firestore_admin_subspecies_repository.dart';
 import '../../data/firestore_admin_table_repository.dart';
+import '../../data/firestore_content_repository.dart';
 import '../../providers/content_providers.dart';
 import '../auth/auth_providers.dart';
 import 'background_merge.dart';
@@ -68,10 +50,14 @@ final allCharactersProvider = StreamProvider<List<AdminCharacterEntry>>(
 );
 
 /// Dépôt des espèces éditées par un admin ; remplacé par
-/// `InMemoryAdminSpeciesRepository` dans les tests.
-final adminSpeciesRepositoryProvider = Provider<AdminSpeciesRepository>(
-  (ref) => FirestoreAdminSpeciesRepository(FirebaseFirestore.instance),
-);
+/// `InMemoryContentRepository` dans les tests.
+final adminSpeciesRepositoryProvider =
+    Provider<ContentRepository<AdminSpeciesDoc>>(
+      (ref) => FirestoreContentRepository(
+        _content('species'),
+        AdminSpeciesDoc.fromMap,
+      ),
+    );
 
 final _speciesOverridesProvider = StreamProvider<List<AdminSpeciesDoc>>(
   (ref) => ref.watch(adminSpeciesRepositoryProvider).watchAll(),
@@ -96,10 +82,14 @@ final allSpeciesProvider = Provider<AsyncValue<List<AdminSpeciesDoc>>>((ref) {
 });
 
 /// Dépôt des sous-espèces éditées par un admin ; remplacé par
-/// `InMemoryAdminSubspeciesRepository` dans les tests.
-final adminSubspeciesRepositoryProvider = Provider<AdminSubspeciesRepository>(
-  (ref) => FirestoreAdminSubspeciesRepository(FirebaseFirestore.instance),
-);
+/// `InMemoryContentRepository` dans les tests.
+final adminSubspeciesRepositoryProvider =
+    Provider<ContentRepository<AdminSubspeciesDoc>>(
+      (ref) => FirestoreContentRepository(
+        _content('subspecies'),
+        AdminSubspeciesDoc.fromMap,
+      ),
+    );
 
 /// Aucune sous-espèce dans le pack SRD statique : pas de fusion nécessaire,
 /// contrairement aux espèces.
@@ -108,9 +98,10 @@ final allSubspeciesProvider = StreamProvider<List<AdminSubspeciesDoc>>(
 );
 
 /// Dépôt des sorts édités par un admin ; remplacé par
-/// `InMemoryAdminSpellRepository` dans les tests.
-final adminSpellRepositoryProvider = Provider<AdminSpellRepository>(
-  (ref) => FirestoreAdminSpellRepository(FirebaseFirestore.instance),
+/// `InMemoryContentRepository` dans les tests.
+final adminSpellRepositoryProvider = Provider<ContentRepository<AdminSpellDoc>>(
+  (ref) =>
+      FirestoreContentRepository(_content('spells'), AdminSpellDoc.fromMap),
 );
 
 /// Aucun sort dans le pack SRD statique : pas de fusion nécessaire.
@@ -119,9 +110,9 @@ final allSpellsProvider = StreamProvider<List<AdminSpellDoc>>(
 );
 
 /// Dépôt des dons édités par un admin ; remplacé par
-/// `InMemoryAdminFeatRepository` dans les tests.
-final adminFeatRepositoryProvider = Provider<AdminFeatRepository>(
-  (ref) => FirestoreAdminFeatRepository(FirebaseFirestore.instance),
+/// `InMemoryContentRepository` dans les tests.
+final adminFeatRepositoryProvider = Provider<ContentRepository<AdminFeatDoc>>(
+  (ref) => FirestoreContentRepository(_content('feats'), AdminFeatDoc.fromMap),
 );
 
 /// Aucun don dans le pack SRD statique : pas de fusion nécessaire.
@@ -130,9 +121,10 @@ final allFeatsProvider = StreamProvider<List<AdminFeatDoc>>(
 );
 
 /// Dépôt des classes éditées par un admin ; remplacé par
-/// `InMemoryAdminClassRepository` dans les tests.
-final adminClassRepositoryProvider = Provider<AdminClassRepository>(
-  (ref) => FirestoreAdminClassRepository(FirebaseFirestore.instance),
+/// `InMemoryContentRepository` dans les tests.
+final adminClassRepositoryProvider = Provider<ContentRepository<AdminClassDoc>>(
+  (ref) =>
+      FirestoreContentRepository(_content('classes'), AdminClassDoc.fromMap),
 );
 
 /// Aucune classe dans le pack SRD statique : pas de fusion nécessaire.
@@ -141,10 +133,14 @@ final allClassesProvider = StreamProvider<List<AdminClassDoc>>(
 );
 
 /// Dépôt des sous-classes éditées par un admin ; remplacé par
-/// `InMemoryAdminSubclassRepository` dans les tests.
-final adminSubclassRepositoryProvider = Provider<AdminSubclassRepository>(
-  (ref) => FirestoreAdminSubclassRepository(FirebaseFirestore.instance),
-);
+/// `InMemoryContentRepository` dans les tests.
+final adminSubclassRepositoryProvider =
+    Provider<ContentRepository<AdminSubclassDoc>>(
+      (ref) => FirestoreContentRepository(
+        _content('subclasses'),
+        AdminSubclassDoc.fromMap,
+      ),
+    );
 
 /// Aucune sous-classe dans le pack SRD statique : pas de fusion nécessaire.
 final allSubclassesProvider = StreamProvider<List<AdminSubclassDoc>>(
@@ -152,10 +148,14 @@ final allSubclassesProvider = StreamProvider<List<AdminSubclassDoc>>(
 );
 
 /// Dépôt des historiques édités par un admin ; remplacé par
-/// `InMemoryAdminBackgroundRepository` dans les tests.
-final adminBackgroundRepositoryProvider = Provider<AdminBackgroundRepository>(
-  (ref) => FirestoreAdminBackgroundRepository(FirebaseFirestore.instance),
-);
+/// `InMemoryContentRepository` dans les tests.
+final adminBackgroundRepositoryProvider =
+    Provider<ContentRepository<AdminBackgroundDoc>>(
+      (ref) => FirestoreContentRepository(
+        _content('backgrounds'),
+        AdminBackgroundDoc.fromMap,
+      ),
+    );
 
 final _backgroundOverridesProvider = StreamProvider<List<AdminBackgroundDoc>>(
   (ref) => ref.watch(adminBackgroundRepositoryProvider).watchAll(),
@@ -183,10 +183,14 @@ final allBackgroundsProvider = Provider<AsyncValue<List<AdminBackgroundDoc>>>((
 });
 
 /// Dépôt des manifestations occultes éditées par un admin ; remplacé par
-/// `InMemoryAdminInvocationRepository` dans les tests.
-final adminInvocationRepositoryProvider = Provider<AdminInvocationRepository>(
-  (ref) => FirestoreAdminInvocationRepository(FirebaseFirestore.instance),
-);
+/// `InMemoryContentRepository` dans les tests.
+final adminInvocationRepositoryProvider =
+    Provider<ContentRepository<AdminInvocationDoc>>(
+      (ref) => FirestoreContentRepository(
+        _content('invocations'),
+        AdminInvocationDoc.fromMap,
+      ),
+    );
 
 /// Aucune manifestation dans le pack SRD statique : pas de fusion nécessaire.
 final allInvocationsProvider = StreamProvider<List<AdminInvocationDoc>>(
@@ -194,19 +198,24 @@ final allInvocationsProvider = StreamProvider<List<AdminInvocationDoc>>(
 );
 
 /// Dépôt des monstres édités par un admin ; remplacé par
-/// `InMemoryAdminMonsterRepository` dans les tests.
-final adminMonsterRepositoryProvider = Provider<AdminMonsterRepository>(
-  (ref) => FirestoreAdminMonsterRepository(FirebaseFirestore.instance),
-);
+/// `InMemoryContentRepository` dans les tests.
+final adminMonsterRepositoryProvider =
+    Provider<ContentRepository<AdminMonsterDoc>>(
+      (ref) => FirestoreContentRepository(
+        _content('monsters'),
+        AdminMonsterDoc.fromMap,
+      ),
+    );
 
 /// Aucun monstre dans le pack SRD statique : pas de fusion nécessaire.
 final allMonstersProvider = StreamProvider<List<AdminMonsterDoc>>(
   (ref) => ref.watch(adminMonsterRepositoryProvider).watchAll(),
 );
 
-/// Dépôt des PNJ ; remplacé par `InMemoryAdminNpcRepository` dans les tests.
-final adminNpcRepositoryProvider = Provider<AdminNpcRepository>(
-  (ref) => FirestoreAdminNpcRepository(FirebaseFirestore.instance),
+/// Dépôt des PNJ ; remplacé par `InMemoryContentRepository` dans les tests.
+final adminNpcRepositoryProvider = Provider<ContentRepository<AdminNpcDoc>>(
+  (ref) =>
+      FirestoreContentRepository(_db.collection('npcs'), AdminNpcDoc.fromMap),
 );
 
 /// Tous les PNJ, en temps réel (lisibles par les seuls admins).
@@ -224,3 +233,9 @@ final adminTableRepositoryProvider = Provider<AdminTableRepository>(
 final adminTableProvider = StreamProvider<AdminTableDoc?>(
   (ref) => ref.watch(adminTableRepositoryProvider).watch(),
 );
+
+FirebaseFirestore get _db => FirebaseFirestore.instance;
+
+/// `content/<kind>/items` : collection d'un type de contenu de règles.
+CollectionReference<Map<String, dynamic>> _content(String kind) =>
+    _db.collection('content').doc(kind).collection('items');

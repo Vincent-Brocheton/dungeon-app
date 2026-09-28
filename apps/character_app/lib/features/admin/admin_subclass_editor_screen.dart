@@ -9,12 +9,6 @@ import '../../theme/app_theme.dart';
 import 'admin_form_fields.dart';
 import 'admin_providers.dart';
 
-String _sourceSubtitle(SpeciesSource source) => switch (source) {
-  SpeciesSource.srd => 'Contenu SRD 5.2 · modifiable',
-  SpeciesSource.official => 'Contenu officiel · modifiable',
-  SpeciesSource.homebrew => 'Sous-classe créée pour ta table · modifiable',
-};
-
 /// Éditeur de sous-classes : liste groupée par classe parente à gauche,
 /// fiche éditable à droite. Reprend `SubclassesEditor.dc.html` — sans
 /// sidebar. Aucune sous-classe dans le pack SRD statique : tout est
@@ -237,8 +231,10 @@ class _AdminSubclassEditorScreenState
                         ),
                       ),
                       for (final item in grouped[groupId]!) ...[
-                        _SubclassTile(
-                          item: item,
+                        AdminListTile(
+                          name: item.name,
+                          badge: item.source.shortLabel,
+                          subtitle: 'Choisie au niv. ${item.level}',
                           active: item.id == _selectedId,
                           onTap: () => _load(item, isNew: false),
                         ),
@@ -313,7 +309,7 @@ class _AdminSubclassEditorScreenState
             child: Text(
               _isNewDraft
                   ? 'Nouveau contenu, pas encore enregistré'
-                  : _sourceSubtitle(_source),
+                  : adminSourceSubtitle(_source, 'Sous-classe créée'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.textMuted,
               ),
@@ -405,77 +401,6 @@ class _AdminSubclassEditorScreenState
             maxLines: 5,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SubclassTile extends StatelessWidget {
-  const _SubclassTile({
-    required this.item,
-    required this.active,
-    required this.onTap,
-  });
-
-  final AdminSubclassDoc item;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          border: Border.all(
-            color: active ? AppTheme.accent : AppTheme.border,
-            width: active ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    item.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppTheme.border),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    item.source.shortLabel,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textMuted,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Text(
-              'Choisie au niv. ${item.level}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: AppTheme.textMuted,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

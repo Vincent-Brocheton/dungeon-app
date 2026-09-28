@@ -1,4 +1,5 @@
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// 20 entrées (niveaux 1 à 20), complétées par des chaînes vides si la liste
 /// stockée est plus courte ou absente.
@@ -27,7 +28,7 @@ class ResourceColumn {
 
 /// Une classe : `content/classes/{id}` dans Firestore. Aucune classe dans le
 /// pack SRD statique — tout est admin-créé, comme les sorts et les dons.
-class AdminClassDoc {
+class AdminClassDoc implements ContentDoc {
   const AdminClassDoc({
     required this.id,
     required this.name,
@@ -61,6 +62,7 @@ class AdminClassDoc {
   ];
   static const recoveries = ['Repos court', 'Repos long'];
 
+  @override
   final String id;
   final String name;
   final SpeciesSource source;
@@ -128,6 +130,7 @@ class AdminClassDoc {
     updatedAt: updatedAt ?? this.updatedAt,
   );
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'source': source.name,

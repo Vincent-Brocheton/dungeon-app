@@ -222,8 +222,10 @@ class _AdminNpcEditorScreenState extends ConsumerState<AdminNpcEditorScreen> {
                     child: Text(type.toUpperCase(), style: muted),
                   ),
                   for (final item in grouped[type]!) ...[
-                    _NpcTile(
-                      item: item,
+                    AdminListTile(
+                      name: item.name,
+                      badge: item.source.shortLabel,
+                      subtitle: item.listLabel,
                       active: item.id == _selectedId,
                       onTap: () => _load(item, isNew: false),
                     ),
@@ -453,70 +455,6 @@ class _AdminNpcEditorScreenState extends ConsumerState<AdminNpcEditorScreen> {
             maxLines: 5,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _NpcTile extends StatelessWidget {
-  const _NpcTile({
-    required this.item,
-    required this.active,
-    required this.onTap,
-  });
-
-  final AdminNpcDoc item;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final muted = theme.textTheme.labelSmall?.copyWith(
-      color: AppTheme.textMuted,
-    );
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          border: Border.all(
-            color: active ? AppTheme.accent : AppTheme.border,
-            width: active ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    item.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppTheme.border),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(item.source.shortLabel, style: muted),
-                ),
-              ],
-            ),
-            Text(item.listLabel, style: muted),
-          ],
-        ),
       ),
     );
   }

@@ -1,10 +1,11 @@
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// Une sous-espèce (variante rattachée à une espèce parente, ex. Haut-Elfe
 /// pour Elfe) : `content/subspecies/{id}` dans Firestore. Contrairement aux
 /// espèces, il n'existe aucune sous-espèce dans le pack SRD statique — tout
 /// vient d'ici, pas de fusion à faire.
-class AdminSubspeciesDoc {
+class AdminSubspeciesDoc implements ContentDoc {
   const AdminSubspeciesDoc({
     required this.id,
     required this.name,
@@ -19,6 +20,7 @@ class AdminSubspeciesDoc {
     this.description = '',
   });
 
+  @override
   final String id;
   final String name;
   final String parentSpeciesId;
@@ -33,6 +35,7 @@ class AdminSubspeciesDoc {
   final String description;
   final DateTime updatedAt;
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'parentSpeciesId': parentSpeciesId,

@@ -291,7 +291,6 @@ class _SpellList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Column(
       children: [
         Padding(
@@ -314,65 +313,12 @@ class _SpellList extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               final active = item.id == selectedId;
-              return InkWell(
-                borderRadius: BorderRadius.circular(8),
+              return AdminListTile(
+                name: item.name,
+                badge: item.source.shortLabel,
+                subtitle: '${_levelLabel(item.level)} · ${item.school}',
+                active: active,
                 onTap: () => onSelect(item),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border.all(
-                      color: active ? AppTheme.accent : AppTheme.border,
-                      width: active ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppTheme.border),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              item.source.shortLabel,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppTheme.textMuted,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${_levelLabel(item.level)} · ${item.school}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             },
           ),

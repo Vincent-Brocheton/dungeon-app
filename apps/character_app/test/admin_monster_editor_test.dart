@@ -1,9 +1,10 @@
 import 'package:character_app/app.dart';
+import 'package:character_app/data/admin_invocation_doc.dart';
+import 'package:character_app/data/admin_monster_doc.dart';
 import 'package:character_app/data/in_memory_admin_character_repository.dart';
-import 'package:character_app/data/in_memory_admin_invocation_repository.dart';
-import 'package:character_app/data/in_memory_admin_monster_repository.dart';
 import 'package:character_app/data/in_memory_admin_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
+import 'package:character_app/data/in_memory_content_repository.dart';
 import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
@@ -12,36 +13,36 @@ import 'package:character_app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'fakes/fake_auth_service.dart';
 
-Widget _app(InMemoryAdminMonsterRepository monsters) => ProviderScope(
-  overrides: [
-    authServiceProvider.overrideWithValue(
-      FakeAuthService(
-        initial: const AppUser(
-          uid: 'me',
-          isAnonymous: false,
-          email: 'me@test.dev',
+Widget _app(InMemoryContentRepository<AdminMonsterDoc> monsters) =>
+    ProviderScope(
+      overrides: [
+        authServiceProvider.overrideWithValue(
+          FakeAuthService(
+            initial: const AppUser(
+              uid: 'me',
+              isAnonymous: false,
+              email: 'me@test.dev',
+            ),
+          ),
         ),
-      ),
-    ),
-    characterRepositoryProvider.overrideWithValue(
-      InMemoryCharacterRepository(),
-    ),
-    adminRepositoryProvider.overrideWithValue(
-      InMemoryAdminRepository(admins: {'me'}),
-    ),
-    adminCharacterRepositoryProvider.overrideWithValue(
-      InMemoryAdminCharacterRepository(),
-    ),
-    adminInvocationRepositoryProvider.overrideWithValue(
-      InMemoryAdminInvocationRepository(),
-    ),
-    adminMonsterRepositoryProvider.overrideWithValue(monsters),
-  ],
-  child: const CharacterApp(),
-);
+        characterRepositoryProvider.overrideWithValue(
+          InMemoryCharacterRepository(),
+        ),
+        adminRepositoryProvider.overrideWithValue(
+          InMemoryAdminRepository(admins: {'me'}),
+        ),
+        adminCharacterRepositoryProvider.overrideWithValue(
+          InMemoryAdminCharacterRepository(),
+        ),
+        adminInvocationRepositoryProvider.overrideWithValue(
+          InMemoryContentRepository<AdminInvocationDoc>(),
+        ),
+        adminMonsterRepositoryProvider.overrideWithValue(monsters),
+      ],
+      child: const CharacterApp(),
+    );
 
 Finder _field(String key) =>
     find.descendant(of: find.byKey(Key(key)), matching: find.byType(TextField));
@@ -60,7 +61,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final monsters = InMemoryAdminMonsterRepository();
+    final monsters = InMemoryContentRepository<AdminMonsterDoc>();
     appRouter.go(AppRoutes.home);
     await tester.pumpWidget(_app(monsters));
     await tester.pumpAndSettle();

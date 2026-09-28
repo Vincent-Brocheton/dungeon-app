@@ -1,9 +1,10 @@
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// Une manifestation occulte (aptitude de pacte de l'Occultiste) :
 /// `content/invocations/{id}` dans Firestore. Aucune dans le pack SRD
 /// statique — tout est admin-créé, comme les dons.
-class AdminInvocationDoc {
+class AdminInvocationDoc implements ContentDoc {
   const AdminInvocationDoc({
     required this.id,
     required this.name,
@@ -17,6 +18,7 @@ class AdminInvocationDoc {
     this.effect = '',
   });
 
+  @override
   final String id;
   final String name;
   final SpeciesSource source;
@@ -42,6 +44,7 @@ class AdminInvocationDoc {
     return parts.isEmpty ? 'Sans prérequis' : parts.join(' · ');
   }
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'source': source.name,

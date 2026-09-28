@@ -1,8 +1,9 @@
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// Un don : `content/feats/{id}` dans Firestore. Comme les sorts, aucun don
 /// n'existe dans le pack SRD statique — tout est admin-créé.
-class AdminFeatDoc {
+class AdminFeatDoc implements ContentDoc {
   const AdminFeatDoc({
     required this.id,
     required this.name,
@@ -31,6 +32,7 @@ class AdminFeatDoc {
   static const defaultDistribution =
       'Une seule, ou 1 sur deux caractéristiques différentes';
 
+  @override
   final String id;
   final String name;
   final SpeciesSource source;
@@ -58,6 +60,7 @@ class AdminFeatDoc {
   final String effect;
   final DateTime updatedAt;
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'source': source.name,

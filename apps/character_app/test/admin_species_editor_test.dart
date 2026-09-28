@@ -1,8 +1,9 @@
 import 'package:character_app/app.dart';
+import 'package:character_app/data/admin_species_doc.dart';
 import 'package:character_app/data/in_memory_admin_character_repository.dart';
 import 'package:character_app/data/in_memory_admin_repository.dart';
-import 'package:character_app/data/in_memory_admin_species_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
+import 'package:character_app/data/in_memory_content_repository.dart';
 import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
@@ -13,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rules_engine/rules_engine.dart';
-
 import 'fakes/fake_auth_service.dart';
 
 /// Pack figé plutôt que l'asset réel (`loadSrd52Pack`) : plusieurs
@@ -52,7 +52,7 @@ Widget _app() => ProviderScope(
       InMemoryAdminCharacterRepository(),
     ),
     adminSpeciesRepositoryProvider.overrideWithValue(
-      InMemoryAdminSpeciesRepository(),
+      InMemoryContentRepository<AdminSpeciesDoc>(),
     ),
     srdPackProvider.overrideWith((ref) async => _testPack),
   ],

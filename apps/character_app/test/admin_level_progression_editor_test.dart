@@ -2,10 +2,9 @@ import 'package:character_app/app.dart';
 import 'package:character_app/data/admin_class_doc.dart';
 import 'package:character_app/data/admin_subclass_doc.dart';
 import 'package:character_app/data/in_memory_admin_character_repository.dart';
-import 'package:character_app/data/in_memory_admin_class_repository.dart';
 import 'package:character_app/data/in_memory_admin_repository.dart';
-import 'package:character_app/data/in_memory_admin_subclass_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
+import 'package:character_app/data/in_memory_content_repository.dart';
 import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
@@ -14,12 +13,11 @@ import 'package:character_app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'fakes/fake_auth_service.dart';
 
 Widget _app(
-  InMemoryAdminClassRepository classes,
-  InMemoryAdminSubclassRepository subclasses,
+  InMemoryContentRepository<AdminClassDoc> classes,
+  InMemoryContentRepository<AdminSubclassDoc> subclasses,
 ) => ProviderScope(
   overrides: [
     authServiceProvider.overrideWithValue(
@@ -58,7 +56,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final classes = InMemoryAdminClassRepository(
+    final classes = InMemoryContentRepository<AdminClassDoc>(
       seed: [
         AdminClassDoc(
           id: 'fighter',
@@ -67,7 +65,7 @@ void main() {
         ),
       ],
     );
-    final subclasses = InMemoryAdminSubclassRepository(
+    final subclasses = InMemoryContentRepository<AdminSubclassDoc>(
       seed: [
         AdminSubclassDoc(
           id: 'champion',
@@ -138,7 +136,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final classes = InMemoryAdminClassRepository(
+    final classes = InMemoryContentRepository<AdminClassDoc>(
       seed: [
         AdminClassDoc(id: 'bard', name: 'Barde', updatedAt: DateTime(2026)),
         AdminClassDoc(
@@ -149,7 +147,9 @@ void main() {
       ],
     );
     appRouter.go(AppRoutes.home);
-    await tester.pumpWidget(_app(classes, InMemoryAdminSubclassRepository()));
+    await tester.pumpWidget(
+      _app(classes, InMemoryContentRepository<AdminSubclassDoc>()),
+    );
     await tester.pumpAndSettle();
     appRouter.go(AppRoutes.adminClasses);
     await tester.pumpAndSettle();

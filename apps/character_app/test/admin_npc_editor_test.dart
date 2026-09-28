@@ -1,9 +1,10 @@
 import 'package:character_app/app.dart';
+import 'package:character_app/data/admin_npc_doc.dart';
+import 'package:character_app/data/admin_species_doc.dart';
 import 'package:character_app/data/in_memory_admin_character_repository.dart';
-import 'package:character_app/data/in_memory_admin_npc_repository.dart';
 import 'package:character_app/data/in_memory_admin_repository.dart';
-import 'package:character_app/data/in_memory_admin_species_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
+import 'package:character_app/data/in_memory_content_repository.dart';
 import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
@@ -14,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rules_engine/rules_engine.dart';
-
 import 'fakes/fake_auth_service.dart';
 
 /// Pack figé plutôt que l'asset réel : voir la même précaution dans
@@ -29,7 +29,7 @@ final _testPack = ContentPack(
   ],
 );
 
-Widget _app(InMemoryAdminNpcRepository npcs) => ProviderScope(
+Widget _app(InMemoryContentRepository<AdminNpcDoc> npcs) => ProviderScope(
   overrides: [
     authServiceProvider.overrideWithValue(
       FakeAuthService(
@@ -50,7 +50,7 @@ Widget _app(InMemoryAdminNpcRepository npcs) => ProviderScope(
       InMemoryAdminCharacterRepository(),
     ),
     adminSpeciesRepositoryProvider.overrideWithValue(
-      InMemoryAdminSpeciesRepository(),
+      InMemoryContentRepository<AdminSpeciesDoc>(),
     ),
     adminNpcRepositoryProvider.overrideWithValue(npcs),
     srdPackProvider.overrideWith((ref) async => _testPack),
@@ -76,7 +76,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final npcs = InMemoryAdminNpcRepository();
+    final npcs = InMemoryContentRepository<AdminNpcDoc>();
     appRouter.go(AppRoutes.home);
     await tester.pumpWidget(_app(npcs));
     await tester.pumpAndSettle();

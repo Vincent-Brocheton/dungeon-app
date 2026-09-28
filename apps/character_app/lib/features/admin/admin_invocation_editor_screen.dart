@@ -9,12 +9,6 @@ import 'admin_compendium_tabs.dart';
 import 'admin_form_fields.dart';
 import 'admin_providers.dart';
 
-String _sourceSubtitle(SpeciesSource source) => switch (source) {
-  SpeciesSource.srd => 'Contenu SRD 5.2 · modifiable',
-  SpeciesSource.official => 'Contenu officiel · modifiable',
-  SpeciesSource.homebrew => 'Manifestation créée pour ta table · modifiable',
-};
-
 /// Éditeur de manifestations occultes : liste (prérequis résumés sous le
 /// nom) à gauche, fiche éditable à droite. Reprend
 /// `InvocationsEditorNoModal.dc.html` — sans sidebar ni import CSV (bouton
@@ -179,10 +173,6 @@ class _AdminInvocationEditorScreenState
   }
 
   Widget _buildList(List<AdminInvocationDoc> items) {
-    final theme = Theme.of(context);
-    final muted = theme.textTheme.labelSmall?.copyWith(
-      color: AppTheme.textMuted,
-    );
     return Column(
       children: [
         Padding(
@@ -205,57 +195,12 @@ class _AdminInvocationEditorScreenState
             itemBuilder: (context, index) {
               final item = items[index];
               final active = item.id == _selectedId;
-              return InkWell(
-                borderRadius: BorderRadius.circular(8),
+              return AdminListTile(
+                name: item.name,
+                badge: item.source.shortLabel,
+                subtitle: item.prerequisitesLabel,
+                active: active,
                 onTap: () => _load(item, isNew: false),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border.all(
-                      color: active ? AppTheme.accent : AppTheme.border,
-                      width: active ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppTheme.border),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(item.source.shortLabel, style: muted),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        item.prerequisitesLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: muted,
-                      ),
-                    ],
-                  ),
-                ),
               );
             },
           ),
@@ -300,7 +245,7 @@ class _AdminInvocationEditorScreenState
             child: Text(
               _isNewDraft
                   ? 'Nouveau contenu, pas encore enregistré'
-                  : _sourceSubtitle(_source),
+                  : adminSourceSubtitle(_source, 'Manifestation créée'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.textMuted,
               ),

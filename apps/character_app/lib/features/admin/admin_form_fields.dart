@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/admin_species_doc.dart';
 import '../../theme/app_theme.dart';
 
 /// Champ texte labellisé, style commun aux fiches d'édition de compendium
@@ -212,6 +213,92 @@ class AdminCheckbox extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Sous-titre d'une fiche selon sa source ; [homebrew] nomme le contenu
+/// maison (ex. « Classe créée »).
+String adminSourceSubtitle(SpeciesSource source, String homebrew) =>
+    switch (source) {
+      SpeciesSource.srd => 'Contenu SRD 5.2 · modifiable',
+      SpeciesSource.official => 'Contenu officiel · modifiable',
+      SpeciesSource.homebrew => '$homebrew pour ta table · modifiable',
+    };
+
+/// Carte d'une liste de compendium : nom, badge de source, sous-titre
+/// optionnel, mise en avant de l'élément sélectionné.
+class AdminListTile extends StatelessWidget {
+  const AdminListTile({
+    super.key,
+    required this.name,
+    required this.badge,
+    required this.active,
+    required this.onTap,
+    this.subtitle,
+  });
+
+  final String name;
+  final String badge;
+  final String? subtitle;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.labelSmall?.copyWith(
+      color: AppTheme.textMuted,
+    );
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          border: Border.all(
+            color: active ? AppTheme.accent : AppTheme.border,
+            width: active ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppTheme.border),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(badge, style: muted),
+                ),
+              ],
+            ),
+            if (subtitle != null)
+              Text(
+                subtitle!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: muted,
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -1,9 +1,10 @@
 import 'package:character_app/app.dart';
+import 'package:character_app/data/admin_class_doc.dart';
+import 'package:character_app/data/admin_subclass_doc.dart';
 import 'package:character_app/data/in_memory_admin_character_repository.dart';
-import 'package:character_app/data/in_memory_admin_class_repository.dart';
 import 'package:character_app/data/in_memory_admin_repository.dart';
-import 'package:character_app/data/in_memory_admin_subclass_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
+import 'package:character_app/data/in_memory_content_repository.dart';
 import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
@@ -12,7 +13,6 @@ import 'package:character_app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'fakes/fake_auth_service.dart';
 
 Widget _app() => ProviderScope(
@@ -36,10 +36,10 @@ Widget _app() => ProviderScope(
       InMemoryAdminCharacterRepository(),
     ),
     adminClassRepositoryProvider.overrideWithValue(
-      InMemoryAdminClassRepository(),
+      InMemoryContentRepository<AdminClassDoc>(),
     ),
     adminSubclassRepositoryProvider.overrideWithValue(
-      InMemoryAdminSubclassRepository(),
+      InMemoryContentRepository<AdminSubclassDoc>(),
     ),
   ],
   child: const CharacterApp(),

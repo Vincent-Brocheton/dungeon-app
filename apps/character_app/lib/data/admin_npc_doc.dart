@@ -1,11 +1,12 @@
 import 'admin_monster_doc.dart';
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// Un PNJ (fiche de scène du MJ) : `npcs/{id}` dans Firestore, lisible par
 /// les seuls admins. Bloc de stats plus léger que [AdminMonsterDoc] (une
 /// seule vitesse, immunités regroupées, seulement des actions), avec un rôle
 /// dans la scène et une espèce liée optionnelle.
-class AdminNpcDoc {
+class AdminNpcDoc implements ContentDoc {
   const AdminNpcDoc({
     required this.id,
     required this.name,
@@ -105,6 +106,7 @@ class AdminNpcDoc {
     return '$cr ($grouped PX)';
   }
 
+  @override
   final String id;
   final String name;
   final SpeciesSource source;
@@ -147,6 +149,7 @@ class AdminNpcDoc {
   String get listLabel =>
       role.trim().isEmpty ? 'DP $cr' : 'DP $cr · ${role.trim()}';
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'source': source.name,

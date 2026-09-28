@@ -9,12 +9,6 @@ import 'admin_compendium_tabs.dart';
 import 'admin_form_fields.dart';
 import 'admin_providers.dart';
 
-String _sourceSubtitle(SpeciesSource source) => switch (source) {
-  SpeciesSource.srd => 'Contenu SRD 5.2 · modifiable',
-  SpeciesSource.official => 'Contenu officiel · modifiable',
-  SpeciesSource.homebrew => 'Classe créée pour ta table · modifiable',
-};
-
 /// Éditeur de classes : liste à gauche, fiche éditable à droite. Reprend
 /// `ClassesEditorNoModal.dc.html` — sans sidebar ni import CSV (bouton
 /// présent, annonce juste qu'il arrive). Aucune classe dans le pack SRD
@@ -261,7 +255,7 @@ class _AdminClassEditorScreenState
             child: Text(
               _isNewDraft
                   ? 'Nouveau contenu, pas encore enregistré'
-                  : _sourceSubtitle(_source),
+                  : adminSourceSubtitle(_source, 'Classe créée'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.textMuted,
               ),
@@ -461,7 +455,6 @@ class _ClassList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Column(
       children: [
         Padding(
@@ -484,51 +477,11 @@ class _ClassList extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               final active = item.id == selectedId;
-              return InkWell(
-                borderRadius: BorderRadius.circular(8),
+              return AdminListTile(
+                name: item.name,
+                badge: item.source.shortLabel,
+                active: active,
                 onTap: () => onSelect(item),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border.all(
-                      color: active ? AppTheme.accent : AppTheme.border,
-                      width: active ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppTheme.border),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.source.shortLabel,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.textMuted,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             },
           ),

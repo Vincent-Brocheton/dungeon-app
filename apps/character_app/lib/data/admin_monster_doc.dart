@@ -1,4 +1,5 @@
 import 'admin_species_doc.dart' show SpeciesSource;
+import 'content_repository.dart';
 
 /// Entrée nommée d'un bloc de stats (aptitude, action, réaction…), avec la
 /// résolution automatique prévue pour le suivi de combat.
@@ -44,7 +45,7 @@ class MonsterEntry {
 
 /// Un monstre (bloc de stats) : `content/monsters/{id}` dans Firestore.
 /// Aucun dans le pack SRD statique — tout est admin-créé.
-class AdminMonsterDoc {
+class AdminMonsterDoc implements ContentDoc {
   const AdminMonsterDoc({
     required this.id,
     required this.name,
@@ -136,6 +137,7 @@ class AdminMonsterDoc {
     'description',
   ];
 
+  @override
   final String id;
   final String name;
   final SpeciesSource source;
@@ -190,6 +192,7 @@ class AdminMonsterDoc {
     return fp.isEmpty ? type : 'FP $fp · $type';
   }
 
+  @override
   Map<String, Object?> toMap() => {
     'name': name,
     'source': source.name,
