@@ -164,7 +164,7 @@ class _AdminMonsterEditorScreenState
                 ),
           ),
           IconButton(
-            tooltip: 'Nouveau contenu',
+            tooltip: 'Nouveau monstre',
             icon: const Icon(Icons.add),
             onPressed: _createDraft,
           ),

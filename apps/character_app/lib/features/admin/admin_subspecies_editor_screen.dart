@@ -356,9 +356,15 @@ class _SubspeciesList extends StatelessWidget {
             isExpanded: true,
             decoration: const InputDecoration(isDense: true),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Toutes')),
+              const DropdownMenuItem(
+                value: null,
+                child: Text('Espèce parente : Toutes'),
+              ),
               for (final s in speciesList)
-                DropdownMenuItem(value: s.id, child: Text(s.name)),
+                DropdownMenuItem(
+                  value: s.id,
+                  child: Text('Espèce parente : ${s.name}'),
+                ),
             ],
             onChanged: onParentFilterChanged,
           ),

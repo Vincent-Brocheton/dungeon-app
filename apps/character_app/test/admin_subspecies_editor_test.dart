@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rules_engine/rules_engine.dart';
+
 import 'fakes/fake_auth_service.dart';
 
 /// Pack figé plutôt que l'asset réel : voir la même précaution dans

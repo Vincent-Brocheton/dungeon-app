@@ -1,7 +1,12 @@
+import 'admin_species_doc.dart' show SpeciesSource;
+
 /// Document éditable par un admin (espèce, sort, monstre, PNJ…) : un
 /// identifiant et sa représentation stockée.
 abstract interface class ContentDoc {
   String get id;
+
+  /// Origine du contenu (SRD, officiel, homebrew).
+  SpeciesSource get source;
 
   Map<String, Object?> toMap();
 }

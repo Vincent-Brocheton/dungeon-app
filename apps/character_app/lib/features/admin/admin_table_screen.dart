@@ -46,6 +46,7 @@ class _AdminTableScreenState extends ConsumerState<AdminTableScreen> {
   var _restVariant = 'Standard';
   var _hitDiceRecovery = AdminTableDoc.hitDiceRecoveries.first;
   var _interruptedLongRest = AdminTableDoc.interruptedLongRests.first;
+  var _diceRollsInApp = true;
   var _sessions = <_Draft>[];
   var _journal = <_Draft>[];
 
@@ -69,6 +70,7 @@ class _AdminTableScreenState extends ConsumerState<AdminTableScreen> {
     _restVariant = doc.restVariant;
     _hitDiceRecovery = doc.hitDiceRecovery;
     _interruptedLongRest = doc.interruptedLongRest;
+    _diceRollsInApp = doc.diceRollsInApp;
     _sessions = [
       for (final s in doc.sessions) _Draft(title: s.title, text: s.text),
     ];
@@ -107,6 +109,7 @@ class _AdminTableScreenState extends ConsumerState<AdminTableScreen> {
               'restVariant': _restVariant,
               'hitDiceRecovery': _hitDiceRecovery,
               'interruptedLongRest': _interruptedLongRest,
+              'diceRollsInApp': _diceRollsInApp,
               'sessions': [for (final e in entries(_sessions)) e.toMap()],
               'journal': [for (final e in entries(_journal)) e.toMap()],
               'updatedAt': DateTime.now(),
@@ -324,6 +327,36 @@ class _AdminTableScreenState extends ConsumerState<AdminTableScreen> {
                       ),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+          vgap,
+          _Section(
+            title: 'Jets de dés',
+            child: Row(
+              children: [
+                Switch(
+                  key: const Key('table-dice-switch'),
+                  value: _diceRollsInApp,
+                  onChanged: (v) => setState(() => _diceRollsInApp = v),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Autoriser les jets de dés dans l'application",
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      Text(
+                        'Sinon, les joueurs lancent leurs dés physiques et '
+                        'renseignent eux-mêmes le résultat sur leur fiche.',
+                        style: muted,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

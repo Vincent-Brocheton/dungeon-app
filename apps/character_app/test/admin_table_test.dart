@@ -90,6 +90,8 @@ void main() {
     await tester.enterText(_field('house-rule-0'), 'Points de destin');
     await tester.tap(find.text('Repos lent (survie)'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('table-dice-switch')));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('+ Nouvelle entrée'));
     await tester.pumpAndSettle();
     await tester.enterText(_field('journal-title-0'), 'Séance 12');
@@ -104,6 +106,7 @@ void main() {
     expect(saved.houseRules.single.enabled, isTrue);
     expect(saved.restVariant, 'Repos lent (survie)');
     expect(saved.journal.single.title, 'Séance 12');
+    expect(saved.diceRollsInApp, isFalse);
 
     // Rouvert : la table enregistrée est reprise.
     appRouter.go(AppRoutes.home);

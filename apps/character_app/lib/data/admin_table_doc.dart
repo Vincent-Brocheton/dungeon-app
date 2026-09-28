@@ -42,6 +42,7 @@ class AdminTableDoc {
     this.maxShortRests = 2,
     this.hitDiceRecovery = 'Tous les dés de vie (règle 2024)',
     this.interruptedLongRest = 'Ne compte pas — à recommencer',
+    this.diceRollsInApp = true,
     this.nextSessionWhen = '',
     this.nextSessionWhere = '',
     this.nextSessionNote = '',
@@ -84,6 +85,10 @@ class AdminTableDoc {
   final int maxShortRests;
   final String hitDiceRecovery;
   final String interruptedLongRest;
+
+  /// Jets de dés dans l'application ; sinon les joueurs lancent leurs dés
+  /// physiques et saisissent le résultat.
+  final bool diceRollsInApp;
   final String nextSessionWhen;
   final String nextSessionWhere;
   final String nextSessionNote;
@@ -104,6 +109,7 @@ class AdminTableDoc {
     'maxShortRests': maxShortRests,
     'hitDiceRecovery': hitDiceRecovery,
     'interruptedLongRest': interruptedLongRest,
+    'diceRollsInApp': diceRollsInApp,
     'nextSessionWhen': nextSessionWhen,
     'nextSessionWhere': nextSessionWhere,
     'nextSessionNote': nextSessionNote,
@@ -132,6 +138,7 @@ class AdminTableDoc {
           map['hitDiceRecovery'] as String? ?? hitDiceRecoveries.first,
       interruptedLongRest:
           map['interruptedLongRest'] as String? ?? interruptedLongRests.first,
+      diceRollsInApp: map['diceRollsInApp'] as bool? ?? true,
       nextSessionWhen: text('nextSessionWhen'),
       nextSessionWhere: text('nextSessionWhere'),
       nextSessionNote: text('nextSessionNote'),
