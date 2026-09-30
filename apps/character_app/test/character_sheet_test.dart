@@ -231,4 +231,47 @@ void main() {
     expect(find.text('DÉGÂTS — COUP CRITIQUE, DÉS DOUBLÉS'), findsOneWidget);
     expect(total('damage-total').data, '13');
   });
+
+  testWidgets('repos court avec un dé de vie, puis repos long', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan.copyWith(hpLost: 10, tempHp: 3));
+    appRouter.go(AppRoutes.character('durgan'));
+    await tester.pumpWidget(_app(characters, dice: [6]));
+    await tester.pumpAndSettle();
+    expect(find.text('2 / 12 PV'), findsOneWidget);
+    expect(find.text('Dés de vie 1d10 (0 utilisé)'), findsOneWidget);
+
+    // d10 = 6, Con +2.
+    await tester.tap(find.text('Repos court'));
+    await tester.pumpAndSettle();
+    expect(find.text('1d10 + 2 (≈ 8 PV)'), findsOneWidget);
+    await tester.tap(find.text('Prendre un repos court'));
+    await tester.pumpAndSettle();
+    expect(find.text('10 / 12 PV'), findsOneWidget);
+    expect(find.text('+8 PV (dés : 6)'), findsOneWidget);
+    expect(find.text('Dés de vie 1d10 (1 utilisé)'), findsOneWidget);
+
+    // Plus aucun dé : le repos court ne peut rien dépenser.
+    await tester.tap(find.text('Repos court'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Text>(find.byKey(const Key('hit-dice-count'))).data,
+      '0',
+    );
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Repos long'));
+    await tester.pumpAndSettle();
+    expect(find.text('10 → 12 (complet)'), findsOneWidget);
+    await tester.tap(find.text('Prendre un repos long'));
+    await tester.pumpAndSettle();
+    expect(find.text('12 / 12 PV'), findsOneWidget);
+    final saved = (await characters.watchAll('me').first).single;
+    expect((saved.hpLost, saved.tempHp, saved.hitDiceUsed), (0, 0, 0));
+  });
 }

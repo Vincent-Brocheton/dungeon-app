@@ -161,4 +161,10 @@ void main() {
       3,
     ));
   });
+
+  test('repos court : dé + Constitution, au moins 1 PV par dé', () {
+    expect(hitDiceHealing([6, 3], 2), 13);
+    expect(hitDiceHealing([1, 2], -2), 2);
+    expect(hitDiceHealing([], 3), 0);
+  });
 }

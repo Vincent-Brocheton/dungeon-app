@@ -178,6 +178,11 @@ DerivedStats deriveStats({
   return (min(maxHp, hpLost + amount - absorbed), tempHp - absorbed);
 }
 
+/// PV rendus par des dés de vie dépensés au repos court : chaque dé
+/// + Constitution, au moins 1 PV par dé.
+int hitDiceHealing(List<int> rolls, int constitutionModifier) =>
+    rolls.fold(0, (sum, r) => sum + max(1, r + constitutionModifier));
+
 /// Arme de [weapons] désignée par un objet d'équipement (« Arbalète
 /// légère et 20 carreaux »), le nom le plus long l'emportant (« Lance
 /// d'arçon » plutôt que « Lance »).
