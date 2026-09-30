@@ -19,6 +19,13 @@ final myCharactersProvider = StreamProvider<List<CharacterDoc>>((ref) {
   return ref.watch(characterRepositoryProvider).watchAll(uid);
 });
 
+/// Un personnage de l'utilisateur courant, `null` s'il n'existe pas (ou plus).
+final characterProvider = Provider.family<AsyncValue<CharacterDoc?>, String>(
+  (ref, id) => ref
+      .watch(myCharactersProvider)
+      .whenData((list) => list.where((c) => c.id == id).firstOrNull),
+);
+
 /// Actions sur les personnages, à appeler depuis l'UI.
 final charactersControllerProvider = Provider<CharactersController>(
   (ref) => CharactersController(ref),
@@ -69,6 +76,10 @@ class CharactersController {
     await _repo.upsert(_uid(), doc);
     return doc;
   }
+
+  /// Enregistre une modification de la fiche.
+  Future<void> save(CharacterDoc doc) =>
+      _repo.upsert(_uid(), doc.copyWith(updatedAt: DateTime.now()));
 
   Future<void> delete(String id) => _repo.softDelete(_uid(), id);
 

@@ -74,7 +74,29 @@ BackgroundBonus defaultBonus(List<Ability> background, Ability? primary) {
   return PlusTwoPlusOne(plusTwo: plusTwo, plusOne: plusOne);
 }
 
-/// Statistiques calculées au niveau 1.
+/// Les 18 compétences (PHB 2024) et leur caractéristique.
+const skills = {
+  'Acrobaties': Ability.dexterity,
+  'Arcanes': Ability.intelligence,
+  'Athlétisme': Ability.strength,
+  'Discrétion': Ability.dexterity,
+  'Dressage': Ability.wisdom,
+  'Escamotage': Ability.dexterity,
+  'Histoire': Ability.intelligence,
+  'Intimidation': Ability.charisma,
+  'Investigation': Ability.intelligence,
+  'Médecine': Ability.wisdom,
+  'Nature': Ability.intelligence,
+  'Perception': Ability.wisdom,
+  'Perspicacité': Ability.wisdom,
+  'Persuasion': Ability.charisma,
+  'Religion': Ability.intelligence,
+  'Représentation': Ability.charisma,
+  'Survie': Ability.wisdom,
+  'Tromperie': Ability.charisma,
+};
+
+/// Statistiques calculées d'un personnage.
 class DerivedStats {
   const DerivedStats({
     required this.hitPoints,
@@ -83,6 +105,7 @@ class DerivedStats {
     required this.proficiencyBonus,
     required this.passivePerception,
     required this.saves,
+    required this.skills,
   });
 
   final int hitPoints;
@@ -95,29 +118,43 @@ class DerivedStats {
 
   /// Modificateur de sauvegarde et maîtrise, par caractéristique.
   final Map<Ability, (int, bool)> saves;
+
+  /// Modificateur de compétence et maîtrise, par nom de [skills].
+  final Map<String, (int, bool)> skills;
 }
 
-/// Statistiques d'un personnage niveau 1 : [hitDie] au format « d10 »,
-/// [savingThrows] le texte libre des sauvegardes maîtrisées de la classe.
+/// Statistiques d'un personnage : [hitDie] au format « d10 »,
+/// [savingThrows] et [skillProficiencies] les textes libres des sauvegardes
+/// et compétences maîtrisées (« Perspicacité, Religion »). PV au-delà du
+/// niveau 1 : valeur fixe du dé (moitié + 1) + Constitution par niveau.
 DerivedStats deriveStats({
   required AbilityScores scores,
   required String hitDie,
   required String savingThrows,
+  String skillProficiencies = '',
+  int level = 1,
 }) {
-  final proficiency = proficiencyBonus(1);
+  final proficiency = proficiencyBonus(level);
   int mod(Ability a) => abilityModifier(scores[a]);
+  final con = mod(Ability.constitution);
+  final die = int.tryParse(hitDie.replaceAll('d', '')) ?? 8;
   final proficient = {
     for (final a in Ability.values)
       if (savingThrows.contains(abilityLabel(a))) a,
   };
+  final skillText = skillProficiencies.toLowerCase();
+  final skillMods = {
+    for (final MapEntry(key: name, value: a) in skills.entries)
+      name: switch (skillText.contains(name.toLowerCase())) {
+        final p => (mod(a) + (p ? proficiency : 0), p),
+      },
+  };
   return DerivedStats(
-    hitPoints:
-        (int.tryParse(hitDie.replaceAll('d', '')) ?? 8) +
-        mod(Ability.constitution),
+    hitPoints: die + con + (level - 1) * (die ~/ 2 + 1 + con),
     armorClass: 10 + mod(Ability.dexterity),
     initiative: mod(Ability.dexterity),
     proficiencyBonus: proficiency,
-    passivePerception: 10 + mod(Ability.wisdom),
+    passivePerception: 10 + skillMods['Perception']!.$1,
     saves: {
       for (final a in Ability.values)
         a: (
@@ -125,7 +162,20 @@ DerivedStats deriveStats({
           proficient.contains(a),
         ),
     },
+    skills: skillMods,
   );
+}
+
+/// Nouvel état (PV perdus, PV temporaires) après [amount] dégâts : les PV
+/// temporaires absorbent d'abord, les PV perdus plafonnent à [maxHp].
+(int, int) takeDamage(
+  int amount, {
+  required int hpLost,
+  required int tempHp,
+  required int maxHp,
+}) {
+  final absorbed = min(amount, tempHp);
+  return (min(maxHp, hpLost + amount - absorbed), tempHp - absorbed);
 }
 
 /// Langues courantes citées dans le texte des langues d'une espèce.

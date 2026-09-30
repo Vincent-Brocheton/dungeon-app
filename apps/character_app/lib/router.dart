@@ -15,6 +15,7 @@ import 'features/admin/admin_subspecies_editor_screen.dart';
 import 'features/admin/admin_table_screen.dart';
 import 'features/auth/account_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/sheet/character_sheet_screen.dart';
 import 'features/wizard/wizard_screen.dart';
 
 /// Routes de l'app. Les chemins sont aussi les URL sur le web.
@@ -22,6 +23,7 @@ abstract final class AppRoutes {
   static const home = '/';
   static const newCharacter = '/new-character';
   static const account = '/account';
+  static String character(String id) => '/character/$id';
   static const admin = '/admin';
   static const adminSpecies = '/admin/species';
   static const adminSubspecies = '/admin/subspecies';
@@ -46,6 +48,13 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'new-character',
           builder: (context, state) => const WizardScreen(),
+        ),
+        GoRoute(
+          path: 'character/:id',
+          builder:
+              (context, state) => CharacterSheetScreen(
+                characterId: state.pathParameters['id']!,
+              ),
         ),
         GoRoute(
           path: 'account',
