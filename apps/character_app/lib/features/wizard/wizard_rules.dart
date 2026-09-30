@@ -178,6 +178,40 @@ DerivedStats deriveStats({
   return (min(maxHp, hpLost + amount - absorbed), tempHp - absorbed);
 }
 
+/// Arme de [weapons] désignée par un objet d'équipement (« Arbalète
+/// légère et 20 carreaux »), le nom le plus long l'emportant (« Lance
+/// d'arçon » plutôt que « Lance »).
+WeaponDef? weaponForItem(String item, List<WeaponDef> weapons) {
+  final text = item.toLowerCase();
+  WeaponDef? best;
+  for (final w in weapons) {
+    if (text.contains(w.name.toLowerCase()) &&
+        w.name.length > (best?.name.length ?? 0)) {
+      best = w;
+    }
+  }
+  return best;
+}
+
+/// Caractéristique, bonus d'attaque et bonus de dégâts d'une arme : Force
+/// au corps à corps, Dextérité à distance, la meilleure des deux en finesse.
+// ponytail: maîtrise de l'arme supposée, en attendant les maîtrises d'armes
+// par classe.
+(Ability, int, int) weaponAttack(
+  WeaponDef weapon,
+  AbilityScores scores,
+  int proficiency,
+) {
+  final str = abilityModifier(scores.strength);
+  final dex = abilityModifier(scores.dexterity);
+  final ability =
+      weapon.ranged || (weapon.finesse && dex > str)
+          ? Ability.dexterity
+          : Ability.strength;
+  final mod = ability == Ability.dexterity ? dex : str;
+  return (ability, mod + proficiency, mod);
+}
+
 /// Langues courantes citées dans le texte des langues d'une espèce.
 List<String> suggestedLanguages(String speciesLanguages) {
   final text = speciesLanguages.toLowerCase();

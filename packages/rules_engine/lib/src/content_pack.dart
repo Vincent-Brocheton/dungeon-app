@@ -16,6 +16,7 @@ class ContentPack {
     this.attribution = '',
     this.species = const [],
     this.backgrounds = const [],
+    this.weapons = const [],
   });
 
   /// Lit un pack depuis son JSON décodé.
@@ -36,6 +37,7 @@ class ContentPack {
       species: _listOfMaps(json, 'species').map(SpeciesDef.fromJson).toList(),
       backgrounds:
           _listOfMaps(json, 'backgrounds').map(BackgroundDef.fromJson).toList(),
+      weapons: _listOfMaps(json, 'weapons').map(WeaponDef.fromJson).toList(),
     );
   }
 
@@ -59,6 +61,9 @@ class ContentPack {
 
   /// Backgrounds.
   final List<BackgroundDef> backgrounds;
+
+  /// Armes.
+  final List<WeaponDef> weapons;
 
   /// Espèce par identifiant, ou `null`.
   SpeciesDef? speciesById(String id) =>
@@ -148,6 +153,63 @@ class BackgroundDef {
 
   /// Identifiant de l'outil maîtrisé.
   final String tool;
+}
+
+/// Une arme (PHB 2024). Le nom est celui écrit dans l'équipement des
+/// personnages, qui sert à retrouver l'arme.
+class WeaponDef {
+  /// Crée une arme.
+  const WeaponDef({
+    required this.id,
+    required this.name,
+    required this.diceCount,
+    required this.diceSides,
+    required this.damageType,
+    this.ranged = false,
+    this.finesse = false,
+  });
+
+  /// Lit une arme depuis son JSON (`"damage": "2d6"`).
+  factory WeaponDef.fromJson(Map<String, dynamic> json) {
+    final damage = _requireString(json, 'damage');
+    final match = RegExp(r'^(\d+)d(\d+)$').firstMatch(damage);
+    if (match == null) {
+      throw FormatException('Arme ${json['id']} : dégâts "$damage" invalides');
+    }
+    return WeaponDef(
+      id: _requireString(json, 'id'),
+      name: _requireString(json, 'name'),
+      diceCount: int.parse(match.group(1)!),
+      diceSides: int.parse(match.group(2)!),
+      damageType: _requireString(json, 'damageType'),
+      ranged: json['ranged'] as bool? ?? false,
+      finesse: json['finesse'] as bool? ?? false,
+    );
+  }
+
+  /// Identifiant stable.
+  final String id;
+
+  /// Nom.
+  final String name;
+
+  /// Nombre de dés de dégâts.
+  final int diceCount;
+
+  /// Faces du dé de dégâts.
+  final int diceSides;
+
+  /// Type de dégâts (`tranchant`).
+  final String damageType;
+
+  /// Arme à distance (Dextérité) plutôt qu'au corps à corps (Force).
+  final bool ranged;
+
+  /// Finesse : la meilleure de Force et Dextérité.
+  final bool finesse;
+
+  /// Dégâts au format `1d8`.
+  String get damage => '${diceCount}d$diceSides';
 }
 
 /// Le pack est écrit pour un schéma plus récent que ce moteur.

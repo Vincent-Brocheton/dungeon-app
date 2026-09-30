@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rules_engine/rules_engine.dart';
 
+import '../../data/admin_class_doc.dart';
 import '../../data/character_doc.dart';
+import '../../providers/content_providers.dart';
 import '../../router.dart';
 import '../../theme/app_theme.dart';
 import '../admin/admin_providers.dart';
@@ -16,7 +18,7 @@ String _signed(int value) => value >= 0 ? '+$value' : '$value';
 
 /// Fiche d'un personnage. Reprend `CharSheetSummary.dc.html` (onglets
 /// Résumé et Sac sur mobile) et `CharSheetWeb.dc.html` (trois colonnes à
-/// partir de 900px). Initiative, sauvegardes et compétences se lancent au
+/// partir de 900px) ; onglet Actions : `CharSheetActions.dc.html`. Initiative, sauvegardes et compétences se lancent au
 /// d20 (cf. `roll_dialog.dart`). Les autres onglets (actions, sorts, notes),
 /// repos et conditions viendront avec leurs maquettes.
 class CharacterSheetScreen extends ConsumerStatefulWidget {
@@ -160,6 +162,36 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
           ),
     );
     final bag = _Bag(doc: doc);
+    final weapons = ref.watch(srdPackProvider).value?.weapons ?? const [];
+    final actions = _Actions(
+      cls: cls,
+      scores: doc.scores,
+      level: doc.level,
+      proficiency: stats.proficiencyBonus,
+      weapons: [
+        for (final item in doc.equipment)
+          if (weaponForItem(item, weapons) case final w?) w,
+      ],
+      onAttack:
+          (weapon, attack, damage) => showRollDialog(
+            context,
+            title: "Jet d'attaque",
+            subtitle:
+                '${doc.name} · ${weapon.name} '
+                '(${weapon.ranged ? 'distance' : 'CAC'})',
+            modifierLabel: "Bonus d'attaque (${weapon.name})",
+            modifier: attack,
+            hint:
+                'Compare ce total à la CA de la cible. Un 20 naturel est un '
+                'coup critique.',
+            damage: (
+              count: weapon.diceCount,
+              sides: weapon.diceSides,
+              bonus: damage,
+              type: weapon.damageType,
+            ),
+          ),
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -213,13 +245,15 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: column([abilities, saves, skillList])),
-                      Expanded(child: column([strip, hp])),
+                      Expanded(child: column([strip, hp, actions])),
                       Expanded(child: column([bag])),
                     ],
                   )
-                  : _tab == 0
-                  ? column([strip, hp, abilities, saves, skillList])
-                  : column([bag]),
+                  : switch (_tab) {
+                    0 => column([strip, hp, abilities, saves, skillList]),
+                    1 => column([actions]),
+                    _ => column([bag]),
+                  },
           bottomNavigationBar:
               wide
                   ? null
@@ -230,6 +264,10 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                       NavigationDestination(
                         icon: Icon(Icons.person_outline),
                         label: 'Résumé',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.bolt_outlined),
+                        label: 'Actions',
                       ),
                       NavigationDestination(
                         icon: Icon(Icons.backpack_outlined),
@@ -644,6 +682,229 @@ class _ModifierList extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Onglet Actions (`CharSheetActions.dc.html`) : incantation, attaques des
+/// armes de l'équipement, aptitudes de classe jusqu'au niveau atteint.
+/// Conditions, compagnons, actions bonus et réactions viendront avec leurs
+/// maquettes.
+class _Actions extends StatelessWidget {
+  const _Actions({
+    required this.cls,
+    required this.scores,
+    required this.level,
+    required this.proficiency,
+    required this.weapons,
+    required this.onAttack,
+  });
+
+  final AdminClassDoc? cls;
+  final AbilityScores scores;
+  final int level;
+  final int proficiency;
+  final List<WeaponDef> weapons;
+
+  /// Arme, bonus d'attaque, bonus de dégâts.
+  final void Function(WeaponDef, int, int) onAttack;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: AppTheme.textMuted,
+    );
+    final cls = this.cls;
+    final spellAbility =
+        cls != null && cls.spellcaster
+            ? abilityFromLabel(cls.spellcastingAbility)
+            : null;
+    final features = [
+      for (var i = 0; i < level && i < (cls?.levelFeatures.length ?? 0); i++)
+        if (cls!.levelFeatures[i].trim().isNotEmpty)
+          (i + 1, cls.levelFeatures[i].trim()),
+    ];
+    final resources = [
+      for (final c in cls?.resourceColumns ?? const <ResourceColumn>[])
+        if (c.name.isNotEmpty &&
+            level <= c.values.length &&
+            !const ['', '—', '-'].contains(c.values[level - 1].trim()))
+          (c.name, c.values[level - 1].trim()),
+    ];
+
+    Widget value(String label, String v) => Expanded(
+      child: Column(
+        children: [
+          Text(label, style: muted),
+          Text(
+            v,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: AppTheme.accent,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (spellAbility != null) ...[
+          _Section(
+            title: 'Incantation (calculée automatiquement)',
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: _card,
+              child: Row(
+                children: [
+                  value('Caract.', cls!.spellcastingAbility),
+                  value(
+                    'Attaque',
+                    _signed(
+                      abilityModifier(scores[spellAbility]) + proficiency,
+                    ),
+                  ),
+                  value(
+                    'DD sauv.',
+                    '${8 + abilityModifier(scores[spellAbility]) + proficiency}',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        _Section(
+          title: 'Attaques',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (weapons.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: _card,
+                  child: Text("Aucune arme dans l'équipement.", style: muted),
+                ),
+              for (final w in weapons)
+                if (weaponAttack(w, scores, proficiency) case (
+                  _,
+                  final attack,
+                  final damage,
+                ))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: _card,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(w.name, style: theme.textTheme.titleSmall),
+                                Text(
+                                  w.ranged ? 'DISTANCE' : 'CAC',
+                                  style: muted,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                _signed(attack),
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                '${w.damage}'
+                                '${damage == 0 ? '' : _signed(damage)} '
+                                '${w.damageType}',
+                                style: muted,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 10),
+                          IconButton.outlined(
+                            tooltip: 'Attaquer : ${w.name}',
+                            icon: const Icon(
+                              Icons.casino_outlined,
+                              color: AppTheme.accent,
+                            ),
+                            onPressed: () => onAttack(w, attack, damage),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            ],
+          ),
+        ),
+        if (resources.isNotEmpty || features.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _Section(
+            title: 'Aptitudes de classe',
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: _card,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (name, v) in resources)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(name),
+                                Text(cls!.recovery, style: muted),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            v,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: AppTheme.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  for (final (lvl, text) in features)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text.rich(
+                        TextSpan(
+                          text: 'Niv. $lvl — ',
+                          style: const TextStyle(color: AppTheme.textMuted),
+                          children: [
+                            TextSpan(
+                              text: text,
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

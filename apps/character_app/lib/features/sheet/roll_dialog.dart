@@ -6,6 +6,9 @@ import 'package:rules_engine/rules_engine.dart';
 
 import '../../theme/app_theme.dart';
 
+/// Dégâts d'une attaque : dés, bonus et type (« tranchant »).
+typedef DamageDice = ({int count, int sides, int bonus, String type});
+
 /// Source d'aléa des jets ; remplacée par un générateur figé dans les tests.
 final diceRngProvider = Provider<Random>((ref) => Random());
 
@@ -13,6 +16,8 @@ final diceRngProvider = Provider<Random>((ref) => Random());
 /// `CharSheetRollSkill`, `CharSheetRollSave` et `CharSheetRollInitiative`
 /// (et leurs variantes web, centrées à 560px). L'avantage ou le désavantage
 /// se choisit à la main, en attendant l'inspiration et les conditions.
+/// Avec [damage], c'est un jet d'attaque (`CharSheetRoll`) : les dégâts sont
+/// lancés avec, dés doublés sur un 20 naturel.
 Future<void> showRollDialog(
   BuildContext context, {
   required String title,
@@ -20,6 +25,7 @@ Future<void> showRollDialog(
   required String modifierLabel,
   required int modifier,
   required String hint,
+  DamageDice? damage,
 }) => showDialog<void>(
   context: context,
   builder:
@@ -29,6 +35,7 @@ Future<void> showRollDialog(
         modifierLabel: modifierLabel,
         modifier: modifier,
         hint: hint,
+        damage: damage,
       ),
 );
 
@@ -41,6 +48,7 @@ class _RollDialog extends ConsumerStatefulWidget {
     required this.modifierLabel,
     required this.modifier,
     required this.hint,
+    this.damage,
   });
 
   final String title;
@@ -48,6 +56,7 @@ class _RollDialog extends ConsumerStatefulWidget {
   final String modifierLabel;
   final int modifier;
   final String hint;
+  final DamageDice? damage;
 
   @override
   ConsumerState<_RollDialog> createState() => _RollDialogState();
@@ -55,7 +64,24 @@ class _RollDialog extends ConsumerStatefulWidget {
 
 class _RollDialogState extends ConsumerState<_RollDialog> {
   var _mode = RollMode.normal;
-  late D20Roll _roll = _newRoll();
+  late D20Roll _roll;
+  List<int> _damageDice = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _reroll();
+  }
+
+  bool get _critical => _roll.kept == 20;
+
+  void _reroll() {
+    final rng = ref.read(diceRngProvider);
+    _roll = _newRoll();
+    if (widget.damage case final d?) {
+      _damageDice = rollDice(rng, _critical ? d.count * 2 : d.count, d.sides);
+    }
+  }
 
   D20Roll _newRoll() =>
       D20Roll.roll(ref.read(diceRngProvider), widget.modifier, mode: _mode);
@@ -100,7 +126,7 @@ class _RollDialogState extends ConsumerState<_RollDialog> {
                 onSelectionChanged:
                     (s) => setState(() {
                       _mode = s.single;
-                      _roll = _newRoll();
+                      _reroll();
                     }),
               ),
               const SizedBox(height: 20),
@@ -172,12 +198,72 @@ class _RollDialogState extends ConsumerState<_RollDialog> {
               ),
               const SizedBox(height: 12),
               Text(widget.hint, textAlign: TextAlign.center, style: muted),
+              if (widget.damage case final d?) ...[
+                const SizedBox(height: 20),
+                Text(
+                  _critical
+                      ? 'DÉGÂTS — COUP CRITIQUE, DÉS DOUBLÉS'
+                      : "DÉGÂTS (SI L'ATTAQUE TOUCHE)",
+                  textAlign: TextAlign.center,
+                  style: muted,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    for (final v in _damageDice) _Die(value: v, kept: true),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    border: Border.all(color: AppTheme.border),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      _Line(
+                        label: '${_damageDice.length}d${d.sides}',
+                        value: '${_damageDice.fold(0, (a, b) => a + b)}',
+                      ),
+                      const SizedBox(height: 8),
+                      _Line(label: 'Bonus', value: _signed(d.bonus)),
+                      const Divider(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Dégâts ${d.type}s',
+                              style: theme.textTheme.titleSmall,
+                            ),
+                          ),
+                          Text(
+                            '${max(0, _damageDice.fold(0, (a, b) => a + b) + d.bonus)}',
+                            key: const Key('damage-total'),
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: const Color(0xFFC97227),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => setState(() => _roll = _newRoll()),
+                      onPressed: () => setState(_reroll),
                       child: const Text('Relancer'),
                     ),
                   ),

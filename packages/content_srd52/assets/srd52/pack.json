@@ -8,9 +8,251 @@
     {
       "id": "human",
       "name": "Human",
-      "sizeOptions": ["small", "medium"],
+      "sizeOptions": [
+        "small",
+        "medium"
+      ],
       "speed": 30
     }
   ],
-  "backgrounds": []
+  "backgrounds": [],
+  "weapons": [
+    {
+      "id": "baton",
+      "name": "Bâton",
+      "damage": "1d6",
+      "damageType": "contondant"
+    },
+    {
+      "id": "dague",
+      "name": "Dague",
+      "damage": "1d4",
+      "damageType": "perforant",
+      "finesse": true
+    },
+    {
+      "id": "gourdin",
+      "name": "Gourdin",
+      "damage": "1d4",
+      "damageType": "contondant"
+    },
+    {
+      "id": "hachette",
+      "name": "Hachette",
+      "damage": "1d6",
+      "damageType": "tranchant"
+    },
+    {
+      "id": "javeline",
+      "name": "Javeline",
+      "damage": "1d6",
+      "damageType": "perforant"
+    },
+    {
+      "id": "lance",
+      "name": "Lance",
+      "damage": "1d6",
+      "damageType": "perforant"
+    },
+    {
+      "id": "marteau-leger",
+      "name": "Marteau léger",
+      "damage": "1d4",
+      "damageType": "contondant"
+    },
+    {
+      "id": "masse-d-armes",
+      "name": "Masse d'armes",
+      "damage": "1d6",
+      "damageType": "contondant"
+    },
+    {
+      "id": "massue",
+      "name": "Massue",
+      "damage": "1d8",
+      "damageType": "contondant"
+    },
+    {
+      "id": "serpe",
+      "name": "Serpe",
+      "damage": "1d4",
+      "damageType": "tranchant"
+    },
+    {
+      "id": "arbalete-legere",
+      "name": "Arbalète légère",
+      "damage": "1d8",
+      "damageType": "perforant",
+      "ranged": true
+    },
+    {
+      "id": "arc-court",
+      "name": "Arc court",
+      "damage": "1d6",
+      "damageType": "perforant",
+      "ranged": true
+    },
+    {
+      "id": "flechettes",
+      "name": "Fléchettes",
+      "damage": "1d4",
+      "damageType": "perforant",
+      "ranged": true,
+      "finesse": true
+    },
+    {
+      "id": "fronde",
+      "name": "Fronde",
+      "damage": "1d4",
+      "damageType": "contondant",
+      "ranged": true
+    },
+    {
+      "id": "cimeterre",
+      "name": "Cimeterre",
+      "damage": "1d6",
+      "damageType": "tranchant",
+      "finesse": true
+    },
+    {
+      "id": "coutille",
+      "name": "Coutille",
+      "damage": "1d10",
+      "damageType": "tranchant"
+    },
+    {
+      "id": "epee-a-deux-mains",
+      "name": "Épée à deux mains",
+      "damage": "2d6",
+      "damageType": "tranchant"
+    },
+    {
+      "id": "epee-courte",
+      "name": "Épée courte",
+      "damage": "1d6",
+      "damageType": "perforant",
+      "finesse": true
+    },
+    {
+      "id": "epee-longue",
+      "name": "Épée longue",
+      "damage": "1d8",
+      "damageType": "tranchant"
+    },
+    {
+      "id": "fleau",
+      "name": "Fléau",
+      "damage": "1d8",
+      "damageType": "contondant"
+    },
+    {
+      "id": "fouet",
+      "name": "Fouet",
+      "damage": "1d4",
+      "damageType": "tranchant",
+      "finesse": true
+    },
+    {
+      "id": "hache-a-deux-mains",
+      "name": "Hache à deux mains",
+      "damage": "1d12",
+      "damageType": "tranchant"
+    },
+    {
+      "id": "hache-d-armes",
+      "name": "Hache d'armes",
+      "damage": "1d8",
+      "damageType": "tranchant"
+    },
+    {
+      "id": "hallebarde",
+      "name": "Hallebarde",
+      "damage": "1d10",
+      "damageType": "tranchant"
+    },
+    {
+      "id": "lance-d-arcon",
+      "name": "Lance d'arçon",
+      "damage": "1d10",
+      "damageType": "perforant"
+    },
+    {
+      "id": "maillet-d-armes",
+      "name": "Maillet d'armes",
+      "damage": "2d6",
+      "damageType": "contondant"
+    },
+    {
+      "id": "marteau-de-guerre",
+      "name": "Marteau de guerre",
+      "damage": "1d8",
+      "damageType": "contondant"
+    },
+    {
+      "id": "morgenstern",
+      "name": "Morgenstern",
+      "damage": "1d8",
+      "damageType": "perforant"
+    },
+    {
+      "id": "pic-de-guerre",
+      "name": "Pic de guerre",
+      "damage": "1d8",
+      "damageType": "perforant"
+    },
+    {
+      "id": "pique",
+      "name": "Pique",
+      "damage": "1d10",
+      "damageType": "perforant"
+    },
+    {
+      "id": "rapiere",
+      "name": "Rapière",
+      "damage": "1d8",
+      "damageType": "perforant",
+      "finesse": true
+    },
+    {
+      "id": "trident",
+      "name": "Trident",
+      "damage": "1d8",
+      "damageType": "perforant"
+    },
+    {
+      "id": "arbalete-de-poing",
+      "name": "Arbalète de poing",
+      "damage": "1d6",
+      "damageType": "perforant",
+      "ranged": true
+    },
+    {
+      "id": "arbalete-lourde",
+      "name": "Arbalète lourde",
+      "damage": "1d10",
+      "damageType": "perforant",
+      "ranged": true
+    },
+    {
+      "id": "arc-long",
+      "name": "Arc long",
+      "damage": "1d8",
+      "damageType": "perforant",
+      "ranged": true
+    },
+    {
+      "id": "mousquet",
+      "name": "Mousquet",
+      "damage": "1d12",
+      "damageType": "perforant",
+      "ranged": true
+    },
+    {
+      "id": "pistolet",
+      "name": "Pistolet",
+      "damage": "1d10",
+      "damageType": "perforant",
+      "ranged": true
+    }
+  ]
 }

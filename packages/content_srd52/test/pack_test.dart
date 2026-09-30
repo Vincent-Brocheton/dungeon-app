@@ -28,8 +28,17 @@ void main() {
     final ids = [
       ...pack.species.map((s) => s.id),
       ...pack.backgrounds.map((b) => b.id),
+      ...pack.weapons.map((w) => w.id),
     ];
     expect(ids.toSet().length, ids.length);
+  });
+
+  test("les armes du PHB 2024, nommées comme dans l'équipement", () {
+    final weapons = {for (final w in parseContentPack(raw).weapons) w.name: w};
+    expect(weapons['Épée longue']?.damage, '1d8');
+    expect(weapons['Épée à deux mains']?.damage, '2d6');
+    expect(weapons['Rapière']?.finesse, isTrue);
+    expect(weapons['Arc long']?.ranged, isTrue);
   });
 
   test('loadSrd52Pack lit l\'asset via le bundle', () async {

@@ -109,4 +109,56 @@ void main() {
     expect(none, isEmpty);
     expect(noGold, 0);
   });
+
+  test("arme d'un objet : le nom le plus long l'emporte", () {
+    const lance = WeaponDef(
+      id: 'lance',
+      name: 'Lance',
+      diceCount: 1,
+      diceSides: 6,
+      damageType: 'perforant',
+    );
+    const lanceDArcon = WeaponDef(
+      id: 'lance-d-arcon',
+      name: "Lance d'arçon",
+      diceCount: 1,
+      diceSides: 10,
+      damageType: 'perforant',
+    );
+    const weapons = [lance, lanceDArcon];
+    expect(weaponForItem("Lance d'arçon", weapons), lanceDArcon);
+    expect(weaponForItem('2 lances', weapons), lance);
+    expect(weaponForItem('Corde', weapons), isNull);
+  });
+
+  test('attaque : Force au CAC, Dextérité à distance ou en finesse', () {
+    const scores = AbilityScores(
+      strength: 12,
+      dexterity: 16,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10,
+    );
+    WeaponDef weapon({bool ranged = false, bool finesse = false}) => WeaponDef(
+      id: 'w',
+      name: 'W',
+      diceCount: 1,
+      diceSides: 8,
+      damageType: 'perforant',
+      ranged: ranged,
+      finesse: finesse,
+    );
+    expect(weaponAttack(weapon(), scores, 2), (Ability.strength, 3, 1));
+    expect(weaponAttack(weapon(ranged: true), scores, 2), (
+      Ability.dexterity,
+      5,
+      3,
+    ));
+    expect(weaponAttack(weapon(finesse: true), scores, 2), (
+      Ability.dexterity,
+      5,
+      3,
+    ));
+  });
 }
