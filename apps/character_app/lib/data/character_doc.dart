@@ -22,6 +22,7 @@ class CharacterDoc {
     this.gold = 0,
     this.hpLost = 0,
     this.tempHp = 0,
+    this.hitDiceUsed = 0,
     this.deletedAt,
     this.schemaVersion = currentSchemaVersion,
   });
@@ -55,6 +56,9 @@ class CharacterDoc {
 
   /// Points de vie temporaires.
   final int tempHp;
+
+  /// Dés de vie dépensés depuis le dernier repos long.
+  final int hitDiceUsed;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -78,6 +82,7 @@ class CharacterDoc {
     int? gold,
     int? hpLost,
     int? tempHp,
+    int? hitDiceUsed,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) => CharacterDoc(
@@ -95,6 +100,7 @@ class CharacterDoc {
     gold: gold ?? this.gold,
     hpLost: hpLost ?? this.hpLost,
     tempHp: tempHp ?? this.tempHp,
+    hitDiceUsed: hitDiceUsed ?? this.hitDiceUsed,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt ?? this.deletedAt,
@@ -116,6 +122,7 @@ class CharacterDoc {
     'gold': gold,
     'hpLost': hpLost,
     'tempHp': tempHp,
+    'hitDiceUsed': hitDiceUsed,
     'abilityScores': {for (final a in Ability.values) a.code: scores[a]},
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -150,6 +157,7 @@ class CharacterDoc {
       gold: map['gold'] as int? ?? 0,
       hpLost: map['hpLost'] as int? ?? 0,
       tempHp: map['tempHp'] as int? ?? 0,
+      hitDiceUsed: map['hitDiceUsed'] as int? ?? 0,
       createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       deletedAt: map['deletedAt'] as DateTime?,

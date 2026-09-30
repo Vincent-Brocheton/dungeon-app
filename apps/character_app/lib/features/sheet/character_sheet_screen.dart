@@ -12,15 +12,17 @@ import '../../theme/app_theme.dart';
 import '../admin/admin_providers.dart';
 import '../characters/characters_providers.dart';
 import '../wizard/wizard_rules.dart';
+import 'rest_dialogs.dart';
 import 'roll_dialog.dart';
 
 String _signed(int value) => value >= 0 ? '+$value' : '$value';
 
 /// Fiche d'un personnage. Reprend `CharSheetSummary.dc.html` (onglets
 /// Résumé et Sac sur mobile) et `CharSheetWeb.dc.html` (trois colonnes à
-/// partir de 900px) ; onglet Actions : `CharSheetActions.dc.html`. Initiative, sauvegardes et compétences se lancent au
-/// d20 (cf. `roll_dialog.dart`). Les autres onglets (actions, sorts, notes),
-/// repos et conditions viendront avec leurs maquettes.
+/// partir de 900px) ; onglet Actions : `CharSheetActions.dc.html`.
+/// Initiative, sauvegardes et compétences se lancent au d20 (cf.
+/// `roll_dialog.dart`), repos dans `rest_dialogs.dart`. Sorts, notes et
+/// conditions viendront avec leurs maquettes.
 class CharacterSheetScreen extends ConsumerStatefulWidget {
   const CharacterSheetScreen({super.key, required this.characterId});
 
@@ -121,7 +123,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
     final hp = _HitPoints(
       doc: doc,
       maxHp: stats.hitPoints,
-      hitDice: '${doc.level}${cls?.hitDie ?? 'd8'}',
+      hitDieSides: int.tryParse((cls?.hitDie ?? 'd8').substring(1)) ?? 8,
     );
     final abilities = _Abilities(scores: doc.scores);
     final saves = _ModifierList(
@@ -394,12 +396,12 @@ class _HitPoints extends ConsumerWidget {
   const _HitPoints({
     required this.doc,
     required this.maxHp,
-    required this.hitDice,
+    required this.hitDieSides,
   });
 
   final CharacterDoc doc;
   final int maxHp;
-  final String hitDice;
+  final int hitDieSides;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -490,10 +492,41 @@ class _HitPoints extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Dés de vie $hitDice',
+              'Dés de vie ${doc.level}d$hitDieSides '
+              '(${doc.hitDiceUsed} utilisé${doc.hitDiceUsed > 1 ? 's' : ''})',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.textMuted,
               ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed:
+                        () => showShortRestDialog(
+                          context,
+                          doc: doc,
+                          maxHp: maxHp,
+                          hitDieSides: hitDieSides,
+                        ),
+                    child: const Text('Repos court'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed:
+                        () => showLongRestDialog(
+                          context,
+                          doc: doc,
+                          maxHp: maxHp,
+                          hitDieSides: hitDieSides,
+                        ),
+                    child: const Text('Repos long'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
