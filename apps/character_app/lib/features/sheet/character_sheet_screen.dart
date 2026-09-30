@@ -1,0 +1,646 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rules_engine/rules_engine.dart';
+
+import '../../data/character_doc.dart';
+import '../../router.dart';
+import '../../theme/app_theme.dart';
+import '../admin/admin_providers.dart';
+import '../characters/characters_providers.dart';
+import '../wizard/wizard_rules.dart';
+
+String _signed(int value) => value >= 0 ? '+$value' : '$value';
+
+/// Fiche d'un personnage. Reprend `CharSheetSummary.dc.html` (onglets
+/// Résumé et Sac sur mobile) et `CharSheetWeb.dc.html` (trois colonnes à
+/// partir de 900px). Les autres onglets (actions, sorts, notes), les jets de
+/// dés, repos et conditions viendront avec leurs maquettes.
+class CharacterSheetScreen extends ConsumerStatefulWidget {
+  const CharacterSheetScreen({super.key, required this.characterId});
+
+  final String characterId;
+
+  @override
+  ConsumerState<CharacterSheetScreen> createState() =>
+      _CharacterSheetScreenState();
+}
+
+class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
+  var _tab = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final character = ref.watch(characterProvider(widget.characterId));
+    return character.when(
+      loading:
+          () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Scaffold(body: Center(child: Text('Erreur : $e'))),
+      data:
+          (doc) =>
+              doc == null
+                  ? Scaffold(
+                    appBar: AppBar(),
+                    body: const Center(child: Text('Personnage introuvable.')),
+                  )
+                  : _sheet(doc),
+    );
+  }
+
+  Widget _sheet(CharacterDoc doc) {
+    final cls =
+        ref
+            .watch(allClassesProvider)
+            .value
+            ?.where((c) => c.id == doc.classId)
+            .firstOrNull;
+    final species =
+        ref
+            .watch(allSpeciesProvider)
+            .value
+            ?.where((s) => s.id == doc.speciesId)
+            .firstOrNull;
+    final subspecies =
+        ref
+            .watch(allSubspeciesProvider)
+            .value
+            ?.where((s) => s.id == doc.subspeciesId)
+            .firstOrNull;
+    final background =
+        ref
+            .watch(allBackgroundsProvider)
+            .value
+            ?.where((b) => b.id == doc.backgroundId)
+            .firstOrNull;
+    final stats = deriveStats(
+      scores: doc.scores,
+      hitDie: cls?.hitDie ?? 'd8',
+      savingThrows: cls?.savingThrows ?? '',
+      skillProficiencies: background?.skills ?? '',
+      level: doc.level,
+    );
+    final speed =
+        (subspecies?.speed.isNotEmpty ?? false)
+            ? subspecies!.speed
+            : species?.speed ?? '—';
+    final subtitle = [
+      cls == null ? 'Niveau ${doc.level}' : '${cls.name} ${doc.level}',
+      if (subspecies?.name ?? species?.name case final s?) s,
+      if (background != null) background.name,
+    ].join(' · ');
+
+    final strip = _StatStrip(
+      stats: [
+        ('CA', '${stats.armorClass}'),
+        ('Init.', _signed(stats.initiative)),
+        ('Vitesse', speed),
+        ('Perc. pas.', '${stats.passivePerception}'),
+      ],
+    );
+    final hp = _HitPoints(
+      doc: doc,
+      maxHp: stats.hitPoints,
+      hitDice: '${doc.level}${cls?.hitDie ?? 'd8'}',
+    );
+    final abilities = _Abilities(scores: doc.scores);
+    final saves = _ModifierList(
+      title: 'Jets de sauvegarde',
+      rows: [
+        for (final a in Ability.values)
+          (abilityLabel(a), null, stats.saves[a]!.$1, stats.saves[a]!.$2),
+      ],
+    );
+    final skillList = _ModifierList(
+      title: 'Compétences',
+      rows: [
+        for (final MapEntry(key: name, value: a) in skills.entries)
+          (
+            name,
+            abilityLabel(a).substring(0, 3),
+            stats.skills[name]!.$1,
+            stats.skills[name]!.$2,
+          ),
+      ],
+    );
+    final bag = _Bag(doc: doc);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 900;
+        Widget column(List<Widget> children) => ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            for (final (i, c) in children.indexed) ...[
+              if (i > 0) const SizedBox(height: 16),
+              c,
+            ],
+          ],
+        );
+        return Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              tooltip: 'Retour à mes personnages',
+              icon: const Icon(Icons.chevron_left),
+              onPressed:
+                  () =>
+                      context.canPop()
+                          ? context.pop()
+                          : context.go(AppRoutes.home),
+            ),
+            titleSpacing: 0,
+            title: Row(
+              children: [
+                _Avatar(name: doc.name),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(doc.name, overflow: TextOverflow.ellipsis),
+                      Text(
+                        subtitle,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          body:
+              wide
+                  ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: column([abilities, saves, skillList])),
+                      Expanded(child: column([strip, hp])),
+                      Expanded(child: column([bag])),
+                    ],
+                  )
+                  : _tab == 0
+                  ? column([strip, hp, abilities, saves, skillList])
+                  : column([bag]),
+          bottomNavigationBar:
+              wide
+                  ? null
+                  : NavigationBar(
+                    selectedIndex: _tab,
+                    onDestinationSelected: (i) => setState(() => _tab = i),
+                    destinations: const [
+                      NavigationDestination(
+                        icon: Icon(Icons.person_outline),
+                        label: 'Résumé',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.backpack_outlined),
+                        label: 'Sac',
+                      ),
+                    ],
+                  ),
+        );
+      },
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 40,
+    height: 40,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: AppTheme.accent,
+      borderRadius: BorderRadius.circular(9),
+    ),
+    child: Text(
+      name.isEmpty ? '?' : name[0].toUpperCase(),
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        color: AppTheme.background,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
+}
+
+final _card = BoxDecoration(
+  color: AppTheme.surface,
+  border: Border.all(color: AppTheme.border),
+  borderRadius: BorderRadius.circular(10),
+);
+
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        title.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: AppTheme.textMuted,
+          letterSpacing: 0.6,
+        ),
+      ),
+      const SizedBox(height: 6),
+      child,
+    ],
+  );
+}
+
+/// CA, initiative, vitesse, perception passive.
+class _StatStrip extends StatelessWidget {
+  const _StatStrip({required this.stats});
+
+  final List<(String, String)> stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        for (final (i, (label, value)) in stats.indexed) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              decoration: _card,
+              child: Column(
+                children: [
+                  Text(
+                    label.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppTheme.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    value,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: AppTheme.accent,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// PV actuels / max, avec dégâts, soins et PV temporaires enregistrés.
+class _HitPoints extends ConsumerWidget {
+  const _HitPoints({
+    required this.doc,
+    required this.maxHp,
+    required this.hitDice,
+  });
+
+  final CharacterDoc doc;
+  final int maxHp;
+  final String hitDice;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final current = (maxHp - doc.hpLost).clamp(0, maxHp);
+    final controller = ref.read(charactersControllerProvider);
+
+    Future<void> ask(String title, void Function(int) apply) async {
+      final amount = await _askAmount(context, title);
+      if (amount != null) apply(amount);
+    }
+
+    return _Section(
+      title: 'Points de vie',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: _card,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                IconButton.outlined(
+                  tooltip: 'Subir des dégâts',
+                  icon: const Icon(Icons.remove, color: Color(0xFFC97227)),
+                  onPressed:
+                      () => ask('Dégâts subis', (n) {
+                        final (lost, temp) = takeDamage(
+                          n,
+                          hpLost: doc.hpLost,
+                          tempHp: doc.tempHp,
+                          maxHp: maxHp,
+                        );
+                        controller.save(
+                          doc.copyWith(hpLost: lost, tempHp: temp),
+                        );
+                      }),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        '$current / $maxHp PV',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      InkWell(
+                        onTap:
+                            () => ask(
+                              'PV temporaires',
+                              (n) => controller.save(doc.copyWith(tempHp: n)),
+                            ),
+                        child: Text(
+                          'PV temporaires : +${doc.tempHp}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton.outlined(
+                  tooltip: 'Récupérer des PV',
+                  icon: const Icon(Icons.add, color: Color(0xFF7FA86A)),
+                  onPressed:
+                      () => ask(
+                        'PV récupérés',
+                        (n) => controller.save(
+                          doc.copyWith(
+                            hpLost: (doc.hpLost - n).clamp(0, maxHp),
+                          ),
+                        ),
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: maxHp == 0 ? 0 : current / maxHp,
+                minHeight: 9,
+                color: AppTheme.accent,
+                backgroundColor: AppTheme.background,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Dés de vie $hitDice',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<int?> _askAmount(BuildContext context, String title) {
+  final field = TextEditingController();
+  int? parse() => int.tryParse(field.text.trim());
+  return showDialog<int>(
+    context: context,
+    builder:
+        (context) => AlertDialog(
+          title: Text(title),
+          content: TextField(
+            key: const Key('hp-amount-field'),
+            controller: field,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(4),
+            ],
+            onSubmitted: (_) => Navigator.pop(context, parse()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, parse()),
+              child: const Text('Valider'),
+            ),
+          ],
+        ),
+  );
+}
+
+class _Abilities extends StatelessWidget {
+  const _Abilities({required this.scores});
+
+  final AbilityScores scores;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Section(
+      title: 'Caractéristiques',
+      child: GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 1.6,
+        children: [
+          for (final a in Ability.values)
+            Container(
+              decoration: _card,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    abilityLabel(a).substring(0, 3).toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppTheme.textMuted,
+                    ),
+                  ),
+                  Text(
+                    '${scores[a]}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    _signed(abilityModifier(scores[a])),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Liste « nom (carac) … modificateur », maîtrises en or avec ★.
+class _ModifierList extends StatelessWidget {
+  const _ModifierList({required this.title, required this.rows});
+
+  final String title;
+
+  /// Nom, caractéristique abrégée (facultative), modificateur, maîtrise.
+  final List<(String, String?, int, bool)> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Section(
+      title: '$title (★ = maîtrisé)',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        decoration: _card,
+        child: Column(
+          children: [
+            for (final (i, (name, ability, modifier, proficient))
+                in rows.indexed)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                decoration: BoxDecoration(
+                  border:
+                      i == rows.length - 1
+                          ? null
+                          : const Border(
+                            bottom: BorderSide(color: AppTheme.border),
+                          ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          text: proficient ? '$name ★' : name,
+                          children: [
+                            if (ability != null)
+                              TextSpan(
+                                text: ' ($ability)',
+                                style: const TextStyle(
+                                  color: AppTheme.textMuted,
+                                  fontSize: 11,
+                                ),
+                              ),
+                          ],
+                        ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color:
+                              proficient
+                                  ? AppTheme.textPrimary
+                                  : AppTheme.textMuted,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _signed(modifier),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color:
+                            proficient ? AppTheme.accent : AppTheme.textMuted,
+                        fontWeight: proficient ? FontWeight.w700 : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bourse et objets (équipement de départ en texte, en attendant
+/// l'inventaire détaillé de `CharSheetInventory.dc.html`).
+class _Bag extends StatelessWidget {
+  const _Bag({required this.doc});
+
+  final CharacterDoc doc;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Section(
+          title: 'Bourse',
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: _card,
+            child: Text(
+              '${doc.gold} po',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: AppTheme.accent,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _Section(
+          title: 'Objets',
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: _card,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (doc.equipment.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Text(
+                      'Aucun objet.',
+                      style: TextStyle(color: AppTheme.textMuted),
+                    ),
+                  ),
+                for (final item in doc.equipment)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 7),
+                    child: Text(item),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (doc.languages.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _Section(
+            title: 'Langues',
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: _card,
+              child: Text(doc.languages.join(', ')),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}

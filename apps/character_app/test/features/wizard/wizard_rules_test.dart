@@ -61,6 +61,39 @@ void main() {
     expect(stats.saves[Ability.dexterity], (2, false));
   });
 
+  test(
+    "niveau et compétences : PV fixes par niveau, maîtrises d'historique",
+    () {
+      final stats = deriveStats(
+        scores: const AbilityScores(
+          strength: 17,
+          dexterity: 14,
+          constitution: 14,
+          intelligence: 8,
+          wisdom: 10,
+          charisma: 12,
+        ),
+        hitDie: 'd10',
+        savingThrows: '',
+        skillProficiencies: 'Perception, Athlétisme',
+        level: 5,
+      );
+      // 10 + 2, puis 4 niveaux à (5 + 1 + 2).
+      expect(stats.hitPoints, 44);
+      expect(stats.proficiencyBonus, 3);
+      expect(stats.skills['Perception'], (3, true));
+      expect(stats.skills['Perspicacité'], (0, false));
+      expect(stats.passivePerception, 13);
+      expect(stats.skills, hasLength(18));
+    },
+  );
+
+  test("dégâts : PV temporaires absorbés d'abord, plafonnés au maximum", () {
+    expect(takeDamage(3, hpLost: 0, tempHp: 5, maxHp: 10), (0, 2));
+    expect(takeDamage(8, hpLost: 1, tempHp: 5, maxHp: 10), (4, 0));
+    expect(takeDamage(50, hpLost: 0, tempHp: 0, maxHp: 10), (10, 0));
+  });
+
   test('langues suggérées d\'après le texte de l\'espèce', () {
     expect(suggestedLanguages('Commun, Naine'), ['Naine']);
     expect(suggestedLanguages(''), isEmpty);

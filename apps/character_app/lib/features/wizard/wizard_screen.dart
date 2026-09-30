@@ -812,6 +812,7 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
       scores: scores,
       hitDie: cls.hitDie,
       savingThrows: cls.savingThrows,
+      skillProficiencies: _background!.skills,
     );
     final speciesName = _subspeciesDoc?.name ?? _speciesDoc!.name;
     return [

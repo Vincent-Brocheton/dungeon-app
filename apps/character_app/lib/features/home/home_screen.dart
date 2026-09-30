@@ -119,83 +119,87 @@ class _CharacterCard extends ConsumerWidget {
       if (speciesName != null) speciesName!,
     ].join(' · ');
 
-    return Container(
-      width: 340,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppTheme.accent,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              doc.name.isEmpty ? '?' : doc.name[0].toUpperCase(),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: AppTheme.background,
-                fontWeight: FontWeight.w700,
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => context.push(AppRoutes.character(doc.id)),
+      child: Container(
+        width: 340,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          border: Border.all(color: AppTheme.border),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppTheme.accent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                doc.name.isEmpty ? '?' : doc.name[0].toUpperCase(),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: AppTheme.background,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  doc.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textMuted,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    doc.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall,
                   ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            tooltip: 'Supprimer',
-            icon: const Icon(Icons.delete_outline, size: 20),
-            onPressed: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder:
-                    (context) => AlertDialog(
-                      title: Text('Supprimer ${doc.name} ?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Annuler'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Supprimer'),
-                        ),
-                      ],
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textMuted,
                     ),
-              );
-              if (confirmed ?? false) {
-                await ref.read(charactersControllerProvider).delete(doc.id);
-              }
-            },
-          ),
-        ],
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Supprimer',
+              icon: const Icon(Icons.delete_outline, size: 20),
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        title: Text('Supprimer ${doc.name} ?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Annuler'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Supprimer'),
+                          ),
+                        ],
+                      ),
+                );
+                if (confirmed ?? false) {
+                  await ref.read(charactersControllerProvider).delete(doc.id);
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -20,6 +20,8 @@ class CharacterDoc {
     this.languages = const [],
     this.equipment = const [],
     this.gold = 0,
+    this.hpLost = 0,
+    this.tempHp = 0,
     this.deletedAt,
     this.schemaVersion = currentSchemaVersion,
   });
@@ -47,6 +49,12 @@ class CharacterDoc {
 
   /// Pièces d'or.
   final int gold;
+
+  /// PV perdus : on stocke l'écart au maximum, qui lui est dérivé.
+  final int hpLost;
+
+  /// Points de vie temporaires.
+  final int tempHp;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -68,6 +76,8 @@ class CharacterDoc {
     List<String>? languages,
     List<String>? equipment,
     int? gold,
+    int? hpLost,
+    int? tempHp,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) => CharacterDoc(
@@ -83,6 +93,8 @@ class CharacterDoc {
     languages: languages ?? this.languages,
     equipment: equipment ?? this.equipment,
     gold: gold ?? this.gold,
+    hpLost: hpLost ?? this.hpLost,
+    tempHp: tempHp ?? this.tempHp,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt ?? this.deletedAt,
@@ -102,6 +114,8 @@ class CharacterDoc {
     'languages': languages,
     'equipment': equipment,
     'gold': gold,
+    'hpLost': hpLost,
+    'tempHp': tempHp,
     'abilityScores': {for (final a in Ability.values) a.code: scores[a]},
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -134,6 +148,8 @@ class CharacterDoc {
         for (final e in (map['equipment'] as List?) ?? const []) e as String,
       ],
       gold: map['gold'] as int? ?? 0,
+      hpLost: map['hpLost'] as int? ?? 0,
+      tempHp: map['tempHp'] as int? ?? 0,
       createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       deletedAt: map['deletedAt'] as DateTime?,
