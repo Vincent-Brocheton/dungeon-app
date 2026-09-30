@@ -54,3 +54,8 @@ class D20Roll {
   /// Dé retenu + modificateur.
   int get total => kept + modifier;
 }
+
+/// Lance [count] dés à [sides] faces.
+List<int> rollDice(Random rng, int count, int sides) => [
+  for (var i = 0; i < count; i++) rng.nextInt(sides) + 1,
+];

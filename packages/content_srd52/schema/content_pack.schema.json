@@ -13,7 +13,8 @@
     "license": { "type": "string", "minLength": 1 },
     "attribution": { "type": "string" },
     "species": { "type": "array", "items": { "$ref": "#/$defs/species" } },
-    "backgrounds": { "type": "array", "items": { "$ref": "#/$defs/background" } }
+    "backgrounds": { "type": "array", "items": { "$ref": "#/$defs/background" } },
+    "weapons": { "type": "array", "items": { "$ref": "#/$defs/weapon" } }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[-.][a-z0-9]+)*$" },
@@ -57,6 +58,19 @@
           "items": { "$ref": "#/$defs/id" }
         },
         "tool": { "$ref": "#/$defs/id" }
+      }
+    },
+    "weapon": {
+      "type": "object",
+      "required": ["id", "name", "damage", "damageType"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1, "description": "Nom tel qu'écrit dans l'équipement des personnages (français)." },
+        "damage": { "type": "string", "pattern": "^[0-9]+d[0-9]+$" },
+        "damageType": { "type": "string", "enum": ["contondant", "perforant", "tranchant"] },
+        "ranged": { "type": "boolean" },
+        "finesse": { "type": "boolean" }
       }
     }
   }

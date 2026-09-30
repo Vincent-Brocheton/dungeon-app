@@ -56,6 +56,15 @@ Widget _app(
         name: 'Test',
         schemaVersion: 1,
         license: 'CC-BY-4.0',
+        weapons: [
+          WeaponDef(
+            id: 'epee-longue',
+            name: 'Épée longue',
+            diceCount: 1,
+            diceSides: 8,
+            damageType: 'tranchant',
+          ),
+        ],
       ),
     ),
     adminSpeciesRepositoryProvider.overrideWithValue(
@@ -188,5 +197,38 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("Jet d'initiative"), findsOneWidget);
     expect(tester.widget<Text>(find.byKey(const Key('roll-total'))).data, '18');
+  });
+
+  testWidgets('onglet Actions : attaquer avec une arme, dégâts doublés sur '
+      'un 20 naturel', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan);
+    appRouter.go(AppRoutes.character('durgan'));
+    // Attaque 16, dégâts 5 ; puis attaque 20, dégâts 4 et 6.
+    await tester.pumpWidget(_app(characters, dice: [16, 5, 20, 4, 6]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Actions'));
+    await tester.pumpAndSettle();
+    // Force 17 → +3, maîtrise +2.
+    expect(find.text('Épée longue'), findsOneWidget);
+    expect(find.text('+5'), findsOneWidget);
+    expect(find.text('1d8+3 tranchant'), findsOneWidget);
+
+    Text total(String key) => tester.widget<Text>(find.byKey(Key(key)));
+    await tester.tap(find.byTooltip('Attaquer : Épée longue'));
+    await tester.pumpAndSettle();
+    expect(total('roll-total').data, '21');
+    expect(total('damage-total').data, '8');
+
+    await tester.tap(find.text('Relancer'));
+    await tester.pumpAndSettle();
+    expect(total('roll-total').data, '25');
+    expect(find.text('DÉGÂTS — COUP CRITIQUE, DÉS DOUBLÉS'), findsOneWidget);
+    expect(total('damage-total').data, '13');
   });
 }
