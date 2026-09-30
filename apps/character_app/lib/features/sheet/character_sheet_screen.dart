@@ -10,13 +10,15 @@ import '../../theme/app_theme.dart';
 import '../admin/admin_providers.dart';
 import '../characters/characters_providers.dart';
 import '../wizard/wizard_rules.dart';
+import 'roll_dialog.dart';
 
 String _signed(int value) => value >= 0 ? '+$value' : '$value';
 
 /// Fiche d'un personnage. Reprend `CharSheetSummary.dc.html` (onglets
 /// Résumé et Sac sur mobile) et `CharSheetWeb.dc.html` (trois colonnes à
-/// partir de 900px). Les autres onglets (actions, sorts, notes), les jets de
-/// dés, repos et conditions viendront avec leurs maquettes.
+/// partir de 900px). Initiative, sauvegardes et compétences se lancent au
+/// d20 (cf. `roll_dialog.dart`). Les autres onglets (actions, sorts, notes),
+/// repos et conditions viendront avec leurs maquettes.
 class CharacterSheetScreen extends ConsumerStatefulWidget {
   const CharacterSheetScreen({super.key, required this.characterId});
 
@@ -91,14 +93,29 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
       if (background != null) background.name,
     ].join(' · ');
 
+    const dcHint = 'Compare ce total au DD demandé par le MJ.';
     final strip = _StatStrip(
       stats: [
-        ('CA', '${stats.armorClass}'),
-        ('Init.', _signed(stats.initiative)),
-        ('Vitesse', speed),
-        ('Perc. pas.', '${stats.passivePerception}'),
+        ('CA', '${stats.armorClass}', null),
+        (
+          'Init.',
+          _signed(stats.initiative),
+          () => showRollDialog(
+            context,
+            title: "Jet d'initiative",
+            subtitle: '${doc.name} · Dextérité ${_signed(stats.initiative)}',
+            modifierLabel: 'Dextérité',
+            modifier: stats.initiative,
+            hint:
+                "Ce résultat détermine ta place dans l'ordre d'initiative — "
+                'communique-le à ton MJ pour le suivi de combat.',
+          ),
+        ),
+        ('Vitesse', speed, null),
+        ('Perc. pas.', '${stats.passivePerception}', null),
       ],
     );
+    String mastery(bool proficient) => proficient ? ', maîtrisé' : '';
     final hp = _HitPoints(
       doc: doc,
       maxHp: stats.hitPoints,
@@ -111,6 +128,15 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
         for (final a in Ability.values)
           (abilityLabel(a), null, stats.saves[a]!.$1, stats.saves[a]!.$2),
       ],
+      onRoll:
+          (name, _, modifier, proficient) => showRollDialog(
+            context,
+            title: 'Jet de sauvegarde',
+            subtitle: '${doc.name} · $name${mastery(proficient)}',
+            modifierLabel: '$name${mastery(proficient)}',
+            modifier: modifier,
+            hint: dcHint,
+          ),
     );
     final skillList = _ModifierList(
       title: 'Compétences',
@@ -123,6 +149,15 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
             stats.skills[name]!.$2,
           ),
       ],
+      onRoll:
+          (name, ability, modifier, proficient) => showRollDialog(
+            context,
+            title: 'Test de compétence',
+            subtitle: '${doc.name} · $name ($ability${mastery(proficient)})',
+            modifierLabel: '$name ($ability${mastery(proficient)})',
+            modifier: modifier,
+            hint: dcHint,
+          ),
     );
     final bag = _Bag(doc: doc);
 
@@ -265,36 +300,48 @@ class _Section extends StatelessWidget {
 class _StatStrip extends StatelessWidget {
   const _StatStrip({required this.stats});
 
-  final List<(String, String)> stats;
+  /// Libellé, valeur, et jet à lancer au toucher (facultatif).
+  final List<(String, String, VoidCallback?)> stats;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
       children: [
-        for (final (i, (label, value)) in stats.indexed) ...[
+        for (final (i, (label, value, onTap)) in stats.indexed) ...[
           if (i > 0) const SizedBox(width: 8),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-              decoration: _card,
-              child: Column(
-                children: [
-                  Text(
-                    label.toUpperCase(),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textMuted,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                decoration: _card,
+                child: Column(
+                  children: [
+                    Text(
+                      label.toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.textMuted,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    value,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppTheme.accent,
-                      fontWeight: FontWeight.w700,
+                    const SizedBox(height: 3),
+                    Text(
+                      value,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: AppTheme.accent,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                    if (onTap != null)
+                      Icon(
+                        Icons.casino_outlined,
+                        size: 12,
+                        color: AppTheme.accent,
+                        semanticLabel: 'Lancer : $label',
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -504,12 +551,19 @@ class _Abilities extends StatelessWidget {
 
 /// Liste « nom (carac) … modificateur », maîtrises en or avec ★.
 class _ModifierList extends StatelessWidget {
-  const _ModifierList({required this.title, required this.rows});
+  const _ModifierList({
+    required this.title,
+    required this.rows,
+    required this.onRoll,
+  });
 
   final String title;
 
   /// Nom, caractéristique abrégée (facultative), modificateur, maîtrise.
   final List<(String, String?, int, bool)> rows;
+
+  /// Lance le jet d'une ligne (mêmes champs que [rows]).
+  final void Function(String, String?, int, bool) onRoll;
 
   @override
   Widget build(BuildContext context) {
@@ -565,6 +619,24 @@ class _ModifierList extends StatelessWidget {
                             proficient ? AppTheme.accent : AppTheme.textMuted,
                         fontWeight: proficient ? FontWeight.w700 : null,
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.outlined(
+                      tooltip: 'Lancer : $name',
+                      iconSize: 14,
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 28,
+                        height: 28,
+                      ),
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.casino_outlined,
+                        color:
+                            proficient ? AppTheme.accent : AppTheme.textMuted,
+                      ),
+                      onPressed:
+                          () => onRoll(name, ability, modifier, proficient),
                     ),
                   ],
                 ),
