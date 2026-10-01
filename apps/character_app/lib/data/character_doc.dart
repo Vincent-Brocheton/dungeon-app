@@ -28,6 +28,12 @@ class CharacterDoc {
     this.conditions = const [],
     this.exhaustion = 0,
     this.heroicInspiration = false,
+    this.personalityTrait = '',
+    this.ideal = '',
+    this.bond = '',
+    this.flaw = '',
+    this.backstory = '',
+    this.allies = '',
     this.deletedAt,
     this.schemaVersion = currentSchemaVersion,
   });
@@ -80,6 +86,18 @@ class CharacterDoc {
   /// Inspiration héroïque disponible.
   final bool heroicInspiration;
 
+  /// Personnalité (onglet Notes) : trait, idéal, lien, défaut.
+  final String personalityTrait;
+  final String ideal;
+  final String bond;
+  final String flaw;
+
+  /// Histoire du personnage.
+  final String backstory;
+
+  /// Alliés et organisations.
+  final String allies;
+
   /// [conditions] reconnues par le moteur.
   Set<Condition> get activeConditions => {
     for (final c in Condition.values)
@@ -114,6 +132,12 @@ class CharacterDoc {
     List<String>? conditions,
     int? exhaustion,
     bool? heroicInspiration,
+    String? personalityTrait,
+    String? ideal,
+    String? bond,
+    String? flaw,
+    String? backstory,
+    String? allies,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) => CharacterDoc(
@@ -137,6 +161,12 @@ class CharacterDoc {
     conditions: conditions ?? this.conditions,
     exhaustion: exhaustion ?? this.exhaustion,
     heroicInspiration: heroicInspiration ?? this.heroicInspiration,
+    personalityTrait: personalityTrait ?? this.personalityTrait,
+    ideal: ideal ?? this.ideal,
+    bond: bond ?? this.bond,
+    flaw: flaw ?? this.flaw,
+    backstory: backstory ?? this.backstory,
+    allies: allies ?? this.allies,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt ?? this.deletedAt,
@@ -164,6 +194,12 @@ class CharacterDoc {
     'conditions': conditions,
     'exhaustion': exhaustion,
     'heroicInspiration': heroicInspiration,
+    'personalityTrait': personalityTrait,
+    'ideal': ideal,
+    'bond': bond,
+    'flaw': flaw,
+    'backstory': backstory,
+    'allies': allies,
     'abilityScores': {for (final a in Ability.values) a.code: scores[a]},
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -218,6 +254,12 @@ class CharacterDoc {
       ],
       exhaustion: map['exhaustion'] as int? ?? 0,
       heroicInspiration: map['heroicInspiration'] as bool? ?? false,
+      personalityTrait: map['personalityTrait'] as String? ?? '',
+      ideal: map['ideal'] as String? ?? '',
+      bond: map['bond'] as String? ?? '',
+      flaw: map['flaw'] as String? ?? '',
+      backstory: map['backstory'] as String? ?? '',
+      allies: map['allies'] as String? ?? '',
       createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       deletedAt: map['deletedAt'] as DateTime?,
@@ -258,4 +300,34 @@ class InventoryItem {
     quantity: map['quantity'] as int? ?? 1,
     equipped: map['equipped'] as bool? ?? false,
   );
+}
+
+/// Note de session privée : `users/{uid}/notes/{id}`, hors du document du
+/// personnage pour que le MJ (qui lit les personnages) ne la voie pas.
+class CharacterNote {
+  const CharacterNote({
+    required this.id,
+    required this.characterId,
+    required this.text,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String characterId;
+  final String text;
+  final DateTime createdAt;
+
+  Map<String, Object?> toMap() => {
+    'characterId': characterId,
+    'text': text,
+    'createdAt': createdAt,
+  };
+
+  factory CharacterNote.fromMap(String id, Map<String, Object?> map) =>
+      CharacterNote(
+        id: id,
+        characterId: map['characterId'] as String? ?? '',
+        text: map['text'] as String? ?? '',
+        createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
+      );
 }

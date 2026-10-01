@@ -25,6 +25,15 @@ service cloud.firestore {
         && (!('level' in d) || (d.level is int && d.level >= 1 && d.level <= 20));
     }
 
+    function validNote() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['characterId', 'text', 'createdAt'])
+        && d.characterId is string && d.characterId.size() > 0
+        && d.characterId.size() <= 128
+        && d.text is string && d.text.size() > 0 && d.text.size() <= 4000
+        && d.createdAt is timestamp;
+    }
+
     function validSpecies() {
       let d = request.resource.data;
       return d.keys().hasAll(['name', 'updatedAt'])
@@ -123,6 +132,13 @@ service cloud.firestore {
         allow read: if isOwner(uid) || isAdmin();
         allow delete: if isOwner(uid);
         allow create, update: if isOwner(uid) && validCharacter();
+      }
+
+      // Notes de session privées : le propriétaire seul, jamais le MJ (hors
+      // du wildcard characters ci-dessous, volontairement).
+      match /notes/{noteId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validNote();
       }
     }
 

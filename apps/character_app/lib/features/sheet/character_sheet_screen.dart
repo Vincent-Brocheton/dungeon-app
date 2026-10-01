@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ import 'roll_dialog.dart';
 
 part 'conditions_part.dart';
 part 'inventory_part.dart';
+part 'notes_part.dart';
 part 'spells_tab.dart';
 
 String _signed(int value) => value >= 0 ? '+$value' : '$value';
@@ -31,7 +33,8 @@ String _signed(int value) => value >= 0 ? '+$value' : '$value';
 /// Initiative, sauvegardes et compétences se lancent au d20 (cf.
 /// `roll_dialog.dart`), repos dans `rest_dialogs.dart`, sorts et grimoire
 /// dans `spells_tab.dart`, conditions et inspiration dans
-/// `conditions_part.dart`. Les notes viendront avec leur maquette.
+/// `conditions_part.dart`, sac dans `inventory_part.dart`, notes dans
+/// `notes_part.dart`.
 class CharacterSheetScreen extends ConsumerStatefulWidget {
   const CharacterSheetScreen({super.key, required this.characterId});
 
@@ -202,6 +205,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
           ),
     );
     final bag = _Bag(doc: doc, pack: pack);
+    final notes = _Notes(key: ValueKey(doc.id), doc: doc);
     final status = _Status(doc: doc);
     final spells = _SpellsTab(
       doc: doc,
@@ -294,7 +298,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                     children: [
                       Expanded(child: column([abilities, saves, skillList])),
                       Expanded(child: column([strip, hp, status, actions])),
-                      Expanded(child: column([spells, bag])),
+                      Expanded(child: column([spells, bag, notes])),
                     ],
                   )
                   : switch (_tab) {
@@ -308,7 +312,8 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                     ]),
                     1 => column([actions]),
                     2 => column([spells]),
-                    _ => column([bag]),
+                    3 => column([bag]),
+                    _ => column([notes]),
                   },
           bottomNavigationBar:
               wide
@@ -332,6 +337,10 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                       NavigationDestination(
                         icon: Icon(Icons.backpack_outlined),
                         label: 'Sac',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.edit_note_outlined),
+                        label: 'Notes',
                       ),
                     ],
                   ),
