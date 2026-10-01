@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../theme/app_theme.dart';
+import 'condition_labels.dart';
 
 /// Dégâts d'une attaque : dés, bonus et type (« tranchant »).
 typedef DamageDice = ({int count, int sides, int bonus, String type});
@@ -14,8 +15,10 @@ final diceRngProvider = Provider<Random>((ref) => Random());
 
 /// Jet de d20 d'un test, d'une sauvegarde ou de l'initiative. Reprend
 /// `CharSheetRollSkill`, `CharSheetRollSave` et `CharSheetRollInitiative`
-/// (et leurs variantes web, centrées à 560px). L'avantage ou le désavantage
-/// se choisit à la main, en attendant l'inspiration et les conditions.
+/// (et leurs variantes web, centrées à 560px). [effects] (conditions,
+/// épuisement) fixe le mode de départ, le malus et l'échec automatique ;
+/// [onSpendInspiration], s'il est donné, propose de dépenser l'Inspiration
+/// héroïque pour l'avantage. Le mode reste modifiable à la main.
 /// Avec [damage], c'est un jet d'attaque (`CharSheetRoll`) : les dégâts sont
 /// lancés avec, dés doublés sur un 20 naturel.
 Future<void> showRollDialog(
@@ -26,6 +29,8 @@ Future<void> showRollDialog(
   required int modifier,
   required String hint,
   DamageDice? damage,
+  D20Effects effects = const D20Effects(),
+  VoidCallback? onSpendInspiration,
 }) => showDialog<void>(
   context: context,
   builder:
@@ -36,6 +41,8 @@ Future<void> showRollDialog(
         modifier: modifier,
         hint: hint,
         damage: damage,
+        effects: effects,
+        onSpendInspiration: onSpendInspiration,
       ),
 );
 
@@ -49,6 +56,8 @@ class _RollDialog extends ConsumerStatefulWidget {
     required this.modifier,
     required this.hint,
     this.damage,
+    required this.effects,
+    this.onSpendInspiration,
   });
 
   final String title;
@@ -57,13 +66,16 @@ class _RollDialog extends ConsumerStatefulWidget {
   final int modifier;
   final String hint;
   final DamageDice? damage;
+  final D20Effects effects;
+  final VoidCallback? onSpendInspiration;
 
   @override
   ConsumerState<_RollDialog> createState() => _RollDialogState();
 }
 
 class _RollDialogState extends ConsumerState<_RollDialog> {
-  var _mode = RollMode.normal;
+  late var _mode = widget.effects.mode;
+  var _inspired = false;
   late D20Roll _roll;
   List<int> _damageDice = const [];
 
@@ -83,8 +95,24 @@ class _RollDialogState extends ConsumerState<_RollDialog> {
     }
   }
 
-  D20Roll _newRoll() =>
-      D20Roll.roll(ref.read(diceRngProvider), widget.modifier, mode: _mode);
+  D20Roll _newRoll() => D20Roll.roll(
+    ref.read(diceRngProvider),
+    widget.modifier + widget.effects.penalty,
+    mode: _mode,
+  );
+
+  void _spendInspiration() {
+    widget.onSpendInspiration!();
+    setState(() {
+      _inspired = true;
+      // L'avantage de l'inspiration annule un désavantage (PHB 2024).
+      _mode =
+          widget.effects.disadvantage.isEmpty
+              ? RollMode.advantage
+              : RollMode.normal;
+      _reroll();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +123,18 @@ class _RollDialogState extends ConsumerState<_RollDialog> {
     final twoDice = _roll.dice.length == 2;
     final keptIndex = _roll.dice.indexOf(_roll.kept);
     final discarded = twoDice ? _roll.dice[1 - keptIndex] : null;
+    final effects = widget.effects;
+    final notes = [
+      if (effects.advantage.isNotEmpty)
+        'Avantage — ${conditionList(effects.advantage)}.',
+      if (effects.disadvantage.isNotEmpty)
+        'Désavantage — ${conditionList(effects.disadvantage)}.',
+      if (effects.autoFail.isNotEmpty)
+        'Échec automatique — ${conditionList(effects.autoFail)}.',
+      if (effects.penalty != 0)
+        'Épuisement — ${_signed(effects.penalty)} au jet.',
+      if (_inspired) 'Inspiration héroïque dépensée — avantage.',
+    ];
 
     return Dialog(
       insetPadding: const EdgeInsets.all(20),
@@ -108,6 +148,34 @@ class _RollDialogState extends ConsumerState<_RollDialog> {
             children: [
               Text(widget.title, style: theme.textTheme.titleLarge),
               Text(widget.subtitle, style: muted),
+              for (final note in notes) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF201A14),
+                    border: Border.all(color: AppTheme.border),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    note,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF7B9CC4),
+                    ),
+                  ),
+                ),
+              ],
+              if (widget.onSpendInspiration != null && !_inspired) ...[
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: _spendInspiration,
+                  icon: const Icon(Icons.star, color: AppTheme.accent),
+                  label: const Text("Dépenser l'Inspiration héroïque"),
+                ),
+              ],
               const SizedBox(height: 16),
               SegmentedButton<RollMode>(
                 segments: const [
@@ -174,6 +242,13 @@ class _RollDialogState extends ConsumerState<_RollDialog> {
                       label: widget.modifierLabel,
                       value: _signed(widget.modifier),
                     ),
+                    if (effects.penalty != 0) ...[
+                      const SizedBox(height: 8),
+                      _Line(
+                        label: 'Épuisement',
+                        value: _signed(effects.penalty),
+                      ),
+                    ],
                     const Divider(height: 20),
                     Row(
                       children: [
@@ -184,7 +259,7 @@ class _RollDialogState extends ConsumerState<_RollDialog> {
                           ),
                         ),
                         Text(
-                          '${_roll.total}',
+                          effects.autoFail.isEmpty ? '${_roll.total}' : 'Échec',
                           key: const Key('roll-total'),
                           style: theme.textTheme.headlineSmall?.copyWith(
                             color: AppTheme.accent,

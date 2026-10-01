@@ -25,6 +25,9 @@ class CharacterDoc {
     this.hitDiceUsed = 0,
     this.spellIds = const [],
     this.slotsUsed = const [],
+    this.conditions = const [],
+    this.exhaustion = 0,
+    this.heroicInspiration = false,
     this.deletedAt,
     this.schemaVersion = currentSchemaVersion,
   });
@@ -67,6 +70,21 @@ class CharacterDoc {
 
   /// Emplacements dépensés depuis le dernier repos long (index 0 = niveau 1).
   final List<int> slotsUsed;
+
+  /// Conditions actives (noms de [Condition]).
+  final List<String> conditions;
+
+  /// Niveau d'épuisement, 0 à 6.
+  final int exhaustion;
+
+  /// Inspiration héroïque disponible.
+  final bool heroicInspiration;
+
+  /// [conditions] reconnues par le moteur.
+  Set<Condition> get activeConditions => {
+    for (final c in Condition.values)
+      if (conditions.contains(c.name)) c,
+  };
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -93,6 +111,9 @@ class CharacterDoc {
     int? hitDiceUsed,
     List<String>? spellIds,
     List<int>? slotsUsed,
+    List<String>? conditions,
+    int? exhaustion,
+    bool? heroicInspiration,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) => CharacterDoc(
@@ -113,6 +134,9 @@ class CharacterDoc {
     hitDiceUsed: hitDiceUsed ?? this.hitDiceUsed,
     spellIds: spellIds ?? this.spellIds,
     slotsUsed: slotsUsed ?? this.slotsUsed,
+    conditions: conditions ?? this.conditions,
+    exhaustion: exhaustion ?? this.exhaustion,
+    heroicInspiration: heroicInspiration ?? this.heroicInspiration,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt ?? this.deletedAt,
@@ -137,6 +161,9 @@ class CharacterDoc {
     'hitDiceUsed': hitDiceUsed,
     'spellIds': spellIds,
     'slotsUsed': slotsUsed,
+    'conditions': conditions,
+    'exhaustion': exhaustion,
+    'heroicInspiration': heroicInspiration,
     'abilityScores': {for (final a in Ability.values) a.code: scores[a]},
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -178,6 +205,11 @@ class CharacterDoc {
       slotsUsed: [
         for (final n in (map['slotsUsed'] as List?) ?? const []) n as int,
       ],
+      conditions: [
+        for (final c in (map['conditions'] as List?) ?? const []) c as String,
+      ],
+      exhaustion: map['exhaustion'] as int? ?? 0,
+      heroicInspiration: map['heroicInspiration'] as bool? ?? false,
       createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       deletedAt: map['deletedAt'] as DateTime?,

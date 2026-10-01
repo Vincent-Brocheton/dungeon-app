@@ -370,4 +370,77 @@ void main() {
       expect(saved.slotsUsed, [1]);
     },
   );
+
+  testWidgets(
+    'conditions et épuisement appliqués aux jets, inspiration dépensée',
+    (tester) async {
+      tester.view.physicalSize = const Size(420, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final characters = InMemoryCharacterRepository();
+      await characters.upsert('me', _durgan);
+      appRouter.go(AppRoutes.character('durgan'));
+      await tester.pumpWidget(_app(characters, dice: [16, 3, 12, 9, 15]));
+      await tester.pumpAndSettle();
+      expect(find.text('Aucune condition.'), findsOneWidget);
+
+      await tester.tap(find.text('+ Gérer'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Empoisonné'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byTooltip("Un niveau d'épuisement de plus"),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip("Un niveau d'épuisement de plus"));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Fermer'));
+      await tester.pumpAndSettle();
+      expect(find.text('Empoisonné'), findsOneWidget);
+      expect(find.text('Épuisement (niveau 1)'), findsOneWidget);
+
+      // Athlétisme +5, désavantage (Empoisonné) : 16 et 3, 3 retenu ; -2.
+      await tester.tap(find.byTooltip('Lancer : Athlétisme'));
+      await tester.pumpAndSettle();
+      expect(find.text('Désavantage — Empoisonné.'), findsOneWidget);
+      expect(find.text('3 (16 écarté)'), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('roll-total'))).data,
+        '6',
+      );
+      expect(find.text("Dépenser l'Inspiration héroïque"), findsNothing);
+      await tester.tap(find.text('Fermer'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Pas d'Inspiration héroïque"));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Noter l'inspiration"));
+      await tester.pumpAndSettle();
+      expect(find.text('Inspiration héroïque disponible'), findsOneWidget);
+
+      // Sauvegarde de Force +5 (pas de désavantage) : 12 - 2 = 15 ; puis
+      // l'inspiration donne l'avantage : 9 et 15, 15 retenu → 18.
+      await tester.tap(find.byTooltip('Lancer : Force'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<Text>(find.byKey(const Key('roll-total'))).data,
+        '15',
+      );
+      await tester.tap(find.text("Dépenser l'Inspiration héroïque"));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Inspiration héroïque dépensée — avantage.'),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('roll-total'))).data,
+        '18',
+      );
+      final saved = (await characters.watchAll('me').first).single;
+      expect(saved.conditions, ['poisoned']);
+      expect(saved.exhaustion, 1);
+      expect(saved.heroicInspiration, isFalse);
+    },
+  );
 }
