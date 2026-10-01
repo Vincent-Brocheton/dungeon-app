@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:character_app/data/character_doc.dart';
 import 'package:character_app/features/wizard/wizard_rules.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rules_engine/rules_engine.dart';
@@ -189,5 +190,13 @@ void main() {
     expect(improved.strength, 20);
     expect(improved.dexterity, 15);
     expect(improved.wisdom, 10);
+  });
+
+  test('pièces : conversion vers la pièce supérieure, valeur en po', () {
+    expect(convertCoins(1, 2, 25, Coin.copper), (1, 4, 5));
+    expect(convertCoins(1, 14, 5, Coin.silver), (2, 4, 5));
+    expect(goldValue(24, 8, 15), '24,95');
+    expect(goldValue(3, 0, 0), '3');
+    expect(goldValue(0, 0, 7), '0,07');
   });
 }

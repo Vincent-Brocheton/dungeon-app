@@ -226,7 +226,7 @@ void main() {
 
     await tester.tap(find.text('Sac'));
     await tester.pumpAndSettle();
-    expect(find.text('14 po'), findsOneWidget);
+    expect(find.text('14 po · 0 pa · 0 pc'), findsOneWidget);
     expect(find.text('Épée longue'), findsOneWidget);
   });
 
@@ -681,5 +681,53 @@ void main() {
     expect(saved.hpGains, [6, 6, 7]);
     expect(saved.scores.strength, 19);
     expect(saved.subclassId, 'champion');
+  });
+
+  testWidgets('bourse : conversions, mouvement refusé puis accepté', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan.copyWith(silver: 12, copper: 25));
+    appRouter.go(AppRoutes.character('durgan'));
+    await tester.pumpWidget(_app(characters));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Sac'));
+    await tester.pumpAndSettle();
+    expect(find.text('14 po · 12 pa · 25 pc'), findsOneWidget);
+    await tester.tap(find.text('Gérer →'));
+    await tester.pumpAndSettle();
+    String text(String key) => tester.widget<Text>(find.byKey(Key(key))).data!;
+    expect(text('purse-total'), '≈ 15,45 po');
+
+    await tester.tap(find.byKey(const Key('convert-copper')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('convert-silver')));
+    await tester.pumpAndSettle();
+    expect(
+      (text('coin-gold'), text('coin-silver'), text('coin-copper')),
+      ('15', '4', '5'),
+    );
+    expect(text('purse-total'), '≈ 15,45 po');
+
+    await tester.tap(find.text('Ajouter un mouvement manuel'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('movement-label')), 'Amende');
+    await tester.enterText(find.byKey(const Key('movement-amount')), '-20');
+    await tester.tap(find.text('Ajouter'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pas assez de pièces : 15 po.'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('movement-amount')), '+5');
+    await tester.tap(find.text('Ajouter'));
+    await tester.pumpAndSettle();
+    expect(text('coin-gold'), '20');
+    expect(find.text('Amende'), findsOneWidget);
+    expect(find.text('+ 5 po'), findsOneWidget);
+    final saved = (await characters.watchAll('me').first).single;
+    expect(saved.moneyLog.single.amount, 5);
   });
 }
