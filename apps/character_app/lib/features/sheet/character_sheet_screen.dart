@@ -266,6 +266,14 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
           ),
     );
 
+    if (doc.isDead) {
+      return _Memorial(
+        doc: doc,
+        subtitle: subtitle,
+        maxHp: stats.hitPoints,
+        armorClass: armorClassValue,
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 900;

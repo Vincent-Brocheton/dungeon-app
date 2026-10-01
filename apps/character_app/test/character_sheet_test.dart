@@ -730,4 +730,55 @@ void main() {
     final saved = (await characters.watchAll('me').first).single;
     expect(saved.moneyLog.single.amount, 5);
   });
+
+  testWidgets('décès confirmé : mémorial, « Décédé » dans la liste, puis '
+      'résurrection', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert(
+      'me',
+      _durgan.copyWith(hpLost: 12, deathSaves: const DeathSaves(failures: 3)),
+    );
+    appRouter.go(AppRoutes.home);
+    await tester.pumpWidget(_app(characters));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Durgan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mort'), findsOneWidget);
+
+    await tester.tap(find.text('Confirmer le décès'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('epitaph-field')),
+      'Tombé face au chef gobelin.',
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Confirmer le décès'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Décédé — '), findsOneWidget);
+    expect(find.text('Tombé face au chef gobelin.'), findsOneWidget);
+    expect(find.text('Points de vie max.'), findsOneWidget);
+    expect(find.byTooltip('Subir des dégâts'), findsNothing);
+
+    await tester.tap(find.text('Retour à Mes personnages'));
+    await tester.pumpAndSettle();
+    expect(find.text('Guerrier 1 · Décédé'), findsOneWidget);
+
+    await tester.tap(find.text('Durgan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Résurrection (revient à 1 PV)'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 12 PV'), findsOneWidget);
+    final saved = (await characters.watchAll('me').first).single;
+    expect(saved.isDead, isFalse);
+    expect(saved.deathFailures, 0);
+  });
 }

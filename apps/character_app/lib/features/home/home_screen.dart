@@ -117,6 +117,7 @@ class _CharacterCard extends ConsumerWidget {
     final subtitle = [
       className == null ? 'Niveau ${doc.level}' : '$className ${doc.level}',
       if (speciesName != null) speciesName!,
+      if (doc.isDead) 'Décédé',
     ].join(' · ');
 
     return InkWell(
