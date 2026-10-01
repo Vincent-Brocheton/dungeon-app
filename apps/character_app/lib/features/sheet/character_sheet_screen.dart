@@ -20,6 +20,7 @@ import 'rest_dialogs.dart';
 import 'roll_dialog.dart';
 
 part 'conditions_part.dart';
+part 'inventory_part.dart';
 part 'spells_tab.dart';
 
 String _signed(int value) => value >= 0 ? '+$value' : '$value';
@@ -116,10 +117,22 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
       if (background != null) background.name,
     ].join(' · ');
 
+    final pack = ref.watch(srdPackProvider).value;
+    final armors = pack?.armors ?? const <ArmorDef>[];
+    final worn = [
+      for (final item in doc.inventory)
+        if (item.equipped)
+          if (armorForItem(item.name, armors) case final a?) a,
+    ];
+    final armorClassValue = armorClass(
+      abilityModifier(doc.scores.dexterity),
+      armor: worn.where((a) => a.category != ArmorCategory.shield).firstOrNull,
+      shield: worn.where((a) => a.category == ArmorCategory.shield).firstOrNull,
+    );
     const dcHint = 'Compare ce total au DD demandé par le MJ.';
     final strip = _StatStrip(
       stats: [
-        ('CA', '${stats.armorClass}', null),
+        ('CA', '$armorClassValue', null),
         (
           'Init.',
           _signed(stats.initiative),
@@ -188,22 +201,22 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
             onSpendInspiration: spendInspiration,
           ),
     );
-    final bag = _Bag(doc: doc);
+    final bag = _Bag(doc: doc, pack: pack);
     final status = _Status(doc: doc);
     final spells = _SpellsTab(
       doc: doc,
       cls: cls,
       proficiency: stats.proficiencyBonus,
     );
-    final weapons = ref.watch(srdPackProvider).value?.weapons ?? const [];
+    final weapons = pack?.weapons ?? const <WeaponDef>[];
     final actions = _Actions(
       cls: cls,
       scores: doc.scores,
       level: doc.level,
       proficiency: stats.proficiencyBonus,
       weapons: [
-        for (final item in doc.equipment)
-          if (weaponForItem(item, weapons) case final w?) w,
+        for (final item in doc.inventory)
+          if (weaponForItem(item.name, weapons) case final w?) w,
       ],
       onAttack:
           (weapon, attack, damage) => showRollDialog(
@@ -948,75 +961,6 @@ class _Actions extends StatelessWidget {
                     ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-/// Bourse et objets (équipement de départ en texte, en attendant
-/// l'inventaire détaillé de `CharSheetInventory.dc.html`).
-class _Bag extends StatelessWidget {
-  const _Bag({required this.doc});
-
-  final CharacterDoc doc;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Section(
-          title: 'Bourse',
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: _card,
-            child: Text(
-              '${doc.gold} po',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: AppTheme.accent,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        _Section(
-          title: 'Objets',
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            decoration: _card,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (doc.equipment.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Text(
-                      'Aucun objet.',
-                      style: TextStyle(color: AppTheme.textMuted),
-                    ),
-                  ),
-                for (final item in doc.equipment)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 7),
-                    child: Text(item),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        if (doc.languages.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          _Section(
-            title: 'Langues',
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: _card,
-              child: Text(doc.languages.join(', ')),
             ),
           ),
         ],

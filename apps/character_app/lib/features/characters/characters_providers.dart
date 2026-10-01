@@ -68,7 +68,7 @@ class CharactersController {
       backgroundId: backgroundId,
       alignment: alignment,
       languages: languages,
-      equipment: equipment,
+      inventory: [for (final e in equipment) InventoryItem(name: e)],
       gold: gold,
       createdAt: now,
       updatedAt: now,

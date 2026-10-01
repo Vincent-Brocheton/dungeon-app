@@ -254,5 +254,85 @@
       "damageType": "perforant",
       "ranged": true
     }
+  ],
+  "armors": [
+    {
+      "id": "matelassee",
+      "name": "Matelassée",
+      "baseAc": 11,
+      "category": "light"
+    },
+    {
+      "id": "cuir",
+      "name": "Cuir",
+      "baseAc": 11,
+      "category": "light"
+    },
+    {
+      "id": "cuir-cloute",
+      "name": "Cuir clouté",
+      "baseAc": 12,
+      "category": "light"
+    },
+    {
+      "id": "peaux",
+      "name": "Peaux",
+      "baseAc": 12,
+      "category": "medium"
+    },
+    {
+      "id": "chemise-de-mailles",
+      "name": "Chemise de mailles",
+      "baseAc": 13,
+      "category": "medium"
+    },
+    {
+      "id": "ecailles",
+      "name": "Écailles",
+      "baseAc": 14,
+      "category": "medium"
+    },
+    {
+      "id": "cuirasse",
+      "name": "Cuirasse",
+      "baseAc": 14,
+      "category": "medium"
+    },
+    {
+      "id": "demi-plate",
+      "name": "Demi-plate",
+      "baseAc": 15,
+      "category": "medium"
+    },
+    {
+      "id": "broigne",
+      "name": "Broigne",
+      "baseAc": 14,
+      "category": "heavy"
+    },
+    {
+      "id": "cotte-de-mailles",
+      "name": "Cotte de mailles",
+      "baseAc": 16,
+      "category": "heavy"
+    },
+    {
+      "id": "clibanion",
+      "name": "Clibanion",
+      "baseAc": 17,
+      "category": "heavy"
+    },
+    {
+      "id": "harnois",
+      "name": "Harnois",
+      "baseAc": 18,
+      "category": "heavy"
+    },
+    {
+      "id": "bouclier",
+      "name": "Bouclier",
+      "baseAc": 2,
+      "category": "shield"
+    }
   ]
 }

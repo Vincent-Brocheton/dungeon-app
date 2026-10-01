@@ -186,13 +186,20 @@ int hitDiceHealing(List<int> rolls, int constitutionModifier) =>
 /// Arme de [weapons] désignée par un objet d'équipement (« Arbalète
 /// légère et 20 carreaux »), le nom le plus long l'emportant (« Lance
 /// d'arçon » plutôt que « Lance »).
-WeaponDef? weaponForItem(String item, List<WeaponDef> weapons) {
+WeaponDef? weaponForItem(String item, List<WeaponDef> weapons) =>
+    _longestMatch(item, weapons, (w) => w.name);
+
+/// Armure ou bouclier de [armors] désigné par un objet d'inventaire.
+ArmorDef? armorForItem(String item, List<ArmorDef> armors) =>
+    _longestMatch(item, armors, (a) => a.name);
+
+T? _longestMatch<T>(String item, List<T> defs, String Function(T) nameOf) {
   final text = item.toLowerCase();
-  WeaponDef? best;
-  for (final w in weapons) {
-    if (text.contains(w.name.toLowerCase()) &&
-        w.name.length > (best?.name.length ?? 0)) {
-      best = w;
+  T? best;
+  for (final d in defs) {
+    if (text.contains(nameOf(d).toLowerCase()) &&
+        nameOf(d).length > (best == null ? 0 : nameOf(best).length)) {
+      best = d;
     }
   }
   return best;

@@ -159,13 +159,16 @@ void main() {
     expect(saved.languages, ['Commun', 'Naine', 'Orc']);
     expect(saved.scores.strength, 17);
     expect(saved.scores.dexterity, 14);
-    expect(saved.equipment, [
-      'Cotte de mailles',
-      'Épée longue',
-      'Bouclier',
-      'Tenue de voyage',
-      'Insigne de rang',
-    ]);
+    expect(
+      [for (final i in saved.inventory) i.name],
+      [
+        'Cotte de mailles',
+        'Épée longue',
+        'Bouclier',
+        'Tenue de voyage',
+        'Insigne de rang',
+      ],
+    );
     expect(saved.gold, 14);
   });
 }

@@ -14,7 +14,8 @@
     "attribution": { "type": "string" },
     "species": { "type": "array", "items": { "$ref": "#/$defs/species" } },
     "backgrounds": { "type": "array", "items": { "$ref": "#/$defs/background" } },
-    "weapons": { "type": "array", "items": { "$ref": "#/$defs/weapon" } }
+    "weapons": { "type": "array", "items": { "$ref": "#/$defs/weapon" } },
+    "armors": { "type": "array", "items": { "$ref": "#/$defs/armor" } }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[-.][a-z0-9]+)*$" },
@@ -71,6 +72,17 @@
         "damageType": { "type": "string", "enum": ["contondant", "perforant", "tranchant"] },
         "ranged": { "type": "boolean" },
         "finesse": { "type": "boolean" }
+      }
+    },
+    "armor": {
+      "type": "object",
+      "required": ["id", "name", "baseAc", "category"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1, "description": "Nom tel qu'écrit dans l'inventaire des personnages (français)." },
+        "baseAc": { "type": "integer", "minimum": 0, "description": "CA de base, ou bonus de CA pour le bouclier." },
+        "category": { "type": "string", "enum": ["light", "medium", "heavy", "shield"] }
       }
     }
   }
