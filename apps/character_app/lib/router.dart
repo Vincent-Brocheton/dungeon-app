@@ -15,6 +15,7 @@ import 'features/admin/admin_subspecies_editor_screen.dart';
 import 'features/admin/admin_table_screen.dart';
 import 'features/auth/account_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/level_up/level_up_screen.dart';
 import 'features/sheet/character_sheet_screen.dart';
 import 'features/wizard/wizard_screen.dart';
 
@@ -25,6 +26,7 @@ abstract final class AppRoutes {
   static const account = '/account';
   static String character(String id) => '/character/$id';
   static String spellbook(String id) => '/character/$id/spellbook';
+  static String levelUp(String id) => '/character/$id/level-up';
   static const admin = '/admin';
   static const adminSpecies = '/admin/species';
   static const adminSubspecies = '/admin/subspecies';
@@ -57,6 +59,12 @@ final appRouter = GoRouter(
                 characterId: state.pathParameters['id']!,
               ),
           routes: [
+            GoRoute(
+              path: 'level-up',
+              builder:
+                  (context, state) =>
+                      LevelUpScreen(characterId: state.pathParameters['id']!),
+            ),
             GoRoute(
               path: 'spellbook',
               builder:

@@ -16,6 +16,8 @@ class CharacterDoc {
     this.backgroundId,
     this.classId,
     this.subspeciesId,
+    this.subclassId,
+    this.hpGains = const [],
     this.alignment,
     this.languages = const [],
     this.inventory = const [],
@@ -51,6 +53,13 @@ class CharacterDoc {
   final String? backgroundId;
   final String? classId;
   final String? subspeciesId;
+
+  /// Sous-classe, choisie en montant de niveau.
+  final String? subclassId;
+
+  /// PV gagnés (dé seul, sans Constitution) à chaque niveau au-delà du
+  /// premier : index 0 = niveau 2. Un niveau absent compte la moyenne.
+  final List<int> hpGains;
 
   /// Ex. « Loyal Bon ».
   final String? alignment;
@@ -129,6 +138,8 @@ class CharacterDoc {
     String? backgroundId,
     String? classId,
     String? subspeciesId,
+    String? subclassId,
+    List<int>? hpGains,
     String? alignment,
     List<String>? languages,
     List<InventoryItem>? inventory,
@@ -159,6 +170,8 @@ class CharacterDoc {
     backgroundId: backgroundId ?? this.backgroundId,
     classId: classId ?? this.classId,
     subspeciesId: subspeciesId ?? this.subspeciesId,
+    subclassId: subclassId ?? this.subclassId,
+    hpGains: hpGains ?? this.hpGains,
     alignment: alignment ?? this.alignment,
     languages: languages ?? this.languages,
     inventory: inventory ?? this.inventory,
@@ -194,6 +207,8 @@ class CharacterDoc {
     'backgroundId': backgroundId,
     'classId': classId,
     'subspeciesId': subspeciesId,
+    'subclassId': subclassId,
+    'hpGains': hpGains,
     'alignment': alignment,
     'languages': languages,
     'inventory': [for (final i in inventory) i.toMap()],
@@ -238,6 +253,10 @@ class CharacterDoc {
       backgroundId: map['backgroundId'] as String?,
       classId: map['classId'] as String?,
       subspeciesId: map['subspeciesId'] as String?,
+      subclassId: map['subclassId'] as String?,
+      hpGains: [
+        for (final n in (map['hpGains'] as List?) ?? const []) n as int,
+      ],
       alignment: map['alignment'] as String?,
       languages: [
         for (final l in (map['languages'] as List?) ?? const []) l as String,

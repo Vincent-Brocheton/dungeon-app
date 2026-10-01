@@ -167,4 +167,27 @@ void main() {
     expect(hitDiceHealing([1, 2], -2), 2);
     expect(hitDiceHealing([], 3), 0);
   });
+
+  test('PV par niveau : dé enregistré ou moyenne, plus Constitution', () {
+    expect(levelUpHitPoints(10, 2, 1, const []), 0);
+    expect(levelUpHitPoints(10, 2, 3, const [4]), (4 + 2) + (6 + 2));
+  });
+
+  test('amélioration de caractéristique plafonnée à 20', () {
+    const scores = AbilityScores(
+      strength: 19,
+      dexterity: 14,
+      constitution: 14,
+      intelligence: 8,
+      wisdom: 10,
+      charisma: 12,
+    );
+    final improved = improveAbilities(scores, {
+      Ability.strength: 2,
+      Ability.dexterity: 1,
+    });
+    expect(improved.strength, 20);
+    expect(improved.dexterity, 15);
+    expect(improved.wisdom, 10);
+  });
 }
