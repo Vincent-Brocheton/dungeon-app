@@ -4,6 +4,7 @@ import 'package:character_app/app.dart';
 import 'package:character_app/data/admin_background_doc.dart';
 import 'package:character_app/data/admin_class_doc.dart';
 import 'package:character_app/data/admin_species_doc.dart';
+import 'package:character_app/data/admin_spell_doc.dart';
 import 'package:character_app/data/character_doc.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
 import 'package:character_app/data/in_memory_content_repository.dart';
@@ -79,6 +80,42 @@ Widget _app(
             updatedAt: _now,
             hitDie: 'd10',
             savingThrows: 'Force, Constitution',
+          ),
+          AdminClassDoc(
+            id: 'cleric',
+            name: 'Clerc',
+            updatedAt: _now,
+            savingThrows: 'Sagesse, Charisme',
+            spellcaster: true,
+            spellcastingAbility: 'Sagesse',
+          ),
+        ],
+      ),
+    ),
+    adminSpellRepositoryProvider.overrideWithValue(
+      InMemoryContentRepository<AdminSpellDoc>(
+        seed: [
+          AdminSpellDoc(
+            id: 'benediction',
+            name: 'Bénédiction',
+            updatedAt: _now,
+            school: 'Enchantement',
+            duration: "Concentration, jusqu'à 1 minute",
+            classes: 'Clerc, Paladin',
+          ),
+          AdminSpellDoc(
+            id: 'flamme-sacree',
+            name: 'Flamme sacrée',
+            updatedAt: _now,
+            level: 0,
+            classes: 'Clerc',
+          ),
+          AdminSpellDoc(
+            id: 'boule-de-feu',
+            name: 'Boule de feu',
+            updatedAt: _now,
+            level: 3,
+            classes: 'Ensorceleur, Magicien',
           ),
         ],
       ),
@@ -274,4 +311,63 @@ void main() {
     final saved = (await characters.watchAll('me').first).single;
     expect((saved.hpLost, saved.tempHp, saved.hitDiceUsed), (0, 0, 0));
   });
+
+  testWidgets(
+    'sorts : préparer depuis le grimoire, lancer, emplacement dépensé',
+    (tester) async {
+      tester.view.physicalSize = const Size(420, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final characters = InMemoryCharacterRepository();
+      await characters.upsert(
+        'me',
+        _durgan.copyWith(classId: 'cleric', name: 'Kaelen'),
+      );
+      appRouter.go(AppRoutes.character('durgan'));
+      await tester.pumpWidget(_app(characters));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Sorts'));
+      await tester.pumpAndSettle();
+      // Sagesse 10 → +0, maîtrise +2 : attaque +2, DD 10.
+      expect(find.text('Sagesse'), findsOneWidget);
+      expect(find.text('10'), findsOneWidget);
+      expect(
+        find.text('Aucun sort préparé : choisis-les dans le grimoire.'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Voir le grimoire →'));
+      await tester.pumpAndSettle();
+      expect(find.text('Liste de sorts de Clerc'), findsOneWidget);
+      expect(find.text('Flamme sacrée'), findsOneWidget);
+      expect(find.text('Boule de feu'), findsNothing);
+      expect(
+        find.text('Niv. 1 · Enchantement · concentration'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byTooltip('Préparer Bénédiction'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 sort préparé'), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bénédiction'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Lancer ce sort (niveau 1)'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Bénédiction lancé · emplacement de niveau 1 dépensé'),
+        findsOneWidget,
+      );
+      expect(
+        find.byTooltip('Récupérer un emplacement de niveau 1'),
+        findsOneWidget,
+      );
+      final saved = (await characters.watchAll('me').first).single;
+      expect(saved.spellIds, ['benediction']);
+      expect(saved.slotsUsed, [1]);
+    },
+  );
 }

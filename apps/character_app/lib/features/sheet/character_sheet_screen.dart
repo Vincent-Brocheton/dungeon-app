@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../data/admin_class_doc.dart';
+import '../../data/admin_spell_doc.dart';
 import '../../data/character_doc.dart';
 import '../../providers/content_providers.dart';
 import '../../router.dart';
@@ -15,14 +16,17 @@ import '../wizard/wizard_rules.dart';
 import 'rest_dialogs.dart';
 import 'roll_dialog.dart';
 
+part 'spells_tab.dart';
+
 String _signed(int value) => value >= 0 ? '+$value' : '$value';
 
 /// Fiche d'un personnage. Reprend `CharSheetSummary.dc.html` (onglets
 /// Résumé et Sac sur mobile) et `CharSheetWeb.dc.html` (trois colonnes à
 /// partir de 900px) ; onglet Actions : `CharSheetActions.dc.html`.
 /// Initiative, sauvegardes et compétences se lancent au d20 (cf.
-/// `roll_dialog.dart`), repos dans `rest_dialogs.dart`. Sorts, notes et
-/// conditions viendront avec leurs maquettes.
+/// `roll_dialog.dart`), repos dans `rest_dialogs.dart`, sorts et grimoire
+/// dans `spells_tab.dart`. Notes et conditions viendront avec leurs
+/// maquettes.
 class CharacterSheetScreen extends ConsumerStatefulWidget {
   const CharacterSheetScreen({super.key, required this.characterId});
 
@@ -164,6 +168,11 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
           ),
     );
     final bag = _Bag(doc: doc);
+    final spells = _SpellsTab(
+      doc: doc,
+      cls: cls,
+      proficiency: stats.proficiencyBonus,
+    );
     final weapons = ref.watch(srdPackProvider).value?.weapons ?? const [];
     final actions = _Actions(
       cls: cls,
@@ -248,12 +257,13 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                     children: [
                       Expanded(child: column([abilities, saves, skillList])),
                       Expanded(child: column([strip, hp, actions])),
-                      Expanded(child: column([bag])),
+                      Expanded(child: column([spells, bag])),
                     ],
                   )
                   : switch (_tab) {
                     0 => column([strip, hp, abilities, saves, skillList]),
                     1 => column([actions]),
+                    2 => column([spells]),
                     _ => column([bag]),
                   },
           bottomNavigationBar:
@@ -270,6 +280,10 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                       NavigationDestination(
                         icon: Icon(Icons.bolt_outlined),
                         label: 'Actions',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.auto_awesome_outlined),
+                        label: 'Sorts',
                       ),
                       NavigationDestination(
                         icon: Icon(Icons.backpack_outlined),
@@ -766,46 +780,15 @@ class _Actions extends StatelessWidget {
           (c.name, c.values[level - 1].trim()),
     ];
 
-    Widget value(String label, String v) => Expanded(
-      child: Column(
-        children: [
-          Text(label, style: muted),
-          Text(
-            v,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: AppTheme.accent,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (spellAbility != null) ...[
-          _Section(
-            title: 'Incantation (calculée automatiquement)',
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: _card,
-              child: Row(
-                children: [
-                  value('Caract.', cls!.spellcastingAbility),
-                  value(
-                    'Attaque',
-                    _signed(
-                      abilityModifier(scores[spellAbility]) + proficiency,
-                    ),
-                  ),
-                  value(
-                    'DD sauv.',
-                    '${8 + abilityModifier(scores[spellAbility]) + proficiency}',
-                  ),
-                ],
-              ),
-            ),
+          _SpellcastingBlock(
+            cls: cls!,
+            ability: spellAbility,
+            scores: scores,
+            proficiency: proficiency,
           ),
           const SizedBox(height: 16),
         ],

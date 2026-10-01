@@ -23,6 +23,8 @@ class CharacterDoc {
     this.hpLost = 0,
     this.tempHp = 0,
     this.hitDiceUsed = 0,
+    this.spellIds = const [],
+    this.slotsUsed = const [],
     this.deletedAt,
     this.schemaVersion = currentSchemaVersion,
   });
@@ -59,6 +61,12 @@ class CharacterDoc {
 
   /// Dés de vie dépensés depuis le dernier repos long.
   final int hitDiceUsed;
+
+  /// Sorts connus ou préparés (identifiants de `content/spells`).
+  final List<String> spellIds;
+
+  /// Emplacements dépensés depuis le dernier repos long (index 0 = niveau 1).
+  final List<int> slotsUsed;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -83,6 +91,8 @@ class CharacterDoc {
     int? hpLost,
     int? tempHp,
     int? hitDiceUsed,
+    List<String>? spellIds,
+    List<int>? slotsUsed,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) => CharacterDoc(
@@ -101,6 +111,8 @@ class CharacterDoc {
     hpLost: hpLost ?? this.hpLost,
     tempHp: tempHp ?? this.tempHp,
     hitDiceUsed: hitDiceUsed ?? this.hitDiceUsed,
+    spellIds: spellIds ?? this.spellIds,
+    slotsUsed: slotsUsed ?? this.slotsUsed,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt ?? this.deletedAt,
@@ -123,6 +135,8 @@ class CharacterDoc {
     'hpLost': hpLost,
     'tempHp': tempHp,
     'hitDiceUsed': hitDiceUsed,
+    'spellIds': spellIds,
+    'slotsUsed': slotsUsed,
     'abilityScores': {for (final a in Ability.values) a.code: scores[a]},
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -158,6 +172,12 @@ class CharacterDoc {
       hpLost: map['hpLost'] as int? ?? 0,
       tempHp: map['tempHp'] as int? ?? 0,
       hitDiceUsed: map['hitDiceUsed'] as int? ?? 0,
+      spellIds: [
+        for (final s in (map['spellIds'] as List?) ?? const []) s as String,
+      ],
+      slotsUsed: [
+        for (final n in (map['slotsUsed'] as List?) ?? const []) n as int,
+      ],
       createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       deletedAt: map['deletedAt'] as DateTime?,

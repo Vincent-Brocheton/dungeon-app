@@ -24,6 +24,7 @@ abstract final class AppRoutes {
   static const newCharacter = '/new-character';
   static const account = '/account';
   static String character(String id) => '/character/$id';
+  static String spellbook(String id) => '/character/$id/spellbook';
   static const admin = '/admin';
   static const adminSpecies = '/admin/species';
   static const adminSubspecies = '/admin/subspecies';
@@ -55,6 +56,14 @@ final appRouter = GoRouter(
               (context, state) => CharacterSheetScreen(
                 characterId: state.pathParameters['id']!,
               ),
+          routes: [
+            GoRoute(
+              path: 'spellbook',
+              builder:
+                  (context, state) =>
+                      SpellbookScreen(characterId: state.pathParameters['id']!),
+            ),
+          ],
         ),
         GoRoute(
           path: 'account',
