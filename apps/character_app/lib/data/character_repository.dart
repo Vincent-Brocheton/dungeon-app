@@ -10,7 +10,15 @@ abstract class CharacterRepository {
   /// Suppression douce (`deletedAt`), conservée pour la synchro.
   Future<void> softDelete(String uid, String id);
 
-  /// Suppression définitive de tout : uniquement avant suppression du compte.
+  /// Notes privées d'un personnage, de la plus récente à la plus ancienne.
+  Stream<List<CharacterNote>> watchNotes(String uid, String characterId);
+
+  Future<void> addNote(String uid, CharacterNote note);
+
+  Future<void> deleteNote(String uid, String noteId);
+
+  /// Suppression définitive de tout (notes comprises) : uniquement avant
+  /// suppression du compte.
   Future<void> deleteAll(String uid);
 
   /// Identifiant neuf, généré côté client pour fonctionner hors-ligne.

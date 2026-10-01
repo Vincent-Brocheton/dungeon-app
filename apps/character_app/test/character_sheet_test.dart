@@ -507,4 +507,58 @@ void main() {
       [('Épée longue', false), ('Cotte de mailles', true), ('Bouclier', true)],
     );
   });
+
+  testWidgets('notes : personnalité enregistrée, même en changeant '
+      "d'onglet ; note de session privée ajoutée puis supprimée", (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan);
+    appRouter.go(AppRoutes.character('durgan'));
+    await tester.pumpWidget(_app(characters));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Notes'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('note-field-Idéal')),
+      'Charité.',
+    );
+    await tester.pump(const Duration(seconds: 1));
+    // Tapé puis onglet quitté aussitôt : enregistré quand même.
+    await tester.enterText(
+      find.byKey(const Key('note-field-Lien')),
+      'Mon clan.',
+    );
+    await tester.tap(find.text('Résumé'));
+    await tester.pumpAndSettle();
+    var saved = (await characters.watchAll('me').first).single;
+    expect(saved.ideal, 'Charité.');
+    expect(saved.bond, 'Mon clan.');
+
+    await tester.tap(find.text('Notes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Charité.'), findsOneWidget);
+    await tester.tap(find.text('+ Nouvelle note'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('new-note-field')),
+      'La clé est chez Old Renn.',
+    );
+    await tester.tap(find.text('Ajouter'));
+    await tester.pumpAndSettle();
+    expect(find.text('La clé est chez Old Renn.'), findsOneWidget);
+    expect(characters.notes.single.characterId, 'durgan');
+
+    await tester.tap(find.byTooltip('Supprimer la note'));
+    await tester.pumpAndSettle();
+    expect(find.text('Aucune note pour le moment.'), findsOneWidget);
+    expect(characters.notes, isEmpty);
+    saved = (await characters.watchAll('me').first).single;
+    expect(saved.ideal, 'Charité.');
+  });
 }

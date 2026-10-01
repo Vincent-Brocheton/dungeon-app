@@ -26,6 +26,16 @@ final characterProvider = Provider.family<AsyncValue<CharacterDoc?>, String>(
       .whenData((list) => list.where((c) => c.id == id).firstOrNull),
 );
 
+/// Notes privées d'un personnage de l'utilisateur courant.
+final characterNotesProvider =
+    StreamProvider.family<List<CharacterNote>, String>((ref, characterId) {
+      final uid = ref.watch(currentUidProvider);
+      if (uid == null) return const Stream.empty();
+      return ref
+          .watch(characterRepositoryProvider)
+          .watchNotes(uid, characterId);
+    });
+
 /// Actions sur les personnages, à appeler depuis l'UI.
 final charactersControllerProvider = Provider<CharactersController>(
   (ref) => CharactersController(ref),
@@ -80,6 +90,18 @@ class CharactersController {
   /// Enregistre une modification de la fiche.
   Future<void> save(CharacterDoc doc) =>
       _repo.upsert(_uid(), doc.copyWith(updatedAt: DateTime.now()));
+
+  Future<void> addNote(String characterId, String text) => _repo.addNote(
+    _uid(),
+    CharacterNote(
+      id: _repo.newId(),
+      characterId: characterId,
+      text: text.trim(),
+      createdAt: DateTime.now(),
+    ),
+  );
+
+  Future<void> deleteNote(String noteId) => _repo.deleteNote(_uid(), noteId);
 
   Future<void> delete(String id) => _repo.softDelete(_uid(), id);
 
