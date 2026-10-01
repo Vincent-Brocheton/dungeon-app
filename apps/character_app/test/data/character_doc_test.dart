@@ -24,4 +24,24 @@ void main() {
     expect(again.inventory.first.equipped, isTrue);
     expect(again.inventory.last.quantity, 5);
   });
+
+  test("le journal de la bourse fait l'aller-retour, date en ms", () {
+    final at = DateTime.fromMillisecondsSinceEpoch(1790000000000);
+    final doc = CharacterDoc.fromMap('c', {'name': 'Durgan'}).copyWith(
+      silver: 3,
+      moneyLog: [
+        MoneyMovement(label: 'Vente', coin: Coin.silver, amount: -2, at: at),
+      ],
+    );
+    final map = doc.toMap();
+    expect(
+      (map['moneyLog']! as List).single,
+      containsPair('at', 1790000000000),
+    );
+    final again = CharacterDoc.fromMap('c', map);
+    expect(again.silver, 3);
+    expect(again.moneyLog.single.coin, Coin.silver);
+    expect(again.moneyLog.single.amount, -2);
+    expect(again.moneyLog.single.at, at);
+  });
 }

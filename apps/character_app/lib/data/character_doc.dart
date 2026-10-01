@@ -22,6 +22,9 @@ class CharacterDoc {
     this.languages = const [],
     this.inventory = const [],
     this.gold = 0,
+    this.silver = 0,
+    this.copper = 0,
+    this.moneyLog = const [],
     this.hpLost = 0,
     this.tempHp = 0,
     this.hitDiceUsed = 0,
@@ -70,8 +73,13 @@ class CharacterDoc {
   /// Inventaire : objets, quantités, objets portés.
   final List<InventoryItem> inventory;
 
-  /// Pièces d'or.
+  /// Pièces d'or, d'argent et de cuivre (1 po = 10 pa = 100 pc).
   final int gold;
+  final int silver;
+  final int copper;
+
+  /// Mouvements manuels de la bourse, du plus récent au plus ancien.
+  final List<MoneyMovement> moneyLog;
 
   /// PV perdus : on stocke l'écart au maximum, qui lui est dérivé.
   final int hpLost;
@@ -144,6 +152,9 @@ class CharacterDoc {
     List<String>? languages,
     List<InventoryItem>? inventory,
     int? gold,
+    int? silver,
+    int? copper,
+    List<MoneyMovement>? moneyLog,
     int? hpLost,
     int? tempHp,
     int? hitDiceUsed,
@@ -176,6 +187,9 @@ class CharacterDoc {
     languages: languages ?? this.languages,
     inventory: inventory ?? this.inventory,
     gold: gold ?? this.gold,
+    silver: silver ?? this.silver,
+    copper: copper ?? this.copper,
+    moneyLog: moneyLog ?? this.moneyLog,
     hpLost: hpLost ?? this.hpLost,
     tempHp: tempHp ?? this.tempHp,
     hitDiceUsed: hitDiceUsed ?? this.hitDiceUsed,
@@ -213,6 +227,9 @@ class CharacterDoc {
     'languages': languages,
     'inventory': [for (final i in inventory) i.toMap()],
     'gold': gold,
+    'silver': silver,
+    'copper': copper,
+    'moneyLog': [for (final m in moneyLog) m.toMap()],
     'hpLost': hpLost,
     'tempHp': tempHp,
     'hitDiceUsed': hitDiceUsed,
@@ -273,6 +290,12 @@ class CharacterDoc {
         ],
       },
       gold: map['gold'] as int? ?? 0,
+      silver: map['silver'] as int? ?? 0,
+      copper: map['copper'] as int? ?? 0,
+      moneyLog: [
+        for (final m in (map['moneyLog'] as List?) ?? const [])
+          MoneyMovement.fromMap((m! as Map).cast<String, Object?>()),
+      ],
       hpLost: map['hpLost'] as int? ?? 0,
       tempHp: map['tempHp'] as int? ?? 0,
       hitDiceUsed: map['hitDiceUsed'] as int? ?? 0,
@@ -365,4 +388,51 @@ class CharacterNote {
         text: map['text'] as String? ?? '',
         createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       );
+}
+
+/// Pièce de la bourse.
+enum Coin {
+  gold('po', 100),
+  silver('pa', 10),
+  copper('pc', 1);
+
+  const Coin(this.abbreviation, this.copperValue);
+
+  final String abbreviation;
+
+  /// Valeur en pièces de cuivre.
+  final int copperValue;
+}
+
+/// Mouvement manuel de la bourse : vente, amende… (`CurrencyAddMovement`).
+class MoneyMovement {
+  const MoneyMovement({
+    required this.label,
+    required this.coin,
+    required this.amount,
+    required this.at,
+  });
+
+  final String label;
+  final Coin coin;
+
+  /// Positif pour un gain, négatif pour une dépense.
+  final int amount;
+  final DateTime at;
+
+  Map<String, Object?> toMap() => {
+    'label': label,
+    'coin': coin.name,
+    'amount': amount,
+    // Millisecondes : les dates imbriquées ne passent pas par la conversion
+    // Timestamp du dépôt Firestore.
+    'at': at.millisecondsSinceEpoch,
+  };
+
+  factory MoneyMovement.fromMap(Map<String, Object?> map) => MoneyMovement(
+    label: map['label'] as String? ?? '',
+    coin: Coin.values.asNameMap()[map['coin']] ?? Coin.gold,
+    amount: map['amount'] as int? ?? 0,
+    at: DateTime.fromMillisecondsSinceEpoch(map['at'] as int? ?? 0),
+  );
 }

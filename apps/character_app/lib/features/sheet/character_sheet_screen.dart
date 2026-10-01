@@ -24,6 +24,7 @@ part 'conditions_part.dart';
 part 'dying_part.dart';
 part 'inventory_part.dart';
 part 'notes_part.dart';
+part 'purse_part.dart';
 part 'spells_tab.dart';
 
 String _signed(int value) => value >= 0 ? '+$value' : '$value';

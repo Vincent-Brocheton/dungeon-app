@@ -3,8 +3,8 @@ part of 'character_sheet_screen.dart';
 /// Onglet Sac (`CharSheetInventory.dc.html`) : bourse, objets portés (une
 /// armure et un bouclier portés donnent la CA), objets avec quantité, et
 /// ajout depuis le catalogue (armes et armures du pack) ou un nom libre.
-/// Bourse détaillée, charge, harmonisation et charges viendront avec leurs
-/// maquettes.
+/// La bourse détaillée est dans `purse_part.dart` ; charge, harmonisation et
+/// charges viendront avec leurs maquettes.
 class _Bag extends ConsumerWidget {
   const _Bag({required this.doc, required this.pack});
 
@@ -113,14 +113,28 @@ class _Bag extends ConsumerWidget {
       children: [
         _Section(
           title: 'Bourse',
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: _card,
-            child: Text(
-              '${doc.gold} po',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: AppTheme.accent,
-                fontWeight: FontWeight.w700,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => context.push(AppRoutes.purse(doc.id)),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: _card,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${doc.gold} po · ${doc.silver} pa · ${doc.copper} pc',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: AppTheme.accent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'Gérer →',
+                    style: TextStyle(color: AppTheme.accent),
+                  ),
+                ],
               ),
             ),
           ),

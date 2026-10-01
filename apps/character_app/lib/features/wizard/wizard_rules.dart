@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../data/admin_class_doc.dart';
+import '../../data/character_doc.dart';
 
 /// Règles de l'assistant de création, sans UI : répartition des valeurs,
 /// jets, bonus d'historique par défaut, statistiques dérivées.
@@ -198,6 +199,24 @@ DerivedStats deriveStats({
 /// + Constitution, au moins 1 PV par dé.
 int hitDiceHealing(List<int> rolls, int constitutionModifier) =>
     rolls.fold(0, (sum, r) => sum + max(1, r + constitutionModifier));
+
+/// Bourse après conversion de toutes les pièces de [from] vers la pièce
+/// supérieure (10 pc → 1 pa, 10 pa → 1 po) : (po, pa, pc).
+(int, int, int) convertCoins(int gold, int silver, int copper, Coin from) =>
+    switch (from) {
+      Coin.copper => (gold, silver + copper ~/ 10, copper % 10),
+      Coin.silver => (gold + silver ~/ 10, silver % 10, copper),
+      Coin.gold => (gold, silver, copper),
+    };
+
+/// Valeur totale en po, au centième (« 24,95 »).
+String goldValue(int gold, int silver, int copper) {
+  final total = gold * 100 + silver * 10 + copper;
+  final cents = total % 100;
+  return cents == 0
+      ? '${total ~/ 100}'
+      : '${total ~/ 100},${cents.toString().padLeft(2, '0')}';
+}
 
 /// Arme de [weapons] désignée par un objet d'équipement (« Arbalète
 /// légère et 20 carreaux »), le nom le plus long l'emportant (« Lance

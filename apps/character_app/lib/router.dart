@@ -27,6 +27,7 @@ abstract final class AppRoutes {
   static String character(String id) => '/character/$id';
   static String spellbook(String id) => '/character/$id/spellbook';
   static String levelUp(String id) => '/character/$id/level-up';
+  static String purse(String id) => '/character/$id/purse';
   static const admin = '/admin';
   static const adminSpecies = '/admin/species';
   static const adminSubspecies = '/admin/subspecies';
@@ -64,6 +65,12 @@ final appRouter = GoRouter(
               builder:
                   (context, state) =>
                       LevelUpScreen(characterId: state.pathParameters['id']!),
+            ),
+            GoRoute(
+              path: 'purse',
+              builder:
+                  (context, state) =>
+                      PurseScreen(characterId: state.pathParameters['id']!),
             ),
             GoRoute(
               path: 'spellbook',
