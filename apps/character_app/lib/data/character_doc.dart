@@ -23,6 +23,8 @@ class CharacterDoc {
     this.hpLost = 0,
     this.tempHp = 0,
     this.hitDiceUsed = 0,
+    this.deathSuccesses = 0,
+    this.deathFailures = 0,
     this.spellIds = const [],
     this.slotsUsed = const [],
     this.conditions = const [],
@@ -70,6 +72,13 @@ class CharacterDoc {
 
   /// Dés de vie dépensés depuis le dernier repos long.
   final int hitDiceUsed;
+
+  /// Jets de sauvegarde contre la mort, à 0 PV (0 à 3 chacun).
+  final int deathSuccesses;
+  final int deathFailures;
+
+  DeathSaves get deathSaves =>
+      DeathSaves(successes: deathSuccesses, failures: deathFailures);
 
   /// Sorts connus ou préparés (identifiants de `content/spells`).
   final List<String> spellIds;
@@ -127,6 +136,7 @@ class CharacterDoc {
     int? hpLost,
     int? tempHp,
     int? hitDiceUsed,
+    DeathSaves? deathSaves,
     List<String>? spellIds,
     List<int>? slotsUsed,
     List<String>? conditions,
@@ -156,6 +166,8 @@ class CharacterDoc {
     hpLost: hpLost ?? this.hpLost,
     tempHp: tempHp ?? this.tempHp,
     hitDiceUsed: hitDiceUsed ?? this.hitDiceUsed,
+    deathSuccesses: deathSaves?.successes ?? deathSuccesses,
+    deathFailures: deathSaves?.failures ?? deathFailures,
     spellIds: spellIds ?? this.spellIds,
     slotsUsed: slotsUsed ?? this.slotsUsed,
     conditions: conditions ?? this.conditions,
@@ -189,6 +201,8 @@ class CharacterDoc {
     'hpLost': hpLost,
     'tempHp': tempHp,
     'hitDiceUsed': hitDiceUsed,
+    'deathSuccesses': deathSuccesses,
+    'deathFailures': deathFailures,
     'spellIds': spellIds,
     'slotsUsed': slotsUsed,
     'conditions': conditions,
@@ -243,6 +257,8 @@ class CharacterDoc {
       hpLost: map['hpLost'] as int? ?? 0,
       tempHp: map['tempHp'] as int? ?? 0,
       hitDiceUsed: map['hitDiceUsed'] as int? ?? 0,
+      deathSuccesses: map['deathSuccesses'] as int? ?? 0,
+      deathFailures: map['deathFailures'] as int? ?? 0,
       spellIds: [
         for (final s in (map['spellIds'] as List?) ?? const []) s as String,
       ],

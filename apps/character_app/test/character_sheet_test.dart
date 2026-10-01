@@ -561,4 +561,53 @@ void main() {
     saved = (await characters.watchAll('me').first).single;
     expect(saved.ideal, 'Charité.');
   });
+
+  testWidgets('à 0 PV : jets contre la mort, dégâts, 20 naturel, mort '
+      'instantanée, soins', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan);
+    appRouter.go(AppRoutes.character('durgan'));
+    await tester.pumpWidget(_app(characters, dice: [14, 20]));
+    await tester.pumpAndSettle();
+    Future<DeathSaves> saves() async =>
+        (await characters.watchAll('me').first).single.deathSaves;
+
+    await _enterAmount(tester, 'Subir des dégâts', 12);
+    expect(find.text('0 / 12 PV'), findsOneWidget);
+    expect(find.text('Mourant — Inconscient'), findsOneWidget);
+
+    await tester.tap(find.text('Jet contre la mort (1d20, DD 10)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Réussite (14 ≥ DD 10)'), findsOneWidget);
+    await tester.tap(find.text('Fermer'));
+    await tester.pumpAndSettle();
+
+    // Blessé à 0 PV : un échec, la réussite reste.
+    await _enterAmount(tester, 'Subir des dégâts', 3);
+    expect(((await saves()).successes, (await saves()).failures), (1, 1));
+
+    await tester.tap(find.text('Jet contre la mort (1d20, DD 10)'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('20 naturel — 1 PV, tu reprends conscience !'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Fermer'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 12 PV'), findsOneWidget);
+    expect(find.text('Mourant — Inconscient'), findsNothing);
+
+    // 30 dégâts à 1 PV : reliquat 29 ≥ 12 PV max.
+    await _enterAmount(tester, 'Subir des dégâts', 30);
+    expect(find.text('Mort'), findsOneWidget);
+    expect(find.text('Jet contre la mort (1d20, DD 10)'), findsNothing);
+
+    await _enterAmount(tester, 'Récupérer des PV', 5);
+    expect(find.text('5 / 12 PV'), findsOneWidget);
+    expect(((await saves()).successes, (await saves()).failures), (0, 0));
+  });
 }
