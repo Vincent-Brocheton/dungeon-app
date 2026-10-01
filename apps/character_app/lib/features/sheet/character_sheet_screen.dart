@@ -99,6 +99,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
       savingThrows: cls?.savingThrows ?? '',
       skillProficiencies: background?.skills ?? '',
       level: doc.level,
+      hpGains: doc.hpGains,
     );
     final conditions = doc.activeConditions;
     final speed = effectiveSpeed(
@@ -115,8 +116,18 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
         doc.heroicInspiration
             ? () => controller.save(doc.copyWith(heroicInspiration: false))
             : null;
+    final subclass =
+        ref
+            .watch(allSubclassesProvider)
+            .value
+            ?.where((s) => s.id == doc.subclassId)
+            .firstOrNull;
     final subtitle = [
-      cls == null ? 'Niveau ${doc.level}' : '${cls.name} ${doc.level}',
+      switch ((cls, subclass)) {
+        (null, _) => 'Niveau ${doc.level}',
+        (final c?, null) => '${c.name} ${doc.level}',
+        (final c?, final sc?) => '${c.name} (${sc.name}) ${doc.level}',
+      },
       if (subspecies?.name ?? species?.name case final s?) s,
       if (background != null) background.name,
     ].join(' · ');
@@ -208,6 +219,14 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
     final bag = _Bag(doc: doc, pack: pack);
     final notes = _Notes(key: ValueKey(doc.id), doc: doc);
     final status = _Status(doc: doc);
+    final levelUp =
+        cls == null || doc.level >= 20
+            ? const SizedBox.shrink()
+            : OutlinedButton.icon(
+              onPressed: () => context.push(AppRoutes.levelUp(doc.id)),
+              icon: const Icon(Icons.trending_up, color: AppTheme.accent),
+              label: Text('Monter au niveau ${doc.level + 1}'),
+            );
     final spells = _SpellsTab(
       doc: doc,
       cls: cls,
@@ -298,12 +317,15 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: column([abilities, saves, skillList])),
-                      Expanded(child: column([strip, hp, status, actions])),
+                      Expanded(
+                        child: column([levelUp, strip, hp, status, actions]),
+                      ),
                       Expanded(child: column([spells, bag, notes])),
                     ],
                   )
                   : switch (_tab) {
                     0 => column([
+                      levelUp,
                       strip,
                       hp,
                       status,

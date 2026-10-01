@@ -123,16 +123,32 @@ class DerivedStats {
   final Map<String, (int, bool)> skills;
 }
 
+/// PV gagnés des niveaux 2 à [level] : dé de [hpGains] (moyenne fixe, moitié
+/// + 1, quand il manque) + Constitution.
+int levelUpHitPoints(int die, int con, int level, List<int> hpGains) => [
+  for (var l = 2; l <= level; l++)
+    (l - 2 < hpGains.length ? hpGains[l - 2] : die ~/ 2 + 1) + con,
+].fold(0, (a, b) => a + b);
+
+/// [scores] après une amélioration de caractéristique (+2, ou +1 et +1),
+/// chaque score plafonné à 20.
+AbilityScores improveAbilities(AbilityScores scores, Map<Ability, int> bonus) =>
+    AbilityScores.fromMap({
+      for (final a in Ability.values)
+        a: min(abilityScoreCap, scores[a] + (bonus[a] ?? 0)),
+    });
+
 /// Statistiques d'un personnage : [hitDie] au format « d10 »,
 /// [savingThrows] et [skillProficiencies] les textes libres des sauvegardes
 /// et compétences maîtrisées (« Perspicacité, Religion »). PV au-delà du
-/// niveau 1 : valeur fixe du dé (moitié + 1) + Constitution par niveau.
+/// niveau 1 : cf. [levelUpHitPoints].
 DerivedStats deriveStats({
   required AbilityScores scores,
   required String hitDie,
   required String savingThrows,
   String skillProficiencies = '',
   int level = 1,
+  List<int> hpGains = const [],
 }) {
   final proficiency = proficiencyBonus(level);
   int mod(Ability a) => abilityModifier(scores[a]);
@@ -150,7 +166,7 @@ DerivedStats deriveStats({
       },
   };
   return DerivedStats(
-    hitPoints: die + con + (level - 1) * (die ~/ 2 + 1 + con),
+    hitPoints: die + con + levelUpHitPoints(die, con, level, hpGains),
     armorClass: 10 + mod(Ability.dexterity),
     initiative: mod(Ability.dexterity),
     proficiencyBonus: proficiency,

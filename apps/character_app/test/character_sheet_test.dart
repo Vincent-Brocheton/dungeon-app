@@ -5,6 +5,7 @@ import 'package:character_app/data/admin_background_doc.dart';
 import 'package:character_app/data/admin_class_doc.dart';
 import 'package:character_app/data/admin_species_doc.dart';
 import 'package:character_app/data/admin_spell_doc.dart';
+import 'package:character_app/data/admin_subclass_doc.dart';
 import 'package:character_app/data/character_doc.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
 import 'package:character_app/data/in_memory_content_repository.dart';
@@ -102,6 +103,20 @@ Widget _app(
             savingThrows: 'Sagesse, Charisme',
             spellcaster: true,
             spellcastingAbility: 'Sagesse',
+          ),
+        ],
+      ),
+    ),
+    adminSubclassRepositoryProvider.overrideWithValue(
+      InMemoryContentRepository<AdminSubclassDoc>(
+        seed: [
+          AdminSubclassDoc(
+            id: 'champion',
+            name: 'Champion',
+            parentClassId: 'fighter',
+            updatedAt: _now,
+            level: 3,
+            levelFeatures: const ['', '', 'Critique amélioré'],
           ),
         ],
       ),
@@ -609,5 +624,62 @@ void main() {
     await _enterAmount(tester, 'Récupérer des PV', 5);
     expect(find.text('5 / 12 PV'), findsOneWidget);
     expect(((await saves()).successes, (await saves()).failures), (0, 0));
+  });
+
+  testWidgets('monter du niveau 3 au 4 : PV au dé, sous-classe, +2 en '
+      'Force', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan.copyWith(level: 3));
+    appRouter.go(AppRoutes.character('durgan'));
+    await tester.pumpWidget(_app(characters, dice: [7]));
+    await tester.pumpAndSettle();
+    // d10 + 2, puis 2 niveaux à (6 + 2).
+    expect(find.text('28 / 28 PV'), findsOneWidget);
+
+    await tester.tap(find.text('Monter au niveau 4'));
+    await tester.pumpAndSettle();
+    expect(find.text('Niveau 3 → 4'), findsOneWidget);
+    expect(find.text('Étape 1/4'), findsOneWidget);
+    await tester.tap(find.text('Lancer 1d10'));
+    await tester.pumpAndSettle();
+    expect(find.text('Lancé : 7'), findsOneWidget);
+    await tester.tap(find.text('Continuer · Aptitudes'));
+    await tester.pumpAndSettle();
+
+    // Sous-classe due au niveau 3 et pas encore choisie : obligatoire.
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Continuer · Amélioration'),
+          )
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.text('Champion'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continuer · Amélioration'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Force 17'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continuer · Récapitulatif'));
+    await tester.pumpAndSettle();
+    expect(find.text('28 → 37'), findsOneWidget);
+    expect(find.text('17 → 19'), findsOneWidget);
+    expect(find.text('Champion'), findsWidgets);
+    await tester.tap(find.text('Confirmer la montée de niveau'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Guerrier (Champion) 4 · Soldat'), findsOneWidget);
+    expect(find.text('37 / 37 PV'), findsOneWidget);
+    final saved = (await characters.watchAll('me').first).single;
+    expect(saved.level, 4);
+    expect(saved.hpGains, [6, 6, 7]);
+    expect(saved.scores.strength, 19);
+    expect(saved.subclassId, 'champion');
   });
 }
