@@ -54,6 +54,26 @@ class _Dying extends StatelessWidget {
           Text(subtitle, style: muted),
           const SizedBox(height: 12),
           _SaveDots(saves: saves),
+          if (saves.dead) ...[
+            const SizedBox(height: 12),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF8B3A2E),
+              ),
+              onPressed:
+                  () => showDialog<void>(
+                    context: context,
+                    builder: (context) => _DeathConfirmDialog(doc: doc),
+                  ),
+              child: const Text('Confirmer le décès'),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Une résurrection ou une erreur ? Soigne le personnage avant '
+              'de confirmer.',
+              style: muted,
+            ),
+          ],
           if (!saves.dead && !saves.stable) ...[
             const SizedBox(height: 12),
             FilledButton(
@@ -110,6 +130,219 @@ class _SaveDots extends StatelessWidget {
           const SizedBox(height: 6),
           row('Échecs', saves.failures, _danger),
         ],
+      ),
+    );
+  }
+}
+
+/// Décès (`CharacterDeathConfirm.dc.html`) : ce qui change, circonstances
+/// facultatives, confirmation.
+class _DeathConfirmDialog extends ConsumerStatefulWidget {
+  const _DeathConfirmDialog({required this.doc});
+
+  final CharacterDoc doc;
+
+  @override
+  ConsumerState<_DeathConfirmDialog> createState() =>
+      _DeathConfirmDialogState();
+}
+
+class _DeathConfirmDialogState extends ConsumerState<_DeathConfirmDialog> {
+  final _epitaph = TextEditingController();
+
+  @override
+  void dispose() {
+    _epitaph.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text('${widget.doc.name} est mort·e'),
+    content: SizedBox(
+      width: 460,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '• Statut « Décédé » dans Mes personnages.\n'
+              '• La fiche devient un mémorial en lecture seule : plus de '
+              'jets ni d’édition.\n'
+              '• Tu peux créer un nouveau personnage pour continuer à jouer.',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const Key('epitaph-field'),
+              controller: _epitaph,
+              maxLength: 200,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Circonstances (facultatif)',
+                hintText: 'Succombé à ses blessures face au chef gobelin…',
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Annuler'),
+      ),
+      FilledButton(
+        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF8B3A2E)),
+        onPressed: () {
+          ref
+              .read(charactersControllerProvider)
+              .save(
+                widget.doc.copyWith(
+                  diedAt: DateTime.now(),
+                  epitaph: _epitaph.text.trim(),
+                ),
+              );
+          Navigator.pop(context);
+        },
+        child: const Text('Confirmer le décès'),
+      ),
+    ],
+  );
+}
+
+/// Fiche d'un personnage décédé (`CharacterMemorial.dc.html`) : en lecture
+/// seule, avec ses valeurs au moment du décès. Une résurrection le ramène à
+/// 1 PV.
+class _Memorial extends ConsumerWidget {
+  const _Memorial({
+    required this.doc,
+    required this.subtitle,
+    required this.maxHp,
+    required this.armorClass,
+  });
+
+  final CharacterDoc doc;
+  final String subtitle;
+  final int maxHp;
+  final int armorClass;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: AppTheme.textMuted,
+    );
+    Widget row(String label, String value) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: AppTheme.textMuted),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppTheme.textMuted,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Retour à mes personnages',
+          icon: const Icon(Icons.chevron_left),
+          onPressed: () => context.go(AppRoutes.home),
+        ),
+        titleSpacing: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(doc.name, style: const TextStyle(color: AppTheme.textMuted)),
+            Text('$subtitle · Décédé', style: muted),
+          ],
+        ),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF201A14),
+                  border: Border.all(color: AppTheme.border),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Décédé — ${_noteDate(doc.diedAt!)}',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: const Color(0xFF8B7060),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (doc.epitaph.isNotEmpty) Text(doc.epitaph, style: muted),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _Section(
+                title: 'Fiche au moment du décès (figée)',
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: _card,
+                  child: Column(
+                    children: [
+                      row('Points de vie max.', '$maxHp'),
+                      row("Classe d'armure", '$armorClass'),
+                      row('Niveau', '${doc.level}'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Ce mémorial est en lecture seule : la fiche ne peut plus être '
+                'modifiée ni utilisée pour des jets.',
+                textAlign: TextAlign.center,
+                style: muted,
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: () => context.go(AppRoutes.home),
+                child: const Text('Retour à Mes personnages'),
+              ),
+              TextButton(
+                onPressed:
+                    () => ref
+                        .read(charactersControllerProvider)
+                        .save(
+                          doc.copyWith(
+                            revive: true,
+                            deathSaves: const DeathSaves(),
+                            hpLost: maxHp - 1,
+                          ),
+                        ),
+                child: const Text('Résurrection (revient à 1 PV)'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

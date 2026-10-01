@@ -41,6 +41,8 @@ class CharacterDoc {
     this.flaw = '',
     this.backstory = '',
     this.allies = '',
+    this.diedAt,
+    this.epitaph = '',
     this.deletedAt,
     this.schemaVersion = currentSchemaVersion,
   });
@@ -132,6 +134,14 @@ class CharacterDoc {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Décès confirmé : la fiche devient un mémorial en lecture seule.
+  final DateTime? diedAt;
+
+  /// Circonstances du décès, écrites par le joueur.
+  final String epitaph;
+
+  bool get isDead => diedAt != null;
+
   /// Suppression douce : le document reste pour la synchro, l'UI le masque.
   final DateTime? deletedAt;
   final int schemaVersion;
@@ -172,6 +182,11 @@ class CharacterDoc {
     String? allies,
     DateTime? updatedAt,
     DateTime? deletedAt,
+    DateTime? diedAt,
+    String? epitaph,
+
+    /// Annule le décès (erreur ou résurrection) : [diedAt] repasse à null.
+    bool revive = false,
   }) => CharacterDoc(
     id: id,
     name: name ?? this.name,
@@ -209,6 +224,8 @@ class CharacterDoc {
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt ?? this.deletedAt,
+    diedAt: revive ? null : diedAt ?? this.diedAt,
+    epitaph: epitaph ?? this.epitaph,
     schemaVersion: schemaVersion,
   );
 
@@ -250,6 +267,8 @@ class CharacterDoc {
     'createdAt': createdAt,
     'updatedAt': updatedAt,
     'deletedAt': deletedAt,
+    'diedAt': diedAt,
+    'epitaph': epitaph,
   };
 
   /// Lit un document. Point d'entrée des futures migrations par `schemaVersion`.
@@ -321,6 +340,8 @@ class CharacterDoc {
       createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
       updatedAt: map['updatedAt'] as DateTime? ?? DateTime.now(),
       deletedAt: map['deletedAt'] as DateTime?,
+      diedAt: map['diedAt'] as DateTime?,
+      epitaph: map['epitaph'] as String? ?? '',
       schemaVersion: map['schemaVersion'] as int? ?? 1,
     );
   }
