@@ -10,6 +10,7 @@ export 'src/ability_scores.dart';
 export 'src/background_bonus.dart';
 export 'src/conditions.dart';
 export 'src/d20_roll.dart';
+export 'src/death_saves.dart';
 export 'src/content_pack.dart';
 export 'src/point_buy.dart';
 export 'src/proficiency.dart';

@@ -21,6 +21,7 @@ import 'rest_dialogs.dart';
 import 'roll_dialog.dart';
 
 part 'conditions_part.dart';
+part 'dying_part.dart';
 part 'inventory_part.dart';
 part 'notes_part.dart';
 part 'spells_tab.dart';
@@ -483,120 +484,151 @@ class _HitPoints extends ConsumerWidget {
 
     return _Section(
       title: 'Points de vie',
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: _card,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                IconButton.outlined(
-                  tooltip: 'Subir des dégâts',
-                  icon: const Icon(Icons.remove, color: Color(0xFFC97227)),
-                  onPressed:
-                      () => ask('Dégâts subis', (n) {
-                        final (lost, temp) = takeDamage(
-                          n,
-                          hpLost: doc.hpLost,
-                          tempHp: doc.tempHp,
-                          maxHp: maxHp,
-                        );
-                        controller.save(
-                          doc.copyWith(hpLost: lost, tempHp: temp),
-                        );
-                      }),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text(
-                        '$current / $maxHp PV',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      InkWell(
-                        onTap:
-                            () => ask(
-                              'PV temporaires',
-                              (n) => controller.save(doc.copyWith(tempHp: n)),
-                            ),
-                        child: Text(
-                          'PV temporaires : +${doc.tempHp}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textMuted,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton.outlined(
-                  tooltip: 'Récupérer des PV',
-                  icon: const Icon(Icons.add, color: Color(0xFF7FA86A)),
-                  onPressed:
-                      () => ask(
-                        'PV récupérés',
-                        (n) => controller.save(
-                          doc.copyWith(
-                            hpLost: (doc.hpLost - n).clamp(0, maxHp),
-                          ),
-                        ),
-                      ),
-                ),
-              ],
-            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (current == 0) ...[
+            _Dying(doc: doc, maxHp: maxHp),
             const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: maxHp == 0 ? 0 : current / maxHp,
-                minHeight: 9,
-                color: AppTheme.accent,
-                backgroundColor: AppTheme.background,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Dés de vie ${doc.level}d$hitDieSides '
-              '(${doc.hitDiceUsed} utilisé${doc.hitDiceUsed > 1 ? 's' : ''})',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.textMuted,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed:
-                        () => showShortRestDialog(
-                          context,
-                          doc: doc,
-                          maxHp: maxHp,
-                          hitDieSides: hitDieSides,
-                        ),
-                    child: const Text('Repos court'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed:
-                        () => showLongRestDialog(
-                          context,
-                          doc: doc,
-                          maxHp: maxHp,
-                          hitDieSides: hitDieSides,
-                        ),
-                    child: const Text('Repos long'),
-                  ),
-                ),
-              ],
-            ),
           ],
-        ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: _card,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    IconButton.outlined(
+                      tooltip: 'Subir des dégâts',
+                      icon: const Icon(Icons.remove, color: Color(0xFFC97227)),
+                      onPressed:
+                          () => ask('Dégâts subis', (n) {
+                            final (lost, temp) = takeDamage(
+                              n,
+                              hpLost: doc.hpLost,
+                              tempHp: doc.tempHp,
+                              maxHp: maxHp,
+                            );
+                            final remaining = n - (doc.tempHp - temp);
+                            controller.save(
+                              doc.copyWith(
+                                hpLost: lost,
+                                tempHp: temp,
+                                deathSaves: switch ((current, lost >= maxHp)) {
+                                  // Déjà à 0 PV : un échec de plus.
+                                  (0, _) when remaining > 0 =>
+                                    remaining >= maxHp
+                                        ? const DeathSaves(failures: 3)
+                                        : doc.deathSaves.damaged(),
+                                  (_, true)
+                                      when instantDeath(
+                                        damage: remaining,
+                                        currentHp: current,
+                                        maxHp: maxHp,
+                                      ) =>
+                                    const DeathSaves(failures: 3),
+                                  _ => null,
+                                },
+                              ),
+                            );
+                          }),
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            '$current / $maxHp PV',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          InkWell(
+                            onTap:
+                                () => ask(
+                                  'PV temporaires',
+                                  (n) =>
+                                      controller.save(doc.copyWith(tempHp: n)),
+                                ),
+                            child: Text(
+                              'PV temporaires : +${doc.tempHp}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textMuted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton.outlined(
+                      tooltip: 'Récupérer des PV',
+                      icon: const Icon(Icons.add, color: Color(0xFF7FA86A)),
+                      onPressed:
+                          () => ask(
+                            'PV récupérés',
+                            // Soigné : plus mourant, les jets repartent de zéro.
+                            (n) => controller.save(
+                              doc.copyWith(
+                                hpLost: (doc.hpLost - n).clamp(0, maxHp),
+                                deathSaves: n > 0 ? const DeathSaves() : null,
+                              ),
+                            ),
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: maxHp == 0 ? 0 : current / maxHp,
+                    minHeight: 9,
+                    color: AppTheme.accent,
+                    backgroundColor: AppTheme.background,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Dés de vie ${doc.level}d$hitDieSides '
+                  '(${doc.hitDiceUsed} utilisé${doc.hitDiceUsed > 1 ? 's' : ''})',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed:
+                            () => showShortRestDialog(
+                              context,
+                              doc: doc,
+                              maxHp: maxHp,
+                              hitDieSides: hitDieSides,
+                            ),
+                        child: const Text('Repos court'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed:
+                            () => showLongRestDialog(
+                              context,
+                              doc: doc,
+                              maxHp: maxHp,
+                              hitDieSides: hitDieSides,
+                            ),
+                        child: const Text('Repos long'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
