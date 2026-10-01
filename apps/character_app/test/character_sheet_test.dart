@@ -66,6 +66,20 @@ Widget _app(
             damageType: 'tranchant',
           ),
         ],
+        armors: [
+          ArmorDef(
+            id: 'cotte-de-mailles',
+            name: 'Cotte de mailles',
+            baseAc: 16,
+            category: ArmorCategory.heavy,
+          ),
+          ArmorDef(
+            id: 'bouclier',
+            name: 'Bouclier',
+            baseAc: 2,
+            category: ArmorCategory.shield,
+          ),
+        ],
       ),
     ),
     adminSpeciesRepositoryProvider.overrideWithValue(
@@ -151,7 +165,7 @@ final _durgan = CharacterDoc(
     wisdom: 10,
     charisma: 12,
   ),
-  equipment: const ['Épée longue'],
+  inventory: const [InventoryItem(name: 'Épée longue')],
   gold: 14,
   createdAt: _now,
   updatedAt: _now,
@@ -443,4 +457,54 @@ void main() {
       expect(saved.heroicInspiration, isFalse);
     },
   );
+
+  testWidgets('sac : ajouter et équiper une armure et un bouclier, la CA '
+      'suit ; objet personnalisé', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan);
+    appRouter.go(AppRoutes.character('durgan'));
+    await tester.pumpWidget(_app(characters));
+    await tester.pumpAndSettle();
+    // Sans armure : 10 + Dex (+2).
+    expect(find.text('12'), findsWidgets);
+
+    Future<void> add(String query, String pick) async {
+      await tester.tap(find.text('Ajouter un objet'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('add-item-field')), query);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(pick));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(find.text('Sac'));
+    await tester.pumpAndSettle();
+    await add('cotte', 'Cotte de mailles');
+    await add('bouc', 'Bouclier');
+    await add('Corde', 'Objet personnalisé : Corde');
+    expect(find.text('Armure · CA 16'), findsOneWidget);
+    expect(find.text('Corde'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('equip-Cotte de mailles')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('equip-Bouclier')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Un Corde de moins'));
+    await tester.pumpAndSettle();
+    expect(find.text('Corde'), findsNothing);
+
+    await tester.tap(find.text('Résumé'));
+    await tester.pumpAndSettle();
+    // Cotte de mailles (16, lourde : sans Dex) + bouclier (+2).
+    expect(find.text('18'), findsOneWidget);
+    final saved = (await characters.watchAll('me').first).single;
+    expect(
+      [for (final i in saved.inventory) (i.name, i.equipped)],
+      [('Épée longue', false), ('Cotte de mailles', true), ('Bouclier', true)],
+    );
+  });
 }

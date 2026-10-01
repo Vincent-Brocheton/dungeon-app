@@ -29,6 +29,7 @@ void main() {
       ...pack.species.map((s) => s.id),
       ...pack.backgrounds.map((b) => b.id),
       ...pack.weapons.map((w) => w.id),
+      ...pack.armors.map((a) => a.id),
     ];
     expect(ids.toSet().length, ids.length);
   });
@@ -39,6 +40,13 @@ void main() {
     expect(weapons['Épée à deux mains']?.damage, '2d6');
     expect(weapons['Rapière']?.finesse, isTrue);
     expect(weapons['Arc long']?.ranged, isTrue);
+  });
+
+  test("les armures du PHB 2024, nommées comme dans l'inventaire", () {
+    final armors = {for (final a in parseContentPack(raw).armors) a.name: a};
+    expect(armors['Cotte de mailles']?.baseAc, 16);
+    expect(armors['Cuir clouté']?.category, ArmorCategory.light);
+    expect(armors['Bouclier']?.category, ArmorCategory.shield);
   });
 
   test('loadSrd52Pack lit l\'asset via le bundle', () async {

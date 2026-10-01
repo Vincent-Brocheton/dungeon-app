@@ -18,7 +18,7 @@ class CharacterDoc {
     this.subspeciesId,
     this.alignment,
     this.languages = const [],
-    this.equipment = const [],
+    this.inventory = const [],
     this.gold = 0,
     this.hpLost = 0,
     this.tempHp = 0,
@@ -50,8 +50,8 @@ class CharacterDoc {
   /// Langues parlées, Commun compris.
   final List<String> languages;
 
-  /// Équipement de départ, un objet par entrée (en attendant l'inventaire).
-  final List<String> equipment;
+  /// Inventaire : objets, quantités, objets portés.
+  final List<InventoryItem> inventory;
 
   /// Pièces d'or.
   final int gold;
@@ -104,7 +104,7 @@ class CharacterDoc {
     String? subspeciesId,
     String? alignment,
     List<String>? languages,
-    List<String>? equipment,
+    List<InventoryItem>? inventory,
     int? gold,
     int? hpLost,
     int? tempHp,
@@ -127,7 +127,7 @@ class CharacterDoc {
     subspeciesId: subspeciesId ?? this.subspeciesId,
     alignment: alignment ?? this.alignment,
     languages: languages ?? this.languages,
-    equipment: equipment ?? this.equipment,
+    inventory: inventory ?? this.inventory,
     gold: gold ?? this.gold,
     hpLost: hpLost ?? this.hpLost,
     tempHp: tempHp ?? this.tempHp,
@@ -154,7 +154,7 @@ class CharacterDoc {
     'subspeciesId': subspeciesId,
     'alignment': alignment,
     'languages': languages,
-    'equipment': equipment,
+    'inventory': [for (final i in inventory) i.toMap()],
     'gold': gold,
     'hpLost': hpLost,
     'tempHp': tempHp,
@@ -192,9 +192,17 @@ class CharacterDoc {
       languages: [
         for (final l in (map['languages'] as List?) ?? const []) l as String,
       ],
-      equipment: [
-        for (final e in (map['equipment'] as List?) ?? const []) e as String,
-      ],
+      // Avant l'inventaire, l'équipement était une liste de noms.
+      inventory: switch (map['inventory']) {
+        final List<Object?> items => [
+          for (final i in items)
+            InventoryItem.fromMap((i! as Map).cast<String, Object?>()),
+        ],
+        _ => [
+          for (final e in (map['equipment'] as List?) ?? const [])
+            InventoryItem(name: e as String),
+        ],
+      },
       gold: map['gold'] as int? ?? 0,
       hpLost: map['hpLost'] as int? ?? 0,
       tempHp: map['tempHp'] as int? ?? 0,
@@ -216,4 +224,38 @@ class CharacterDoc {
       schemaVersion: map['schemaVersion'] as int? ?? 1,
     );
   }
+}
+
+/// Un objet de l'inventaire.
+class InventoryItem {
+  const InventoryItem({
+    required this.name,
+    this.quantity = 1,
+    this.equipped = false,
+  });
+
+  /// Nom ; sert à retrouver l'arme ou l'armure dans le pack.
+  final String name;
+  final int quantity;
+
+  /// Porté (armure, bouclier, arme en main…).
+  final bool equipped;
+
+  InventoryItem copyWith({int? quantity, bool? equipped}) => InventoryItem(
+    name: name,
+    quantity: quantity ?? this.quantity,
+    equipped: equipped ?? this.equipped,
+  );
+
+  Map<String, Object?> toMap() => {
+    'name': name,
+    'quantity': quantity,
+    'equipped': equipped,
+  };
+
+  factory InventoryItem.fromMap(Map<String, Object?> map) => InventoryItem(
+    name: map['name'] as String? ?? 'Objet',
+    quantity: map['quantity'] as int? ?? 1,
+    equipped: map['equipped'] as bool? ?? false,
+  );
 }

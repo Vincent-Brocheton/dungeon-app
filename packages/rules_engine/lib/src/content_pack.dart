@@ -17,6 +17,7 @@ class ContentPack {
     this.species = const [],
     this.backgrounds = const [],
     this.weapons = const [],
+    this.armors = const [],
   });
 
   /// Lit un pack depuis son JSON décodé.
@@ -38,6 +39,7 @@ class ContentPack {
       backgrounds:
           _listOfMaps(json, 'backgrounds').map(BackgroundDef.fromJson).toList(),
       weapons: _listOfMaps(json, 'weapons').map(WeaponDef.fromJson).toList(),
+      armors: _listOfMaps(json, 'armors').map(ArmorDef.fromJson).toList(),
     );
   }
 
@@ -64,6 +66,9 @@ class ContentPack {
 
   /// Armes.
   final List<WeaponDef> weapons;
+
+  /// Armures et bouclier.
+  final List<ArmorDef> armors;
 
   /// Espèce par identifiant, ou `null`.
   SpeciesDef? speciesById(String id) =>
@@ -210,6 +215,65 @@ class WeaponDef {
 
   /// Dégâts au format `1d8`.
   String get damage => '${diceCount}d$diceSides';
+}
+
+/// Catégorie d'armure (PHB 2024).
+enum ArmorCategory {
+  /// Légère : CA de base + Dextérité.
+  light,
+
+  /// Intermédiaire : CA de base + Dextérité (2 au plus).
+  medium,
+
+  /// Lourde : CA de base seule.
+  heavy,
+
+  /// Bouclier : + CA de base.
+  shield,
+}
+
+/// Une armure ou le bouclier. Le nom sert à la retrouver dans l'inventaire.
+class ArmorDef {
+  /// Crée une armure.
+  const ArmorDef({
+    required this.id,
+    required this.name,
+    required this.baseAc,
+    required this.category,
+  });
+
+  /// Lit une armure depuis son JSON.
+  factory ArmorDef.fromJson(Map<String, dynamic> json) => ArmorDef(
+    id: _requireString(json, 'id'),
+    name: _requireString(json, 'name'),
+    baseAc: _requireInt(json, 'baseAc'),
+    category: ArmorCategory.values.byName(_requireString(json, 'category')),
+  );
+
+  /// Identifiant stable.
+  final String id;
+
+  /// Nom.
+  final String name;
+
+  /// CA de base (bonus de CA pour le bouclier).
+  final int baseAc;
+
+  /// Catégorie.
+  final ArmorCategory category;
+}
+
+/// Classe d'armure : 10 + Dextérité sans armure, sinon selon la catégorie
+/// de [armor], + le bouclier s'il est porté.
+int armorClass(int dexterityModifier, {ArmorDef? armor, ArmorDef? shield}) {
+  final body = switch (armor?.category) {
+    null || ArmorCategory.shield => 10 + dexterityModifier,
+    ArmorCategory.light => armor!.baseAc + dexterityModifier,
+    ArmorCategory.medium =>
+      armor!.baseAc + (dexterityModifier > 2 ? 2 : dexterityModifier),
+    ArmorCategory.heavy => armor!.baseAc,
+  };
+  return body + (shield?.baseAc ?? 0);
 }
 
 /// Le pack est écrit pour un schéma plus récent que ce moteur.
