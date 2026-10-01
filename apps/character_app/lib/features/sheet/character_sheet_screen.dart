@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,9 +15,11 @@ import '../../theme/app_theme.dart';
 import '../admin/admin_providers.dart';
 import '../characters/characters_providers.dart';
 import '../wizard/wizard_rules.dart';
+import 'condition_labels.dart';
 import 'rest_dialogs.dart';
 import 'roll_dialog.dart';
 
+part 'conditions_part.dart';
 part 'spells_tab.dart';
 
 String _signed(int value) => value >= 0 ? '+$value' : '$value';
@@ -25,8 +29,8 @@ String _signed(int value) => value >= 0 ? '+$value' : '$value';
 /// partir de 900px) ; onglet Actions : `CharSheetActions.dc.html`.
 /// Initiative, sauvegardes et compétences se lancent au d20 (cf.
 /// `roll_dialog.dart`), repos dans `rest_dialogs.dart`, sorts et grimoire
-/// dans `spells_tab.dart`. Notes et conditions viendront avec leurs
-/// maquettes.
+/// dans `spells_tab.dart`, conditions et inspiration dans
+/// `conditions_part.dart`. Les notes viendront avec leur maquette.
 class CharacterSheetScreen extends ConsumerStatefulWidget {
   const CharacterSheetScreen({super.key, required this.characterId});
 
@@ -91,10 +95,21 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
       skillProficiencies: background?.skills ?? '',
       level: doc.level,
     );
-    final speed =
-        (subspecies?.speed.isNotEmpty ?? false)
-            ? subspecies!.speed
-            : species?.speed ?? '—';
+    final conditions = doc.activeConditions;
+    final speed = effectiveSpeed(
+      (subspecies?.speed.isNotEmpty ?? false)
+          ? subspecies!.speed
+          : species?.speed ?? '—',
+      conditions,
+      doc.exhaustion,
+    );
+    D20Effects effects(D20Test test, [Ability? ability]) =>
+        d20Effects(conditions, doc.exhaustion, test, ability: ability);
+    final controller = ref.read(charactersControllerProvider);
+    final spendInspiration =
+        doc.heroicInspiration
+            ? () => controller.save(doc.copyWith(heroicInspiration: false))
+            : null;
     final subtitle = [
       cls == null ? 'Niveau ${doc.level}' : '${cls.name} ${doc.level}',
       if (subspecies?.name ?? species?.name case final s?) s,
@@ -117,6 +132,8 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
             hint:
                 "Ce résultat détermine ta place dans l'ordre d'initiative — "
                 'communique-le à ton MJ pour le suivi de combat.',
+            effects: effects(D20Test.check),
+            onSpendInspiration: spendInspiration,
           ),
         ),
         ('Vitesse', speed, null),
@@ -144,6 +161,8 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
             modifierLabel: '$name${mastery(proficient)}',
             modifier: modifier,
             hint: dcHint,
+            effects: effects(D20Test.save, abilityFromLabel(name)),
+            onSpendInspiration: spendInspiration,
           ),
     );
     final skillList = _ModifierList(
@@ -165,9 +184,12 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
             modifierLabel: '$name ($ability${mastery(proficient)})',
             modifier: modifier,
             hint: dcHint,
+            effects: effects(D20Test.check),
+            onSpendInspiration: spendInspiration,
           ),
     );
     final bag = _Bag(doc: doc);
+    final status = _Status(doc: doc);
     final spells = _SpellsTab(
       doc: doc,
       cls: cls,
@@ -201,6 +223,8 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
               bonus: damage,
               type: weapon.damageType,
             ),
+            effects: effects(D20Test.attack),
+            onSpendInspiration: spendInspiration,
           ),
     );
 
@@ -256,12 +280,19 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: column([abilities, saves, skillList])),
-                      Expanded(child: column([strip, hp, actions])),
+                      Expanded(child: column([strip, hp, status, actions])),
                       Expanded(child: column([spells, bag])),
                     ],
                   )
                   : switch (_tab) {
-                    0 => column([strip, hp, abilities, saves, skillList]),
+                    0 => column([
+                      strip,
+                      hp,
+                      status,
+                      abilities,
+                      saves,
+                      skillList,
+                    ]),
                     1 => column([actions]),
                     2 => column([spells]),
                     _ => column([bag]),

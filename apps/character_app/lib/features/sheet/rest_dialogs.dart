@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rules_engine/rules_engine.dart';
@@ -24,7 +26,8 @@ Future<void> showShortRestDialog(
 );
 
 /// Repos long (`CharSheetRestLong.dc.html`) : PV au maximum, PV temporaires
-/// perdus, tous les dés de vie et emplacements de sorts récupérés.
+/// perdus, tous les dés de vie et emplacements de sorts récupérés, un
+/// niveau d'épuisement en moins.
 Future<void> showLongRestDialog(
   BuildContext context, {
   required CharacterDoc doc,
@@ -51,6 +54,11 @@ Future<void> showLongRestDialog(
             ),
             if (doc.tempHp > 0)
               _Effect(label: 'PV temporaires', value: '${doc.tempHp} → 0'),
+            if (doc.exhaustion > 0)
+              _Effect(
+                label: 'Épuisement',
+                value: '${doc.exhaustion} → ${doc.exhaustion - 1}',
+              ),
             if (doc.slotsUsed.any((n) => n > 0))
               const _Effect(
                 label: 'Emplacements de sorts',
@@ -71,6 +79,7 @@ Future<void> showLongRestDialog(
                         tempHp: 0,
                         hitDiceUsed: 0,
                         slotsUsed: const [],
+                        exhaustion: max(0, doc.exhaustion - 1),
                       ),
                     );
                 Navigator.pop(context);
