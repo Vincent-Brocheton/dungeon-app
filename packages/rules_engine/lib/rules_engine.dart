@@ -13,3 +13,4 @@ export 'src/content_pack.dart';
 export 'src/point_buy.dart';
 export 'src/proficiency.dart';
 export 'src/rule_violation.dart';
+export 'src/spell_slots.dart';

@@ -24,7 +24,7 @@ Future<void> showShortRestDialog(
 );
 
 /// Repos long (`CharSheetRestLong.dc.html`) : PV au maximum, PV temporaires
-/// perdus, tous les dés de vie récupérés.
+/// perdus, tous les dés de vie et emplacements de sorts récupérés.
 Future<void> showLongRestDialog(
   BuildContext context, {
   required CharacterDoc doc,
@@ -51,6 +51,11 @@ Future<void> showLongRestDialog(
             ),
             if (doc.tempHp > 0)
               _Effect(label: 'PV temporaires', value: '${doc.tempHp} → 0'),
+            if (doc.slotsUsed.any((n) => n > 0))
+              const _Effect(
+                label: 'Emplacements de sorts',
+                value: 'Tous restaurés',
+              ),
           ],
         ),
       ],
@@ -60,7 +65,14 @@ Future<void> showLongRestDialog(
               onPressed: () {
                 ref
                     .read(charactersControllerProvider)
-                    .save(doc.copyWith(hpLost: 0, tempHp: 0, hitDiceUsed: 0));
+                    .save(
+                      doc.copyWith(
+                        hpLost: 0,
+                        tempHp: 0,
+                        hitDiceUsed: 0,
+                        slotsUsed: const [],
+                      ),
+                    );
                 Navigator.pop(context);
               },
               child: const Text('Prendre un repos long'),
