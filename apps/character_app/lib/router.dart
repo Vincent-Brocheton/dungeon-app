@@ -18,6 +18,7 @@ import 'features/auth/legal_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/level_up/level_up_screen.dart';
 import 'features/sheet/character_sheet_screen.dart';
+import 'features/table/table_screens.dart';
 import 'features/wizard/wizard_screen.dart';
 
 /// Routes de l'app. Les chemins sont aussi les URL sur le web.
@@ -25,6 +26,8 @@ abstract final class AppRoutes {
   static const home = '/';
   static const newCharacter = '/new-character';
   static const account = '/account';
+  static const table = '/table';
+  static String join(String code) => '/join/$code';
   static const terms = '/account/terms';
   static const privacy = '/account/privacy';
   static String character(String id) => '/character/$id';
@@ -82,6 +85,16 @@ final appRouter = GoRouter(
                       SpellbookScreen(characterId: state.pathParameters['id']!),
             ),
           ],
+        ),
+        GoRoute(
+          path: 'table',
+          builder: (context, state) => const TableHomeScreen(),
+        ),
+        GoRoute(
+          path: 'join/:code',
+          builder:
+              (context, state) =>
+                  JoinTableScreen(code: state.pathParameters['code']!),
         ),
         GoRoute(
           path: 'account',

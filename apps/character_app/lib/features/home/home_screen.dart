@@ -27,6 +27,11 @@ class HomeScreen extends ConsumerWidget {
         title: const Text('Mes personnages'),
         actions: [
           IconButton(
+            tooltip: 'Ma table',
+            icon: const Icon(Icons.groups_outlined),
+            onPressed: () => context.push(AppRoutes.table),
+          ),
+          IconButton(
             tooltip: 'Nouveau personnage',
             icon: const Icon(Icons.add),
             onPressed: () => context.push(AppRoutes.newCharacter),
