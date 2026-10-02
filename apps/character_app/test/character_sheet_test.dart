@@ -230,6 +230,43 @@ void main() {
     expect(find.text('Épée longue'), findsOneWidget);
   });
 
+  testWidgets('le dernier jet affiché rejoint l’historique à la fermeture', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan);
+    appRouter.go(AppRoutes.character('durgan'));
+    await tester.pumpWidget(_app(characters, dice: [16, 3, 12]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Lancer : Force'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Avantage'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fermer'));
+    await tester.pumpAndSettle();
+
+    final roll = characters.rolls.single;
+    expect(
+      (roll.label, roll.detail, roll.total),
+      (
+        'Jet de sauvegarde · Force, maîtrisé',
+        '2d20 avantage — 12 gardé (3 écarté) (+5)',
+        17,
+      ),
+    );
+
+    appRouter.go(AppRoutes.rolls('durgan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Historique de mes jets'), findsOneWidget);
+    expect(find.text('Jet de sauvegarde · Force, maîtrisé'), findsOneWidget);
+    expect(find.text('17'), findsOneWidget);
+  });
+
   testWidgets("lancer une sauvegarde, avec avantage, et l'initiative", (
     tester,
   ) async {

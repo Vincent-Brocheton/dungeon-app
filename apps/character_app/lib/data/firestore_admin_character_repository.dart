@@ -38,4 +38,17 @@ class FirestoreAdminCharacterRepository implements AdminCharacterRepository {
               ? (entry.value as Timestamp).toDate()
               : entry.value,
   };
+
+  // ponytail: tout le groupe `rolls` trié côté client, sans index à déployer ;
+  // index de groupe sur createdAt + limit quand l'historique grossira.
+  @override
+  Stream<List<RollRecord>> watchAllRolls() => _db
+      .collectionGroup('rolls')
+      .snapshots()
+      .map(
+        (q) => [
+          for (final d in q.docs)
+            RollRecord.fromMap(d.id, _fromFirestore(d.data())),
+        ]..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+      );
 }

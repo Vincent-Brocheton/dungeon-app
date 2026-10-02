@@ -1,9 +1,12 @@
 import 'package:character_app/app.dart';
 import 'package:character_app/data/character_doc.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
+import 'package:character_app/data/in_memory_table_membership_repository.dart';
+import 'package:character_app/data/table_membership.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
 import 'package:character_app/features/characters/characters_providers.dart';
+import 'package:character_app/features/table/table_providers.dart';
 import 'package:character_app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,8 +17,14 @@ import 'fakes/fake_auth_service.dart';
 
 final _now = DateTime(2026, 10, 2);
 
-Widget _app(InMemoryCharacterRepository characters) => ProviderScope(
+Widget _app(
+  InMemoryCharacterRepository characters, [
+  InMemoryTableMembershipRepository? membership,
+]) => ProviderScope(
   overrides: [
+    tableMembershipRepositoryProvider.overrideWithValue(
+      membership ?? InMemoryTableMembershipRepository(),
+    ),
     authServiceProvider.overrideWithValue(
       FakeAuthService(initial: const AppUser(uid: 'me', isAnonymous: true)),
     ),
@@ -106,7 +115,10 @@ void main() {
     addTearDown(tester.view.reset);
 
     final characters = await _withDurgan();
-    await tester.pumpWidget(_app(characters));
+    final membership = InMemoryTableMembershipRepository(
+      members: [TableMember(uid: 'me', inviteCode: 'X', joinedAt: _now)],
+    );
+    await tester.pumpWidget(_app(characters, membership));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Supprimer mon compte'));
     await tester.pumpAndSettle();
@@ -131,5 +143,6 @@ void main() {
 
     expect(await characters.watchAll('me').first, isEmpty);
     expect(characters.notes, isEmpty);
+    expect(await membership.watchMember('me').first, isNull);
   });
 }

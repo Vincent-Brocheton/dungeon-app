@@ -1,5 +1,6 @@
 import 'package:character_app/app.dart';
 import 'package:character_app/data/character_doc.dart';
+import 'package:character_app/data/in_memory_admin_character_repository.dart';
 import 'package:character_app/data/in_memory_admin_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
 import 'package:character_app/data/in_memory_table_membership_repository.dart';
@@ -50,6 +51,7 @@ Future<void> _pump(
   InMemoryTableMembershipRepository membership,
   String location, {
   Set<String> admins = const {},
+  List<RollRecord> rolls = const [],
 }) async {
   tester.view.physicalSize = const Size(420, 1600);
   tester.view.devicePixelRatio = 1;
@@ -75,6 +77,9 @@ Future<void> _pump(
         ),
         characterRepositoryProvider.overrideWithValue(characters),
         tableMembershipRepositoryProvider.overrideWithValue(membership),
+        adminCharacterRepositoryProvider.overrideWithValue(
+          InMemoryAdminCharacterRepository(rolls: rolls),
+        ),
         adminRepositoryProvider.overrideWithValue(
           InMemoryAdminRepository(admins: admins),
         ),
@@ -273,5 +278,53 @@ void main() {
     await tester.tap(find.byTooltip('Retirer Tente'));
     await tester.pumpAndSettle();
     expect(find.text('Tente'), findsNothing);
+  });
+
+  testWidgets('historique MJ : jets des personnages de la table seulement, '
+      'filtrables par joueur', (tester) async {
+    RollRecord roll(String id, String characterId, String name, int total) =>
+        RollRecord(
+          id: id,
+          characterId: characterId,
+          characterName: name,
+          label: 'Initiative · Dextérité',
+          detail: 'd20 10 (+2)',
+          total: total,
+          createdAt: _now,
+        );
+    final membership = InMemoryTableMembershipRepository(
+      members: [
+        for (final (uid, id, name) in [
+          ('a', 'sera', 'Sera'),
+          ('b', 'orwen', 'Orwen'),
+        ])
+          TableMember(
+            uid: uid,
+            inviteCode: 'K7QX2M9P',
+            joinedAt: _now,
+            characterId: id,
+            characterName: name,
+          ),
+      ],
+    );
+    await _pump(
+      tester,
+      membership,
+      AppRoutes.adminRolls,
+      admins: {'me'},
+      rolls: [
+        roll('1', 'sera', 'Sera', 12),
+        roll('2', 'orwen', 'Orwen', 19),
+        roll('3', 'ailleurs', 'Hors table', 7),
+      ],
+    );
+    expect(find.text('Sera · Initiative · Dextérité'), findsOneWidget);
+    expect(find.text('Orwen · Initiative · Dextérité'), findsOneWidget);
+    expect(find.textContaining('Hors table'), findsNothing);
+
+    await tester.tap(find.text('Orwen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sera · Initiative · Dextérité'), findsNothing);
+    expect(find.text('19'), findsOneWidget);
   });
 }

@@ -411,6 +411,57 @@ class CharacterNote {
       );
 }
 
+/// Jet fait depuis la fiche (`users/{uid}/rolls/{id}`) : son propriétaire le
+/// voit dans l'historique du personnage, le MJ dans celui de la table.
+class RollRecord {
+  const RollRecord({
+    required this.id,
+    required this.characterId,
+    required this.characterName,
+    required this.label,
+    required this.detail,
+    required this.total,
+    required this.createdAt,
+    this.inspired = false,
+  });
+
+  final String id;
+  final String characterId;
+  final String characterName;
+
+  /// « Jet de sauvegarde · Sagesse ».
+  final String label;
+
+  /// « d20 12 (+7) ».
+  final String detail;
+  final int total;
+
+  /// Inspiration héroïque dépensée.
+  final bool inspired;
+  final DateTime createdAt;
+
+  Map<String, Object?> toMap() => {
+    'characterId': characterId,
+    'characterName': characterName,
+    'label': label,
+    'detail': detail,
+    'total': total,
+    'inspired': inspired,
+    'createdAt': createdAt,
+  };
+
+  factory RollRecord.fromMap(String id, Map<String, Object?> map) => RollRecord(
+    id: id,
+    characterId: map['characterId'] as String? ?? '',
+    characterName: map['characterName'] as String? ?? '',
+    label: map['label'] as String? ?? '',
+    detail: map['detail'] as String? ?? '',
+    total: map['total'] as int? ?? 0,
+    inspired: map['inspired'] as bool? ?? false,
+    createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
+  );
+}
+
 /// Pièce de la bourse.
 enum Coin {
   gold('po', 100),

@@ -59,9 +59,28 @@ class FirestoreCharacterRepository implements CharacterRepository {
   Future<void> deleteNote(String uid, String noteId) =>
       _notes(uid).doc(noteId).delete();
 
+  CollectionReference<Map<String, dynamic>> _rolls(String uid) =>
+      _db.collection('users').doc(uid).collection('rolls');
+
+  @override
+  Stream<List<RollRecord>> watchRolls(String uid, String characterId) =>
+      _rolls(uid)
+          .where('characterId', isEqualTo: characterId)
+          .snapshots()
+          .map(
+            (snapshot) => [
+              for (final doc in snapshot.docs)
+                RollRecord.fromMap(doc.id, _fromFirestore(doc.data())),
+            ]..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+          );
+
+  @override
+  Future<void> addRoll(String uid, RollRecord roll) =>
+      _rolls(uid).doc(roll.id).set(_toFirestore(roll.toMap()));
+
   @override
   Future<void> deleteAll(String uid) async {
-    for (final collection in [_characters(uid), _notes(uid)]) {
+    for (final collection in [_characters(uid), _notes(uid), _rolls(uid)]) {
       final snapshot = await collection.get();
       // 500 opérations max par batch.
       for (var i = 0; i < snapshot.docs.length; i += 500) {

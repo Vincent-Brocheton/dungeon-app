@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/character_doc.dart';
 import '../../data/admin_background_doc.dart';
 import '../../data/admin_character_entry.dart';
 import '../../data/admin_character_repository.dart';
@@ -45,6 +46,11 @@ final adminCharacterRepositoryProvider = Provider<AdminCharacterRepository>(
 );
 
 /// Tous les personnages de tous les utilisateurs, en temps réel (vue admin).
+/// Jets de tous les joueurs (historique de la table côté MJ).
+final allRollsProvider = StreamProvider<List<RollRecord>>(
+  (ref) => ref.watch(adminCharacterRepositoryProvider).watchAllRolls(),
+);
+
 final allCharactersProvider = StreamProvider<List<AdminCharacterEntry>>(
   (ref) => ref.watch(adminCharacterRepositoryProvider).watchAllCharacters(),
 );

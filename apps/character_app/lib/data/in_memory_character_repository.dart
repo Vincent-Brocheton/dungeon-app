@@ -13,6 +13,7 @@ class InMemoryCharacterRepository implements CharacterRepository {
 
   final _docs = <String, CharacterDoc>{};
   final _notes = <String, CharacterNote>{};
+  final _rolls = <String, RollRecord>{};
   final _controller = StreamController<void>.broadcast();
   var _counter = 0;
 
@@ -66,6 +67,25 @@ class InMemoryCharacterRepository implements CharacterRepository {
     _controller.add(null);
   }
 
+  @override
+  Stream<List<RollRecord>> watchRolls(String uid, String characterId) async* {
+    List<RollRecord> rolls() => [
+      for (final r in _rolls.values)
+        if (r.characterId == characterId) r,
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    yield rolls();
+    yield* _controller.stream.map((_) => rolls());
+  }
+
+  @override
+  Future<void> addRoll(String uid, RollRecord roll) async {
+    _rolls[roll.id] = roll;
+    _controller.add(null);
+  }
+
+  /// Jets enregistrés, pour les tests.
+  Iterable<RollRecord> get rolls => _rolls.values;
+
   /// Notes enregistrées, pour les tests.
   Iterable<CharacterNote> get notes => _notes.values;
 
@@ -73,6 +93,7 @@ class InMemoryCharacterRepository implements CharacterRepository {
   Future<void> deleteAll(String uid) async {
     _docs.clear();
     _notes.clear();
+    _rolls.clear();
     _controller.add(null);
   }
 
