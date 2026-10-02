@@ -9,10 +9,14 @@ enum LegalPage { terms, privacy }
 
 const _updated = 'Dernière mise à jour : 2 octobre 2026';
 
+/// Adresse de l'éditeur, pour tout contact.
+const _contact =
+    'Pour toute question, écris à l’éditeur de Grimoire : 45 rue Ferdinand '
+    'Mathias, 59260 Lille.';
+
 /// Conditions d'utilisation (`LegalTerms.dc.html`) et politique de
 /// confidentialité (`LegalPrivacy.dc.html`), en lecture seule. Le texte
-/// décrit ce que fait réellement l'app ; une adresse de contact sera ajoutée
-/// avant la publication.
+/// décrit ce que fait réellement l'app.
 class LegalScreen extends StatelessWidget {
   const LegalScreen({super.key, required this.page});
 
@@ -121,6 +125,7 @@ const _terms = [
         'dangereuse. Tes personnages et tes notes sont alors effacés '
         'définitivement.',
   ),
+  ('7. Contact', _contact),
 ];
 
 const _privacy = [
@@ -153,4 +158,5 @@ const _privacy = [
         'données (personnages et notes, au format JSON) ou supprimer '
         'définitivement ton compte et tout son contenu.',
   ),
+  ('6. Contact', _contact),
 ];
