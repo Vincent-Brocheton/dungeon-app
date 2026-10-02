@@ -410,3 +410,200 @@ class _Line extends StatelessWidget {
     ],
   );
 }
+
+const _freeDice = [4, 6, 8, 10, 12, 20, 100];
+
+/// Jet libre (`FreeRoll.dc.html`) : un ou plusieurs dés et un modificateur,
+/// sans lien avec la fiche ni avec l'historique des jets.
+Future<void> showFreeRollDialog(BuildContext context) => showDialog<void>(
+  context: context,
+  builder: (context) => const _FreeRollDialog(),
+);
+
+class _FreeRollDialog extends ConsumerStatefulWidget {
+  const _FreeRollDialog();
+
+  @override
+  ConsumerState<_FreeRollDialog> createState() => _FreeRollDialogState();
+}
+
+class _FreeRollDialogState extends ConsumerState<_FreeRollDialog> {
+  var _sides = 6;
+  var _count = 1;
+  var _modifier = 0;
+  List<int>? _rolls;
+
+  String get _formula =>
+      '${_count}d$_sides${_modifier == 0 ? '' : ' ${_signed(_modifier)}'}';
+
+  void _roll() => setState(
+    () => _rolls = rollDice(ref.read(diceRngProvider), _count, _sides),
+  );
+
+  Widget _stepper(
+    String label,
+    String value,
+    VoidCallback? less,
+    VoidCallback? more,
+  ) => Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: AppTheme.textMuted)),
+        Row(
+          children: [
+            IconButton(
+              tooltip: '$label : moins',
+              onPressed: less,
+              icon: const Icon(Icons.remove, size: 16),
+            ),
+            Text(value, key: Key('free-$label')),
+            IconButton(
+              tooltip: '$label : plus',
+              onPressed: more,
+              icon: const Icon(Icons.add, size: 16),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: AppTheme.textMuted,
+    );
+    final rolls = _rolls;
+    final sum = rolls?.fold(0, (a, b) => a + b);
+    return Dialog(
+      insetPadding: const EdgeInsets.all(20),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Jet libre', style: theme.textTheme.titleLarge),
+              Text(
+                'Un ou plusieurs dés, sans lien avec ta fiche',
+                style: muted,
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final s in _freeDice)
+                    ChoiceChip(
+                      label: Text('d$s'),
+                      selected: _sides == s,
+                      onSelected:
+                          (_) => setState(() {
+                            _sides = s;
+                            _rolls = null;
+                          }),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _stepper(
+                    'Nombre de dés',
+                    '$_count',
+                    _count > 1
+                        ? () => setState(() {
+                          _count--;
+                          _rolls = null;
+                        })
+                        : null,
+                    _count < 20
+                        ? () => setState(() {
+                          _count++;
+                          _rolls = null;
+                        })
+                        : null,
+                  ),
+                  _stepper(
+                    'Modificateur',
+                    _signed(_modifier),
+                    _modifier > -20 ? () => setState(() => _modifier--) : null,
+                    _modifier < 20 ? () => setState(() => _modifier++) : null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              FilledButton(onPressed: _roll, child: Text('Lancer $_formula')),
+              if (rolls != null) ...[
+                const SizedBox(height: 20),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [for (final r in rolls) _Die(value: r, kept: true)],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    border: Border.all(color: AppTheme.border),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      _Line(
+                        label: '${rolls.length}d$_sides',
+                        value: '${rolls.join(' + ')} = $sum',
+                      ),
+                      if (_modifier != 0) ...[
+                        const SizedBox(height: 8),
+                        _Line(label: 'Modificateur', value: _signed(_modifier)),
+                      ],
+                      const Divider(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Total',
+                              style: theme.textTheme.titleSmall,
+                            ),
+                          ),
+                          Text(
+                            '${sum! + _modifier}',
+                            key: const Key('free-total'),
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: AppTheme.accent,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Text(
+                'Pour du butin, des dégâts de zone ou une règle maison.',
+                style: muted,
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Fermer'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

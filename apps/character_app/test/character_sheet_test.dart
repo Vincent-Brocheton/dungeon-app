@@ -781,4 +781,28 @@ void main() {
     expect(saved.isDead, isFalse);
     expect(saved.deathFailures, 0);
   });
+
+  testWidgets('jet libre : 2d6 + 3', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final characters = InMemoryCharacterRepository();
+    await characters.upsert('me', _durgan);
+    appRouter.go(AppRoutes.character('durgan'));
+    await tester.pumpWidget(_app(characters, dice: [4, 2]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Jet libre — un ou plusieurs dés'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Nombre de dés : plus'));
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byTooltip('Modificateur : plus'));
+    }
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lancer 2d6 +3'));
+    await tester.pumpAndSettle();
+    expect(find.text('4 + 2 = 6'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(const Key('free-total'))).data, '9');
+  });
 }
