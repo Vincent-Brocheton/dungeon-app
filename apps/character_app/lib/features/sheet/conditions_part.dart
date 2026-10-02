@@ -114,6 +114,27 @@ class _Status extends StatelessWidget {
                 '${(1.5 * doc.exhaustion).toString().replaceAll('.', ',')} m.',
             onTap: () => _showConditions(context, doc.id),
           ),
+        const SizedBox(height: 16),
+        InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => showFreeRollDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: _card,
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.casino_outlined,
+                  size: 18,
+                  color: AppTheme.textMuted,
+                ),
+                SizedBox(width: 10),
+                Expanded(child: Text('Jet libre — un ou plusieurs dés')),
+                Icon(Icons.chevron_right, color: AppTheme.textMuted),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
