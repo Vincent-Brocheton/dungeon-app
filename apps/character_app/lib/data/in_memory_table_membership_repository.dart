@@ -9,7 +9,11 @@ class InMemoryTableMembershipRepository implements TableMembershipRepository {
     TablePublicInfo? public,
     Iterable<TableInvite> invites = const [],
     Iterable<TableMember> members = const [],
+    Iterable<ChronicleEntry> chronicle = const [],
   }) : _public = public {
+    for (final e in chronicle) {
+      _chronicle[e.id] = e;
+    }
     for (final i in invites) {
       _invites[i.code] = i;
     }
@@ -21,6 +25,8 @@ class InMemoryTableMembershipRepository implements TableMembershipRepository {
   TablePublicInfo? _public;
   final _invites = <String, TableInvite>{};
   final _members = <String, TableMember>{};
+  final _chronicle = <String, ChronicleEntry>{};
+  var _nextId = 0;
   final _changes = StreamController<void>.broadcast();
 
   Stream<T> _watch<T>(T Function() read) async* {
@@ -84,6 +90,26 @@ class InMemoryTableMembershipRepository implements TableMembershipRepository {
   @override
   Future<void> leave(String uid) async {
     _members.remove(uid);
+    _changes.add(null);
+  }
+
+  @override
+  Stream<List<ChronicleEntry>> watchChronicle() => _watch(
+    () =>
+        _chronicle.values.toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+  );
+
+  @override
+  Future<void> saveChronicle(ChronicleEntry entry) async {
+    final id = entry.id.isEmpty ? 'c${_nextId++}' : entry.id;
+    _chronicle[id] = ChronicleEntry.fromMap(id, entry.toMap());
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> deleteChronicle(String id) async {
+    _chronicle.remove(id);
     _changes.add(null);
   }
 }

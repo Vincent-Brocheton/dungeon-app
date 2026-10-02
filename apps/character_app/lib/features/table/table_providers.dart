@@ -32,3 +32,8 @@ final tableMembersProvider = StreamProvider<List<TableMember>>(
 final tableInvitesProvider = StreamProvider<List<TableInvite>>(
   (ref) => ref.watch(tableMembershipRepositoryProvider).watchInvites(),
 );
+
+/// Chronique partagée de la table.
+final tableChronicleProvider = StreamProvider<List<ChronicleEntry>>(
+  (ref) => ref.watch(tableMembershipRepositoryProvider).watchChronicle(),
+);

@@ -419,6 +419,18 @@ class _TableHome extends ConsumerWidget {
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: AppTheme.border),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                leading: const Icon(Icons.auto_stories_outlined),
+                title: const Text('Chronique de la table'),
+                subtitle: Text('Quêtes, rencontres et notes', style: muted),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.chronicle),
+              ),
               title('Ton personnage à cette table'),
               ListTile(
                 shape: RoundedRectangleBorder(
