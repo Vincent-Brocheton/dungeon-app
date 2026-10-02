@@ -37,3 +37,13 @@ final tableInvitesProvider = StreamProvider<List<TableInvite>>(
 final tableChronicleProvider = StreamProvider<List<ChronicleEntry>>(
   (ref) => ref.watch(tableMembershipRepositoryProvider).watchChronicle(),
 );
+
+/// Mouvements de la réserve du groupe.
+final treasuryProvider = StreamProvider<List<TreasuryMovement>>(
+  (ref) => ref.watch(tableMembershipRepositoryProvider).watchTreasury(),
+);
+
+/// Objets communs du groupe.
+final treasuryItemsProvider = StreamProvider<List<TreasuryItem>>(
+  (ref) => ref.watch(tableMembershipRepositoryProvider).watchTreasuryItems(),
+);

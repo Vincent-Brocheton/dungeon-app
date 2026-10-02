@@ -25,7 +25,7 @@ const _coinLabels = {
 
 /// Bourse (`CharSheetCurrency.dc.html`) : valeur totale, pièces ±,
 /// conversions et historique des mouvements manuels. La réserve du groupe
-/// viendra avec la table côté joueur.
+/// est sur la page de la table.
 class PurseScreen extends ConsumerWidget {
   const PurseScreen({super.key, required this.characterId});
 

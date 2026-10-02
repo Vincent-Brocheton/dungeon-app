@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'character_doc.dart';
+
 /// Ce que les joueurs voient de la table : `tablePublic/main`, copie par le
 /// MJ des champs non confidentiels de `table/main` (dont le journal reste
 /// privé).
@@ -208,6 +210,76 @@ class ChronicleEntry {
       );
 }
 
+/// Mouvement de la réserve du groupe : `treasuryMovements/{id}`. La réserve
+/// est la somme des mouvements ; un joueur ne peut que verser (montant
+/// positif), le MJ ajuste librement. Jamais modifié ni supprimé.
+class TreasuryMovement {
+  const TreasuryMovement({
+    required this.label,
+    required this.coin,
+    required this.amount,
+    required this.authorUid,
+    required this.createdAt,
+    this.id = '',
+  });
+
+  final String id;
+  final String label;
+  final Coin coin;
+
+  /// Positif pour un versement, négatif pour une sortie.
+  final int amount;
+  final String authorUid;
+  final DateTime createdAt;
+
+  Map<String, Object?> toMap() => {
+    'label': label,
+    'coin': coin.name,
+    'amount': amount,
+    'authorUid': authorUid,
+    'createdAt': createdAt,
+  };
+
+  factory TreasuryMovement.fromMap(String id, Map<String, Object?> map) =>
+      TreasuryMovement(
+        id: id,
+        label: map['label'] as String? ?? '',
+        coin: Coin.values.asNameMap()[map['coin']] ?? Coin.gold,
+        amount: map['amount'] as int? ?? 0,
+        authorUid: map['authorUid'] as String? ?? '',
+        createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
+      );
+}
+
+/// Objet commun du groupe (`treasuryItems/{id}`), géré par le MJ.
+class TreasuryItem {
+  const TreasuryItem({
+    required this.name,
+    required this.createdAt,
+    this.note = '',
+    this.id = '',
+  });
+
+  final String id;
+  final String name;
+  final String note;
+  final DateTime createdAt;
+
+  Map<String, Object?> toMap() => {
+    'name': name,
+    'note': note,
+    'createdAt': createdAt,
+  };
+
+  factory TreasuryItem.fromMap(String id, Map<String, Object?> map) =>
+      TreasuryItem(
+        id: id,
+        name: map['name'] as String? ?? '',
+        note: map['note'] as String? ?? '',
+        createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
+      );
+}
+
 /// Accès à l'adhésion à la table. Implémenté par Firestore, et en mémoire
 /// pour les tests.
 abstract class TableMembershipRepository {
@@ -249,4 +321,19 @@ abstract class TableMembershipRepository {
 
   /// Supprime une entrée (auteur ou MJ).
   Future<void> deleteChronicle(String id);
+
+  /// Mouvements de la réserve, des plus récents aux plus anciens.
+  Stream<List<TreasuryMovement>> watchTreasury();
+
+  /// Ajoute un mouvement à la réserve.
+  Future<void> addTreasuryMovement(TreasuryMovement movement);
+
+  /// Objets communs, des plus anciens aux plus récents.
+  Stream<List<TreasuryItem>> watchTreasuryItems();
+
+  /// MJ : ajoute un objet commun.
+  Future<void> addTreasuryItem(TreasuryItem item);
+
+  /// MJ : retire un objet commun.
+  Future<void> removeTreasuryItem(String id);
 }

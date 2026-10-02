@@ -10,7 +10,9 @@ class InMemoryTableMembershipRepository implements TableMembershipRepository {
     Iterable<TableInvite> invites = const [],
     Iterable<TableMember> members = const [],
     Iterable<ChronicleEntry> chronicle = const [],
+    Iterable<TreasuryMovement> treasury = const [],
   }) : _public = public {
+    _treasury.addAll(treasury);
     for (final e in chronicle) {
       _chronicle[e.id] = e;
     }
@@ -26,6 +28,8 @@ class InMemoryTableMembershipRepository implements TableMembershipRepository {
   final _invites = <String, TableInvite>{};
   final _members = <String, TableMember>{};
   final _chronicle = <String, ChronicleEntry>{};
+  final _treasury = <TreasuryMovement>[];
+  final _treasuryItems = <String, TreasuryItem>{};
   var _nextId = 0;
   final _changes = StreamController<void>.broadcast();
 
@@ -110,6 +114,35 @@ class InMemoryTableMembershipRepository implements TableMembershipRepository {
   @override
   Future<void> deleteChronicle(String id) async {
     _chronicle.remove(id);
+    _changes.add(null);
+  }
+
+  @override
+  Stream<List<TreasuryMovement>> watchTreasury() => _watch(
+    () =>
+        _treasury.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+  );
+
+  @override
+  Future<void> addTreasuryMovement(TreasuryMovement movement) async {
+    _treasury.add(movement);
+    _changes.add(null);
+  }
+
+  @override
+  Stream<List<TreasuryItem>> watchTreasuryItems() =>
+      _watch(() => _treasuryItems.values.toList());
+
+  @override
+  Future<void> addTreasuryItem(TreasuryItem item) async {
+    final id = 't${_nextId++}';
+    _treasuryItems[id] = TreasuryItem.fromMap(id, item.toMap());
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> removeTreasuryItem(String id) async {
+    _treasuryItems.remove(id);
     _changes.add(null);
   }
 }
