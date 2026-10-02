@@ -135,6 +135,23 @@ class _Status extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 8),
+        InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => context.push(AppRoutes.rolls(doc.id)),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: _card,
+            child: const Row(
+              children: [
+                Icon(Icons.history, size: 18, color: AppTheme.textMuted),
+                SizedBox(width: 10),
+                Expanded(child: Text('Historique de mes jets')),
+                Icon(Icons.chevron_right, color: AppTheme.textMuted),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }

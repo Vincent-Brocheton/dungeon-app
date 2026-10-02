@@ -8,6 +8,7 @@ import '../../data/character_doc.dart';
 import '../../data/character_repository.dart';
 import '../../data/firestore_character_repository.dart';
 import '../auth/auth_providers.dart';
+import '../table/table_providers.dart';
 
 /// Dépôt des personnages ; remplacé par `InMemoryCharacterRepository` dans les tests.
 final characterRepositoryProvider = Provider<CharacterRepository>(
@@ -27,6 +28,16 @@ final characterProvider = Provider.family<AsyncValue<CharacterDoc?>, String>(
       .watch(myCharactersProvider)
       .whenData((list) => list.where((c) => c.id == id).firstOrNull),
 );
+
+/// Historique des jets d'un personnage de l'utilisateur courant.
+final characterRollsProvider = StreamProvider.family<List<RollRecord>, String>((
+  ref,
+  characterId,
+) {
+  final uid = ref.watch(currentUidProvider);
+  if (uid == null) return Stream.value(const []);
+  return ref.watch(characterRepositoryProvider).watchRolls(uid, characterId);
+});
 
 /// Notes privées d'un personnage de l'utilisateur courant.
 final characterNotesProvider =
@@ -105,6 +116,28 @@ class CharactersController {
 
   Future<void> deleteNote(String noteId) => _repo.deleteNote(_uid(), noteId);
 
+  /// Ajoute un jet à l'historique du personnage.
+  Future<void> addRoll({
+    required String characterId,
+    required String characterName,
+    required String label,
+    required String detail,
+    required int total,
+    bool inspired = false,
+  }) => _repo.addRoll(
+    _uid(),
+    RollRecord(
+      id: _repo.newId(),
+      characterId: characterId,
+      characterName: characterName,
+      label: label,
+      detail: detail,
+      total: total,
+      inspired: inspired,
+      createdAt: DateTime.now(),
+    ),
+  );
+
   Future<void> delete(String id) => _repo.softDelete(_uid(), id);
 
   /// Copie lisible de toutes les données du compte (`AccountExportData`) :
@@ -123,6 +156,10 @@ class CharactersController {
               for (final n in await _repo.watchNotes(uid, c.id).first)
                 n.toMap(),
             ],
+            'rolls': [
+              for (final r in await _repo.watchRolls(uid, c.id).first)
+                r.toMap(),
+            ],
           },
       ],
     });
@@ -131,10 +168,11 @@ class CharactersController {
   static Object? _encodeDate(Object? value) =>
       value is DateTime ? value.toIso8601String() : value.toString();
 
-  /// Efface toutes les données puis le compte. L'écran Bienvenue reprend
+  /// Quitte la table, efface toutes les données puis le compte. L'écran Bienvenue reprend
   /// la main : aucune session n'est recréée automatiquement.
   Future<void> deleteAccount() async {
     final auth = _ref.read(authServiceProvider);
+    await _ref.read(tableMembershipRepositoryProvider).leave(_uid());
     await _repo.deleteAll(_uid());
     await auth.deleteAccount();
   }

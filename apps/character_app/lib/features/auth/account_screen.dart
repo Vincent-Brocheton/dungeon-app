@@ -179,7 +179,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               children: [
                 ListTile(
                   title: const Text('Exporter mes données'),
-                  subtitle: const Text('Personnages et notes, au format JSON'),
+                  subtitle: const Text(
+                    'Personnages, notes et jets, au format JSON',
+                  ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _busy ? null : _export,
                 ),
@@ -303,7 +305,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                 'Cette action est irréversible. Seront définitivement '
                 'supprimés, sur tous tes appareils :\n'
                 '• tes personnages (fiches, inventaire, sorts, bourse) ;\n'
-                '• tes notes de session privées ;\n'
+                '• tes notes de session privées et l’historique de tes jets ;\n'
                 '• ton compte et ses connexions liées.',
               ),
               const SizedBox(height: 8),

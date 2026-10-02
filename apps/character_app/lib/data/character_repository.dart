@@ -17,7 +17,12 @@ abstract class CharacterRepository {
 
   Future<void> deleteNote(String uid, String noteId);
 
-  /// Suppression définitive de tout (notes comprises) : uniquement avant
+  /// Jets d'un personnage, du plus récent au plus ancien.
+  Stream<List<RollRecord>> watchRolls(String uid, String characterId);
+
+  Future<void> addRoll(String uid, RollRecord roll);
+
+  /// Suppression définitive de tout (notes et jets compris) : uniquement avant
   /// suppression du compte.
   Future<void> deleteAll(String uid);
 

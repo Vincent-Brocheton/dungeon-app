@@ -146,6 +146,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
       shield: worn.where((a) => a.category == ArmorCategory.shield).firstOrNull,
     );
     const dcHint = 'Compare ce total au DD demandé par le MJ.';
+    final rollSource = (characterId: doc.id, characterName: doc.name);
     final strip = _StatStrip(
       stats: [
         ('CA', '$armorClassValue', null),
@@ -154,6 +155,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
           _signed(stats.initiative),
           () => showRollDialog(
             context,
+            source: rollSource,
             title: "Jet d'initiative",
             subtitle: '${doc.name} · Dextérité ${_signed(stats.initiative)}',
             modifierLabel: 'Dextérité',
@@ -185,6 +187,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
       onRoll:
           (name, _, modifier, proficient) => showRollDialog(
             context,
+            source: rollSource,
             title: 'Jet de sauvegarde',
             subtitle: '${doc.name} · $name${mastery(proficient)}',
             modifierLabel: '$name${mastery(proficient)}',
@@ -208,6 +211,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
       onRoll:
           (name, ability, modifier, proficient) => showRollDialog(
             context,
+            source: rollSource,
             title: 'Test de compétence',
             subtitle: '${doc.name} · $name ($ability${mastery(proficient)})',
             modifierLabel: '$name ($ability${mastery(proficient)})',
@@ -246,6 +250,7 @@ class _CharacterSheetScreenState extends ConsumerState<CharacterSheetScreen> {
       onAttack:
           (weapon, attack, damage) => showRollDialog(
             context,
+            source: rollSource,
             title: "Jet d'attaque",
             subtitle:
                 '${doc.name} · ${weapon.name} '

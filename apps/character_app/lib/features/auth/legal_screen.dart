@@ -132,8 +132,10 @@ const _privacy = [
   (
     '1. Données enregistrées',
     'Tes personnages (fiche, inventaire, sorts, bourse, personnalité), tes '
-        'notes de session privées et, si tu lies ton compte, ton adresse '
-        'e-mail ou ton identifiant Google. Aucune donnée de paiement.',
+        'notes de session privées, l’historique des jets faits depuis la '
+        'fiche, ce que tu publies à ta table (chronique, versements à la '
+        'réserve) et, si tu lies ton compte, ton adresse e-mail ou ton '
+        'identifiant Google. Aucune donnée de paiement.',
   ),
   (
     '2. Pourquoi',
@@ -143,8 +145,10 @@ const _privacy = [
   (
     '3. Qui voit quoi',
     'Toi seul·e modifies tes personnages. Le MJ (administrateur de l’app) '
-        'peut lire les fiches de personnage, pas tes notes de session '
-        'privées. Rien n’est partagé avec d’autres joueurs.',
+        'peut lire les fiches de personnage et l’historique des jets, pas '
+        'tes notes de session privées. Les joueurs de ta table voient le nom '
+        'et la classe de ton personnage, ainsi que ce que tu publies dans la '
+        'chronique et la réserve du groupe.',
   ),
   (
     '4. Conservation',
@@ -155,7 +159,7 @@ const _privacy = [
   (
     '5. Tes droits',
     'Depuis Réglages → Zone dangereuse, tu peux exporter une copie de tes '
-        'données (personnages et notes, au format JSON) ou supprimer '
+        'données (personnages, notes et jets, au format JSON) ou supprimer '
         'définitivement ton compte et tout son contenu.',
   ),
   ('6. Contact', _contact),

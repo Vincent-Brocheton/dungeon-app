@@ -158,6 +158,11 @@ class _AdminTableScreenState extends ConsumerState<AdminTableScreen> {
             icon: const Icon(Icons.savings_outlined),
             onPressed: () => context.push(AppRoutes.treasury),
           ),
+          IconButton(
+            tooltip: 'Historique des jets',
+            icon: const Icon(Icons.history),
+            onPressed: () => context.push(AppRoutes.adminRolls),
+          ),
         ],
       ),
       body: table.when(

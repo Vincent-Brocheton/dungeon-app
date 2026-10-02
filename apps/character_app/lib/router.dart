@@ -19,6 +19,7 @@ import 'features/home/home_screen.dart';
 import 'features/level_up/level_up_screen.dart';
 import 'features/sheet/character_sheet_screen.dart';
 import 'features/table/chronicle_screen.dart';
+import 'features/table/roll_history_screen.dart';
 import 'features/table/table_screens.dart';
 import 'features/table/treasury_screen.dart';
 import 'features/wizard/wizard_screen.dart';
@@ -38,6 +39,7 @@ abstract final class AppRoutes {
   static String spellbook(String id) => '/character/$id/spellbook';
   static String levelUp(String id) => '/character/$id/level-up';
   static String purse(String id) => '/character/$id/purse';
+  static String rolls(String id) => '/character/$id/rolls';
   static const admin = '/admin';
   static const adminSpecies = '/admin/species';
   static const adminSubspecies = '/admin/subspecies';
@@ -50,6 +52,7 @@ abstract final class AppRoutes {
   static const adminMonsters = '/admin/monsters';
   static const adminNpcs = '/admin/npcs';
   static const adminTable = '/admin/table';
+  static const adminRolls = '/admin/rolls';
   static const adminLevelProgression = '/admin/level-progression';
 }
 
@@ -81,6 +84,13 @@ final appRouter = GoRouter(
               builder:
                   (context, state) =>
                       PurseScreen(characterId: state.pathParameters['id']!),
+            ),
+            GoRoute(
+              path: 'rolls',
+              builder:
+                  (context, state) => RollHistoryScreen(
+                    characterId: state.pathParameters['id']!,
+                  ),
             ),
             GoRoute(
               path: 'spellbook',
@@ -166,6 +176,10 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'table',
               builder: (context, state) => const AdminTableScreen(),
+            ),
+            GoRoute(
+              path: 'rolls',
+              builder: (context, state) => const RollHistoryScreen(),
             ),
             GoRoute(
               path: 'npcs',

@@ -5,10 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../theme/app_theme.dart';
+import '../characters/characters_providers.dart';
 import 'condition_labels.dart';
 
 /// Dégâts d'une attaque : dés, bonus et type (« tranchant »).
 typedef DamageDice = ({int count, int sides, int bonus, String type});
+
+/// Personnage dont le jet rejoint l'historique.
+typedef RollSource = ({String characterId, String characterName});
 
 /// Source d'aléa des jets ; remplacée par un générateur figé dans les tests.
 final diceRngProvider = Provider<Random>((ref) => Random());
@@ -21,8 +25,11 @@ final diceRngProvider = Provider<Random>((ref) => Random());
 /// héroïque pour l'avantage. Le mode reste modifiable à la main.
 /// Avec [damage], c'est un jet d'attaque (`CharSheetRoll`) : les dégâts sont
 /// lancés avec, dés doublés sur un 20 naturel.
+/// Avec [source], le dernier jet affiché rejoint l'historique du personnage
+/// à la fermeture.
 Future<void> showRollDialog(
   BuildContext context, {
+  RollSource? source,
   required String title,
   required String subtitle,
   required String modifierLabel,
@@ -35,6 +42,7 @@ Future<void> showRollDialog(
   context: context,
   builder:
       (context) => _RollDialog(
+        source: source,
         title: title,
         subtitle: subtitle,
         modifierLabel: modifierLabel,
@@ -50,6 +58,7 @@ String _signed(int value) => value >= 0 ? '+$value' : '$value';
 
 class _RollDialog extends ConsumerStatefulWidget {
   const _RollDialog({
+    this.source,
     required this.title,
     required this.subtitle,
     required this.modifierLabel,
@@ -60,6 +69,7 @@ class _RollDialog extends ConsumerStatefulWidget {
     this.onSpendInspiration,
   });
 
+  final RollSource? source;
   final String title;
   final String subtitle;
   final String modifierLabel;
@@ -79,10 +89,47 @@ class _RollDialogState extends ConsumerState<_RollDialog> {
   late D20Roll _roll;
   List<int> _damageDice = const [];
 
+  late final CharactersController _characters;
+
   @override
   void initState() {
     super.initState();
+    _characters = ref.read(charactersControllerProvider);
     _reroll();
+  }
+
+  @override
+  void dispose() {
+    if (widget.source case final s?) {
+      final prefix = '${s.characterName} · ';
+      final what =
+          widget.subtitle.startsWith(prefix)
+              ? widget.subtitle.substring(prefix.length)
+              : widget.subtitle;
+      final kept = _roll.kept;
+      final dice =
+          _roll.dice.length == 2
+              ? '2d20 ${_mode == RollMode.advantage ? 'avantage' : 'désavantage'}'
+                  ' — $kept gardé (${_roll.dice[1 - _roll.dice.indexOf(kept)]}'
+                  ' écarté)'
+              : 'd20 $kept';
+      final damage = switch (widget.damage) {
+        final d? =>
+          ' · dégâts ${max(0, _damageDice.fold(0, (a, b) => a + b) + d.bonus)}',
+        null => '',
+      };
+      _characters.addRoll(
+        characterId: s.characterId,
+        characterName: s.characterName,
+        label: '${widget.title} · $what',
+        detail:
+            '$dice (${_signed(_roll.modifier)})$damage'
+            '${widget.effects.autoFail.isEmpty ? '' : ' · échec automatique'}',
+        total: _roll.total,
+        inspired: _inspired,
+      );
+    }
+    super.dispose();
   }
 
   bool get _critical => _roll.kept == 20;
