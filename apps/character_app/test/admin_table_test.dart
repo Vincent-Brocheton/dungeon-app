@@ -5,10 +5,13 @@ import 'package:character_app/data/in_memory_admin_character_repository.dart';
 import 'package:character_app/data/in_memory_admin_repository.dart';
 import 'package:character_app/data/in_memory_admin_table_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
+import 'package:character_app/data/in_memory_table_membership_repository.dart';
+import 'package:character_app/data/table_membership.dart';
 import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
 import 'package:character_app/features/characters/characters_providers.dart';
+import 'package:character_app/features/table/table_providers.dart';
 import 'package:character_app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,7 +20,10 @@ import 'package:rules_engine/rules_engine.dart';
 
 import 'fakes/fake_auth_service.dart';
 
-Widget _app(InMemoryAdminTableRepository table) => ProviderScope(
+Widget _app(
+  InMemoryAdminTableRepository table, [
+  InMemoryTableMembershipRepository? membership,
+]) => ProviderScope(
   overrides: [
     authServiceProvider.overrideWithValue(
       FakeAuthService(
@@ -52,6 +58,9 @@ Widget _app(InMemoryAdminTableRepository table) => ProviderScope(
       ),
     ),
     adminTableRepositoryProvider.overrideWithValue(table),
+    tableMembershipRepositoryProvider.overrideWithValue(
+      membership ?? InMemoryTableMembershipRepository(),
+    ),
   ],
   child: const CharacterApp(),
 );
@@ -118,5 +127,60 @@ void main() {
       findsOneWidget,
     );
     expect(find.widgetWithText(TextField, 'Points de destin'), findsOneWidget);
+  });
+
+  testWidgets('invitations : publier la table, générer et révoquer un code, '
+      'retirer un joueur', (tester) async {
+    tester.view.physicalSize = const Size(1400, 4000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final membership = InMemoryTableMembershipRepository(
+      invites: [
+        TableInvite(
+          code: 'OLDCODE2',
+          tableName: 'X',
+          createdAt: DateTime(2026),
+        ),
+      ],
+      members: [
+        TableMember(
+          uid: 'joueur-1',
+          inviteCode: 'OLDCODE2',
+          joinedAt: DateTime(2026),
+          characterName: 'Sera Nightwhisper',
+          characterSummary: 'Roublard 3',
+        ),
+      ],
+    );
+    appRouter.go(AppRoutes.adminTable);
+    await tester.pumpWidget(_app(InMemoryAdminTableRepository(), membership));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(_field('table-name-field'), "Les Cendres de l'Aube");
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enregistrer'));
+    await tester.pumpAndSettle();
+    expect(
+      (await membership.watchPublic().first)?.name,
+      "Les Cendres de l'Aube",
+    );
+
+    await tester.tap(find.text('Générer une invitation'));
+    await tester.pumpAndSettle();
+    final invites = await membership.watchInvites().first;
+    expect(invites, hasLength(2));
+    final fresh = invites.firstWhere((i) => i.code != 'OLDCODE2');
+    expect(fresh.code, matches(RegExp(r'^[A-HJ-NP-Z2-9]{8}$')));
+    expect(fresh.tableName, "Les Cendres de l'Aube");
+
+    await tester.tap(find.byTooltip('Révoquer OLDCODE2'));
+    await tester.pumpAndSettle();
+    expect(await membership.getInvite('OLDCODE2'), isNull);
+
+    expect(find.text('Sera Nightwhisper'), findsWidgets);
+    await tester.tap(find.byTooltip('Retirer de la table'));
+    await tester.pumpAndSettle();
+    expect(await membership.watchMembers().first, isEmpty);
   });
 }

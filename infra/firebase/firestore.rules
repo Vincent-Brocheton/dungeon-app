@@ -25,6 +25,50 @@ service cloud.firestore {
         && (!('level' in d) || (d.level is int && d.level >= 1 && d.level <= 20));
     }
 
+    // Joueur de la table (tableMembers/{uid} existe).
+    function isMember() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/tableMembers/$(request.auth.uid));
+    }
+
+    function validTablePublic() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['name', 'world', 'cadence', 'nextSessionWhen',
+          'nextSessionWhere', 'nextSessionNote', 'updatedAt'])
+        && d.name is string && d.name.size() <= 120
+        && d.world is string && d.world.size() <= 500
+        && d.cadence is string && d.cadence.size() <= 200
+        && d.nextSessionWhen is string && d.nextSessionWhen.size() <= 200
+        && d.nextSessionWhere is string && d.nextSessionWhere.size() <= 200
+        && d.nextSessionNote is string && d.nextSessionNote.size() <= 2000
+        && d.updatedAt is timestamp;
+    }
+
+    function validInvite() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['tableName', 'tableWorld', 'createdAt'])
+        && d.tableName is string && d.tableName.size() <= 120
+        && d.tableWorld is string && d.tableWorld.size() <= 500
+        && d.createdAt is timestamp;
+    }
+
+    // Le code d'invitation doit exister à l'entrée ; un joueur déjà membre
+    // peut changer de personnage même si son invitation a été révoquée.
+    function validMember() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['inviteCode', 'joinedAt', 'characterId',
+          'characterName', 'characterSummary'])
+        && d.inviteCode is string && d.inviteCode.size() > 0
+        && d.inviteCode.size() <= 32
+        && d.joinedAt is timestamp
+        && (d.characterId == null
+          || (d.characterId is string && d.characterId.size() <= 128))
+        && d.characterName is string && d.characterName.size() <= 80
+        && d.characterSummary is string && d.characterSummary.size() <= 160
+        && (exists(/databases/$(database)/documents/invites/$(d.inviteCode))
+          || (resource != null && resource.data.inviteCode == d.inviteCode));
+    }
+
     function validNote() {
       let d = request.resource.data;
       return d.keys().hasOnly(['characterId', 'text', 'createdAt'])
@@ -117,6 +161,30 @@ service cloud.firestore {
     match /npcs/{npcId} {
       allow read: if isAdmin();
       allow write: if isAdmin() && validSpecies();
+    }
+
+    // Infos de la table visibles des joueurs (sans le journal du MJ).
+    match /tablePublic/{docId} {
+      allow read: if isAdmin() || isMember();
+      allow write: if isAdmin() && validTablePublic();
+    }
+
+    // Invitations : le code est le secret, lu un par un (jamais listé hors
+    // MJ) ; seul le MJ en crée ou en révoque.
+    match /invites/{code} {
+      allow get: if request.auth != null;
+      allow list: if isAdmin();
+      allow create: if isAdmin() && validInvite();
+      allow delete: if isAdmin();
+    }
+
+    // Joueurs de la table : chacun crée ou met à jour sa propre adhésion
+    // avec un code valide ; les membres et le MJ voient la liste ; on quitte
+    // soi-même, ou le MJ retire.
+    match /tableMembers/{uid} {
+      allow read: if isOwner(uid) || isAdmin() || isMember();
+      allow create, update: if isOwner(uid) && validMember();
+      allow delete: if isOwner(uid) || isAdmin();
     }
 
     // Table du MJ (paramètres, journal privé) : réservée aux admins.
