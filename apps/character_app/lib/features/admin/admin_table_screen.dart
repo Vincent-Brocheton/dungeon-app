@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/admin_character_entry.dart';
 import '../../data/admin_table_doc.dart';
+import '../../data/table_membership.dart';
 import '../../theme/app_theme.dart';
+import '../table/table_providers.dart';
 import 'admin_form_fields.dart';
 import 'admin_providers.dart';
 
@@ -114,6 +118,19 @@ class _AdminTableScreenState extends ConsumerState<AdminTableScreen> {
               'journal': [for (final e in entries(_journal)) e.toMap()],
               'updatedAt': DateTime.now(),
             }),
+          );
+      // Copie pour les joueurs, sans le journal ni les règles internes.
+      await ref
+          .read(tableMembershipRepositoryProvider)
+          .publish(
+            TablePublicInfo(
+              name: _texts['name']!.text.trim(),
+              world: _texts['world']!.text.trim(),
+              cadence: _texts['cadence']!.text.trim(),
+              nextSessionWhen: _texts['nextSessionWhen']!.text.trim(),
+              nextSessionWhere: _texts['nextSessionWhere']!.text.trim(),
+              nextSessionNote: _texts['nextSessionNote']!.text.trim(),
+            ),
           );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -406,6 +423,15 @@ class _AdminTableScreenState extends ConsumerState<AdminTableScreen> {
           ),
           vgap,
           _Section(
+            title: 'Invitations & joueurs',
+            subtitle: 'un code par invitation, révocable',
+            child: _Invitations(
+              tableName: _texts['name']!.text.trim(),
+              tableWorld: _texts['world']!.text.trim(),
+            ),
+          ),
+          vgap,
+          _Section(
             title: 'Planning des séances',
             child: Column(
               children: [
@@ -665,6 +691,122 @@ class _EntriesPanel extends StatelessWidget {
                   decoration: const InputDecoration(isDense: true),
                 ),
               ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Lien d'invitation : sur le web, l'adresse de l'app suivie de
+/// `/join/CODE` ; ailleurs, le code seul, à saisir dans Réglages.
+String inviteLink(String code) =>
+    kIsWeb ? '${Uri.base.origin}/join/$code' : code;
+
+/// Invitations (`TableInvite`) et joueurs entrés à la table : générer un
+/// code, le copier, le révoquer ; retirer un joueur.
+class _Invitations extends ConsumerWidget {
+  const _Invitations({required this.tableName, required this.tableWorld});
+
+  final String tableName;
+  final String tableWorld;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.read(tableMembershipRepositoryProvider);
+    final invites = ref.watch(tableInvitesProvider).value ?? const [];
+    final members = ref.watch(tableMembersProvider).value ?? const [];
+    const muted = TextStyle(color: AppTheme.textMuted);
+
+    Future<void> copy(String code) async {
+      await Clipboard.setData(ClipboardData(text: inviteLink(code)));
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Copié : ${inviteLink(code)}')));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.icon(
+            onPressed:
+                tableName.isEmpty
+                    ? null
+                    : () => repo.createInvite(
+                      TableInvite(
+                        code: TableInvite.newCode(),
+                        tableName: tableName,
+                        tableWorld: tableWorld,
+                        createdAt: DateTime.now(),
+                      ),
+                    ),
+            icon: const Icon(Icons.add_link),
+            label: const Text('Générer une invitation'),
+          ),
+        ),
+        if (tableName.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Text('Donne un nom à la campagne d’abord.', style: muted),
+          ),
+        const SizedBox(height: 8),
+        if (invites.isEmpty)
+          const Text('Aucune invitation active.', style: muted),
+        for (final i in invites)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: SelectableText(i.code, key: Key('invite-${i.code}')),
+            subtitle: Text(
+              kIsWeb ? inviteLink(i.code) : 'Code à saisir dans Réglages',
+              style: muted,
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Copier le lien',
+                  icon: const Icon(Icons.copy),
+                  onPressed: () => copy(i.code),
+                ),
+                IconButton(
+                  tooltip: 'Révoquer ${i.code}',
+                  icon: const Icon(Icons.link_off),
+                  onPressed: () => repo.revokeInvite(i.code),
+                ),
+              ],
+            ),
+          ),
+        const Divider(height: 24),
+        Text(
+          'Joueurs à la table (${members.length})',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        if (members.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Text('Personne n’a encore rejoint la table.', style: muted),
+          ),
+        for (final m in members)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              m.characterName.isEmpty ? 'Sans personnage' : m.characterName,
+            ),
+            subtitle: Text(
+              m.characterSummary.isEmpty
+                  ? 'Joueur ${m.uid}'
+                  : m.characterSummary,
+              style: muted,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: IconButton(
+              tooltip: 'Retirer de la table',
+              icon: const Icon(Icons.person_remove_outlined),
+              onPressed: () => repo.leave(m.uid),
             ),
           ),
       ],
