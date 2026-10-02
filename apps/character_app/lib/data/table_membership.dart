@@ -128,6 +128,86 @@ class TableMember {
       );
 }
 
+/// Type d'entrée de la chronique partagée.
+enum ChronicleKind {
+  quest('Quête'),
+  encounter('Rencontre'),
+  note('Note');
+
+  const ChronicleKind(this.label);
+  final String label;
+}
+
+/// État d'une quête.
+enum QuestStatus {
+  ongoing('En cours'),
+  done('Terminée'),
+  failed('Échouée');
+
+  const QuestStatus(this.label);
+  final String label;
+}
+
+/// Entrée de la chronique partagée : `tableChronicle/{id}`, visible des
+/// membres et du MJ, signée du nom de personnage de son auteur.
+class ChronicleEntry {
+  const ChronicleEntry({
+    required this.id,
+    required this.kind,
+    required this.title,
+    required this.authorUid,
+    required this.authorName,
+    required this.createdAt,
+    this.text = '',
+    this.status,
+  });
+
+  final String id;
+  final ChronicleKind kind;
+  final String title;
+  final String text;
+
+  /// État, pour une quête seulement.
+  final QuestStatus? status;
+  final String authorUid;
+  final String authorName;
+  final DateTime createdAt;
+
+  ChronicleEntry withStatus(QuestStatus status) => ChronicleEntry(
+    id: id,
+    kind: kind,
+    title: title,
+    text: text,
+    status: status,
+    authorUid: authorUid,
+    authorName: authorName,
+    createdAt: createdAt,
+  );
+
+  Map<String, Object?> toMap() => {
+    'kind': kind.name,
+    'status': status?.name ?? '',
+    'title': title,
+    'text': text,
+    'authorUid': authorUid,
+    'authorName': authorName,
+    'createdAt': createdAt,
+  };
+
+  factory ChronicleEntry.fromMap(String id, Map<String, Object?> map) =>
+      ChronicleEntry(
+        id: id,
+        kind:
+            ChronicleKind.values.asNameMap()[map['kind']] ?? ChronicleKind.note,
+        status: QuestStatus.values.asNameMap()[map['status']],
+        title: map['title'] as String? ?? '',
+        text: map['text'] as String? ?? '',
+        authorUid: map['authorUid'] as String? ?? '',
+        authorName: map['authorName'] as String? ?? '',
+        createdAt: map['createdAt'] as DateTime? ?? DateTime.now(),
+      );
+}
+
 /// Accès à l'adhésion à la table. Implémenté par Firestore, et en mémoire
 /// pour les tests.
 abstract class TableMembershipRepository {
@@ -160,4 +240,13 @@ abstract class TableMembershipRepository {
 
   /// Le joueur quitte la table, ou le MJ le retire.
   Future<void> leave(String uid);
+
+  /// Chronique partagée, des plus récentes aux plus anciennes.
+  Stream<List<ChronicleEntry>> watchChronicle();
+
+  /// Ajoute (id vide) ou met à jour une entrée (auteur ou MJ).
+  Future<void> saveChronicle(ChronicleEntry entry);
+
+  /// Supprime une entrée (auteur ou MJ).
+  Future<void> deleteChronicle(String id);
 }

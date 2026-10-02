@@ -69,6 +69,24 @@ service cloud.firestore {
           || (resource != null && resource.data.inviteCode == d.inviteCode));
     }
 
+    // L'auteur et la date de création ne changent jamais (vérifié au
+    // match) ; le statut ne vaut que pour une quête.
+    function validChronicle() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['kind', 'status', 'title', 'text', 'authorUid',
+          'authorName', 'createdAt'])
+        && d.kind in ['quest', 'encounter', 'note']
+        && d.status is string
+        && (d.kind == 'quest'
+          ? d.status in ['ongoing', 'done', 'failed']
+          : d.status == '')
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 120
+        && d.text is string && d.text.size() <= 4000
+        && d.authorUid is string
+        && d.authorName is string && d.authorName.size() <= 80
+        && d.createdAt is timestamp;
+    }
+
     function validNote() {
       let d = request.resource.data;
       return d.keys().hasOnly(['characterId', 'text', 'createdAt'])
@@ -185,6 +203,21 @@ service cloud.firestore {
       allow read: if isOwner(uid) || isAdmin() || isMember();
       allow create, update: if isOwner(uid) && validMember();
       allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Chronique partagée : membres et MJ lisent et publient en leur nom ;
+    // l'auteur (encore membre) ou le MJ modifie et supprime.
+    match /tableChronicle/{entryId} {
+      allow read: if isAdmin() || isMember();
+      allow create: if (isAdmin() || isMember()) && validChronicle()
+        && request.resource.data.authorUid == request.auth.uid;
+      allow update: if (isAdmin()
+          || (isMember() && resource.data.authorUid == request.auth.uid))
+        && validChronicle()
+        && request.resource.data.authorUid == resource.data.authorUid
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin()
+        || (isMember() && resource.data.authorUid == request.auth.uid);
     }
 
     // Table du MJ (paramètres, journal privé) : réservée aux admins.

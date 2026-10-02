@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'table_membership.dart';
 
-/// `tablePublic/main`, `invites/{code}` et `tableMembers/{uid}`.
+/// `tablePublic/main`, `invites/{code}`, `tableMembers/{uid}` et
+/// `tableChronicle/{id}`.
 class FirestoreTableMembershipRepository implements TableMembershipRepository {
   FirestoreTableMembershipRepository(this._db);
 
@@ -14,6 +15,8 @@ class FirestoreTableMembershipRepository implements TableMembershipRepository {
       _db.collection('invites');
   CollectionReference<Map<String, dynamic>> get _members =>
       _db.collection('tableMembers');
+  CollectionReference<Map<String, dynamic>> get _chronicle =>
+      _db.collection('tableChronicle');
 
   static Map<String, Object?> _fromFirestore(Map<String, dynamic> map) => {
     for (final e in map.entries)
@@ -87,4 +90,26 @@ class FirestoreTableMembershipRepository implements TableMembershipRepository {
 
   @override
   Future<void> leave(String uid) => _members.doc(uid).delete();
+
+  @override
+  Stream<List<ChronicleEntry>> watchChronicle() => _chronicle
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map(
+        (q) => [
+          for (final d in q.docs)
+            ChronicleEntry.fromMap(d.id, _fromFirestore(d.data())),
+        ],
+      );
+
+  @override
+  Future<void> saveChronicle(ChronicleEntry entry) {
+    final data = _toFirestore(entry.toMap());
+    return entry.id.isEmpty
+        ? _chronicle.add(data)
+        : _chronicle.doc(entry.id).set(data);
+  }
+
+  @override
+  Future<void> deleteChronicle(String id) => _chronicle.doc(id).delete();
 }

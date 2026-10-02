@@ -1,8 +1,10 @@
 import 'package:character_app/app.dart';
 import 'package:character_app/data/character_doc.dart';
+import 'package:character_app/data/in_memory_admin_repository.dart';
 import 'package:character_app/data/in_memory_character_repository.dart';
 import 'package:character_app/data/in_memory_table_membership_repository.dart';
 import 'package:character_app/data/table_membership.dart';
+import 'package:character_app/features/admin/admin_providers.dart';
 import 'package:character_app/features/auth/app_user.dart';
 import 'package:character_app/features/auth/auth_providers.dart';
 import 'package:character_app/features/characters/characters_providers.dart';
@@ -71,6 +73,7 @@ Future<void> _pump(
         ),
         characterRepositoryProvider.overrideWithValue(characters),
         tableMembershipRepositoryProvider.overrideWithValue(membership),
+        adminRepositoryProvider.overrideWithValue(InMemoryAdminRepository()),
       ],
       child: const CharacterApp(),
     ),
@@ -124,5 +127,63 @@ void main() {
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
     expect(find.text('Rejoindre la table'), findsOneWidget);
+  });
+
+  testWidgets('chronique : lire, publier une quête, filtrer, la terminer, '
+      'la supprimer ; pas d’action sur l’entrée d’un autre', (tester) async {
+    final membership = InMemoryTableMembershipRepository(
+      members: [
+        TableMember(
+          uid: 'me',
+          inviteCode: 'K7QX2M9P',
+          joinedAt: _now,
+          characterId: 'durgan',
+          characterName: 'Durgan',
+        ),
+      ],
+      chronicle: [
+        ChronicleEntry(
+          id: 'x',
+          kind: ChronicleKind.encounter,
+          title: 'Embuscade gobeline',
+          authorUid: 'autre',
+          authorName: 'Sera Nightwhisper',
+          createdAt: _now,
+        ),
+      ],
+    );
+    await _pump(tester, membership, AppRoutes.table);
+    await tester.tap(find.text('Chronique de la table'));
+    await tester.pumpAndSettle();
+    expect(find.text('Embuscade gobeline'), findsOneWidget);
+    expect(find.text('Ajouté par Sera Nightwhisper'), findsOneWidget);
+    expect(find.byType(PopupMenuButton<Object>), findsNothing);
+
+    await tester.tap(find.text('Ajouter'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('chronicle-title')),
+      'Retrouver le prêtre',
+    );
+    await tester.tap(find.text('Publier à la table'));
+    await tester.pumpAndSettle();
+    expect(find.text('QUÊTE · En cours'), findsOneWidget);
+    expect(find.text('Ajouté par Durgan'), findsOneWidget);
+
+    await tester.tap(find.text('Quêtes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Embuscade gobeline'), findsNothing);
+
+    await tester.tap(find.byTooltip('Actions sur Retrouver le prêtre'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Terminée'));
+    await tester.pumpAndSettle();
+    expect(find.text('QUÊTE · Terminée'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Actions sur Retrouver le prêtre'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Supprimer'));
+    await tester.pumpAndSettle();
+    expect(await membership.watchChronicle().first, hasLength(1));
   });
 }

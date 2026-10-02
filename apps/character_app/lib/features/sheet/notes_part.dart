@@ -2,8 +2,8 @@ part of 'character_sheet_screen.dart';
 
 /// Onglet Notes (`CharSheetNotes.dc.html`) : personnalité, historique et
 /// alliés, enregistrés peu après la frappe ; notes de session privées
-/// (`users/{uid}/notes`, que le MJ ne lit pas). La chronique de la table
-/// viendra avec la table côté joueur.
+/// (`users/{uid}/notes`, que le MJ ne lit pas). La chronique partagée est
+/// sur la page de la table.
 class _Notes extends ConsumerStatefulWidget {
   const _Notes({super.key, required this.doc});
 

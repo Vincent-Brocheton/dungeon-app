@@ -18,6 +18,7 @@ import 'features/auth/legal_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/level_up/level_up_screen.dart';
 import 'features/sheet/character_sheet_screen.dart';
+import 'features/table/chronicle_screen.dart';
 import 'features/table/table_screens.dart';
 import 'features/wizard/wizard_screen.dart';
 
@@ -27,6 +28,7 @@ abstract final class AppRoutes {
   static const newCharacter = '/new-character';
   static const account = '/account';
   static const table = '/table';
+  static const chronicle = '/table/chronicle';
   static String join(String code) => '/join/$code';
   static const terms = '/account/terms';
   static const privacy = '/account/privacy';
@@ -89,6 +91,12 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'table',
           builder: (context, state) => const TableHomeScreen(),
+          routes: [
+            GoRoute(
+              path: 'chronicle',
+              builder: (context, state) => const ChronicleScreen(),
+            ),
+          ],
         ),
         GoRoute(
           path: 'join/:code',

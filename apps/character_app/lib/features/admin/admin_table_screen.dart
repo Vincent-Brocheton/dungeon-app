@@ -2,10 +2,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/admin_character_entry.dart';
 import '../../data/admin_table_doc.dart';
 import '../../data/table_membership.dart';
+import '../../router.dart';
 import '../../theme/app_theme.dart';
 import '../table/table_providers.dart';
 import 'admin_form_fields.dart';
@@ -147,14 +149,9 @@ class _AdminTableScreenState extends ConsumerState<AdminTableScreen> {
         title: const Text('Ma table'),
         actions: [
           IconButton(
-            tooltip: 'Inviter un joueur',
-            icon: const Icon(Icons.person_add_alt_outlined),
-            onPressed:
-                () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Invitations : bientôt disponible'),
-                  ),
-                ),
+            tooltip: 'Chronique de la table',
+            icon: const Icon(Icons.auto_stories_outlined),
+            onPressed: () => context.push(AppRoutes.chronicle),
           ),
         ],
       ),
