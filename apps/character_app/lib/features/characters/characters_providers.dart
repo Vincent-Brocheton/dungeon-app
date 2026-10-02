@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rules_engine/rules_engine.dart';
@@ -104,6 +106,30 @@ class CharactersController {
   Future<void> deleteNote(String noteId) => _repo.deleteNote(_uid(), noteId);
 
   Future<void> delete(String id) => _repo.softDelete(_uid(), id);
+
+  /// Copie lisible de toutes les données du compte (`AccountExportData`) :
+  /// personnages et leurs notes privées, en JSON indenté.
+  Future<String> exportData() async {
+    final uid = _uid();
+    final characters = await _repo.watchAll(uid).first;
+    return const JsonEncoder.withIndent('  ', _encodeDate).convert({
+      'exportedAt': DateTime.now(),
+      'characters': [
+        for (final c in characters)
+          {
+            'id': c.id,
+            ...c.toMap(),
+            'notes': [
+              for (final n in await _repo.watchNotes(uid, c.id).first)
+                n.toMap(),
+            ],
+          },
+      ],
+    });
+  }
+
+  static Object? _encodeDate(Object? value) =>
+      value is DateTime ? value.toIso8601String() : value.toString();
 
   /// Efface toutes les données puis le compte. L'écran Bienvenue reprend
   /// la main : aucune session n'est recréée automatiquement.
