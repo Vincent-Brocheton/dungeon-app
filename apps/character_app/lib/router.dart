@@ -14,6 +14,7 @@ import 'features/admin/admin_spell_editor_screen.dart';
 import 'features/admin/admin_subspecies_editor_screen.dart';
 import 'features/admin/admin_table_screen.dart';
 import 'features/auth/account_screen.dart';
+import 'features/auth/legal_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/level_up/level_up_screen.dart';
 import 'features/sheet/character_sheet_screen.dart';
@@ -24,6 +25,8 @@ abstract final class AppRoutes {
   static const home = '/';
   static const newCharacter = '/new-character';
   static const account = '/account';
+  static const terms = '/account/terms';
+  static const privacy = '/account/privacy';
   static String character(String id) => '/character/$id';
   static String spellbook(String id) => '/character/$id/spellbook';
   static String levelUp(String id) => '/character/$id/level-up';
@@ -83,6 +86,19 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'account',
           builder: (context, state) => const AccountScreen(),
+          routes: [
+            GoRoute(
+              path: 'terms',
+              builder:
+                  (context, state) => const LegalScreen(page: LegalPage.terms),
+            ),
+            GoRoute(
+              path: 'privacy',
+              builder:
+                  (context, state) =>
+                      const LegalScreen(page: LegalPage.privacy),
+            ),
+          ],
         ),
         GoRoute(
           path: 'admin',

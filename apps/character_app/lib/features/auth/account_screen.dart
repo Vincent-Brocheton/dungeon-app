@@ -1,11 +1,21 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../router.dart';
+import '../../theme/app_theme.dart';
 import '../characters/characters_providers.dart';
 import 'auth_providers.dart';
 
-/// Compte : lier la session anonyme, se connecter, se déconnecter, supprimer.
+/// Version affichée dans À propos (celle de `pubspec.yaml`).
+const appVersion = '0.1.0';
+
+/// Réglages (`Settings.dc.html`) : compte (lier la session anonyme, se
+/// connecter, se déconnecter), à propos et pages légales, export des données
+/// et suppression du compte. Tables et notifications viendront avec leurs
+/// fonctionnalités.
 class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
 
@@ -52,7 +62,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final isAnonymous = user?.isAnonymous ?? true;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon compte')),
+      appBar: AppBar(title: const Text('Réglages')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -140,41 +150,114 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               label: const Text('Se déconnecter'),
             ),
           ],
-          const SizedBox(height: 32),
-          TextButton.icon(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
+          const SizedBox(height: 24),
+          _title(context, 'À propos'),
+          Card(
+            child: Column(
+              children: [
+                const ListTile(
+                  title: Text('Version'),
+                  trailing: Text('$appVersion (bêta)'),
+                ),
+                ListTile(
+                  title: const Text("Conditions d'utilisation"),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.terms),
+                ),
+                ListTile(
+                  title: const Text('Politique de confidentialité'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.privacy),
+                ),
+              ],
             ),
-            onPressed: _busy ? null : _confirmDelete,
-            icon: const Icon(Icons.delete_forever_outlined),
-            label: const Text('Supprimer mon compte et mes personnages'),
+          ),
+          const SizedBox(height: 24),
+          _title(context, 'Zone dangereuse'),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  title: const Text('Exporter mes données'),
+                  subtitle: const Text('Personnages et notes, au format JSON'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _busy ? null : _export,
+                ),
+                ListTile(
+                  textColor: Theme.of(context).colorScheme.error,
+                  iconColor: Theme.of(context).colorScheme.error,
+                  title: const Text('Supprimer mon compte'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _busy ? null : _confirmDelete,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
+  Widget _title(BuildContext context, String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      text.toUpperCase(),
+      style: Theme.of(
+        context,
+      ).textTheme.labelSmall?.copyWith(color: AppTheme.textMuted),
+    ),
+  );
+
+  /// Export (`AccountExportData.dc.html`) : la copie s'affiche et se copie
+  /// dans le presse-papiers, sans envoi par e-mail.
+  Future<void> _export() async {
+    final json = await ref.read(charactersControllerProvider).exportData();
+    if (!mounted) return;
+    await showDialog<void>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Supprimer définitivement ?'),
-            content: const Text(
-              'Tous tes personnages seront effacés sur tous tes appareils. '
-              'Cette action est irréversible.',
+            title: const Text('Exporter mes données'),
+            content: SizedBox(
+              width: 560,
+              height: 360,
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  json,
+                  key: const Key('export-json'),
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                ),
+              ),
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Annuler'),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Fermer'),
               ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Tout supprimer'),
+              FilledButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: json));
+                  if (context.mounted) Navigator.pop(context);
+                  if (mounted) {
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Copié dans le presse-papiers.'),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.copy),
+                label: const Text('Copier'),
               ),
             ],
           ),
+    );
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const _DeleteAccountDialog(),
     );
     if (confirmed ?? false) {
       await _run(
@@ -182,5 +265,77 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         success: 'Compte supprimé.',
       );
     }
+  }
+}
+
+/// Suppression du compte (`AccountDeleteConfirm.dc.html`) : ce qui sera
+/// effacé, et « SUPPRIMER » à taper pour confirmer.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _confirm = TextEditingController();
+
+  @override
+  void dispose() {
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final error = Theme.of(context).colorScheme.error;
+    final ok = _confirm.text.trim() == 'SUPPRIMER';
+    return AlertDialog(
+      title: const Text('Supprimer mon compte'),
+      content: SizedBox(
+        width: 460,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Cette action est irréversible. Seront définitivement '
+                'supprimés, sur tous tes appareils :\n'
+                '• tes personnages (fiches, inventaire, sorts, bourse) ;\n'
+                '• tes notes de session privées ;\n'
+                '• ton compte et ses connexions liées.',
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Tu peux exporter tes données avant de continuer.',
+                style: TextStyle(color: AppTheme.textMuted),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('delete-confirm-field'),
+                controller: _confirm,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(
+                  labelText: 'Tape SUPPRIMER pour confirmer',
+                  hintText: 'SUPPRIMER',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: error),
+          onPressed: ok ? () => Navigator.pop(context, true) : null,
+          child: const Text('Supprimer définitivement'),
+        ),
+      ],
+    );
   }
 }
