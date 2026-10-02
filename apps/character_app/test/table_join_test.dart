@@ -48,8 +48,9 @@ InMemoryTableMembershipRepository _membership() =>
 Future<void> _pump(
   WidgetTester tester,
   InMemoryTableMembershipRepository membership,
-  String location,
-) async {
+  String location, {
+  Set<String> admins = const {},
+}) async {
   tester.view.physicalSize = const Size(420, 1600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -59,6 +60,7 @@ Future<void> _pump(
     CharacterDoc(
       id: 'durgan',
       name: 'Durgan',
+      gold: 24,
       scores: const AbilityScores.all(10),
       createdAt: _now,
       updatedAt: _now,
@@ -73,7 +75,9 @@ Future<void> _pump(
         ),
         characterRepositoryProvider.overrideWithValue(characters),
         tableMembershipRepositoryProvider.overrideWithValue(membership),
-        adminRepositoryProvider.overrideWithValue(InMemoryAdminRepository()),
+        adminRepositoryProvider.overrideWithValue(
+          InMemoryAdminRepository(admins: admins),
+        ),
       ],
       child: const CharacterApp(),
     ),
@@ -185,5 +189,89 @@ void main() {
     await tester.tap(find.text('Supprimer'));
     await tester.pumpAndSettle();
     expect(await membership.watchChronicle().first, hasLength(1));
+  });
+
+  testWidgets('réserve, joueur : verser de l’or depuis sa bourse', (
+    tester,
+  ) async {
+    final membership = InMemoryTableMembershipRepository(
+      members: [
+        TableMember(
+          uid: 'me',
+          inviteCode: 'K7QX2M9P',
+          joinedAt: _now,
+          characterId: 'durgan',
+          characterName: 'Durgan',
+        ),
+      ],
+      treasury: [
+        TreasuryMovement(
+          label: 'Butin — Séance 9',
+          coin: Coin.gold,
+          amount: 40,
+          authorUid: 'mj',
+          createdAt: _now,
+        ),
+      ],
+    );
+    await _pump(tester, membership, AppRoutes.table);
+    await tester.tap(find.text('Réserve du groupe'));
+    await tester.pumpAndSettle();
+    expect(find.text('≈ 40 po'), findsOneWidget);
+    expect(find.text('Mouvement manuel'), findsNothing);
+
+    await tester.enterText(find.byKey(const Key('deposit-amount')), '30');
+    await tester.tap(find.text('Verser'));
+    await tester.pumpAndSettle();
+    expect(find.text('Entre 1 et 24 po.'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('deposit-amount')), '5');
+    await tester.tap(find.text('Verser'));
+    await tester.pumpAndSettle();
+    expect(find.text('≈ 45 po'), findsOneWidget);
+    expect(find.text('Contribution — Durgan'), findsOneWidget);
+    expect(find.textContaining('(19 po disponibles)'), findsOneWidget);
+  });
+
+  testWidgets('réserve, MJ : solde mixte, distribution et objets communs', (
+    tester,
+  ) async {
+    final membership = _membership();
+    for (final (coin, amount) in [
+      (Coin.gold, 26),
+      (Coin.silver, 12),
+      (Coin.copper, 30),
+    ]) {
+      await membership.addTreasuryMovement(
+        TreasuryMovement(
+          label: 'Butin',
+          coin: coin,
+          amount: amount,
+          authorUid: 'me',
+          createdAt: _now,
+        ),
+      );
+    }
+    await _pump(tester, membership, AppRoutes.treasury, admins: {'me'});
+    expect(find.text('≈ 27,5 po'), findsOneWidget);
+    expect(find.text('Verser'), findsNothing);
+
+    // Un seul joueur à la table : il reçoit tout l'or.
+    await tester.tap(find.text('Distribuer l’or'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmer la distribution'));
+    await tester.pumpAndSettle();
+    expect(find.text('≈ 1,5 po'), findsOneWidget);
+    expect(find.text('− 26 po'), findsOneWidget);
+
+    await tester.tap(find.text('+ Ajouter un objet commun'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('item-name')), 'Tente');
+    await tester.tap(find.widgetWithText(FilledButton, 'Ajouter'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tente'), findsOneWidget);
+    await tester.tap(find.byTooltip('Retirer Tente'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tente'), findsNothing);
   });
 }

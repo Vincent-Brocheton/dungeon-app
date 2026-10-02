@@ -20,6 +20,7 @@ import 'features/level_up/level_up_screen.dart';
 import 'features/sheet/character_sheet_screen.dart';
 import 'features/table/chronicle_screen.dart';
 import 'features/table/table_screens.dart';
+import 'features/table/treasury_screen.dart';
 import 'features/wizard/wizard_screen.dart';
 
 /// Routes de l'app. Les chemins sont aussi les URL sur le web.
@@ -29,6 +30,7 @@ abstract final class AppRoutes {
   static const account = '/account';
   static const table = '/table';
   static const chronicle = '/table/chronicle';
+  static const treasury = '/table/treasury';
   static String join(String code) => '/join/$code';
   static const terms = '/account/terms';
   static const privacy = '/account/privacy';
@@ -95,6 +97,10 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'chronicle',
               builder: (context, state) => const ChronicleScreen(),
+            ),
+            GoRoute(
+              path: 'treasury',
+              builder: (context, state) => const TreasuryScreen(),
             ),
           ],
         ),

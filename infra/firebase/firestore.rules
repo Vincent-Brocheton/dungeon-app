@@ -87,6 +87,26 @@ service cloud.firestore {
         && d.createdAt is timestamp;
     }
 
+    function validTreasuryMovement() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['label', 'coin', 'amount', 'authorUid',
+          'createdAt'])
+        && d.label is string && d.label.size() > 0 && d.label.size() <= 120
+        && d.coin in ['gold', 'silver', 'copper']
+        && d.amount is int && d.amount != 0
+        && d.amount >= -1000000 && d.amount <= 1000000
+        && d.authorUid == request.auth.uid
+        && d.createdAt is timestamp;
+    }
+
+    function validTreasuryItem() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['name', 'note', 'createdAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 120
+        && d.note is string && d.note.size() <= 500
+        && d.createdAt is timestamp;
+    }
+
     function validNote() {
       let d = request.resource.data;
       return d.keys().hasOnly(['characterId', 'text', 'createdAt'])
@@ -218,6 +238,21 @@ service cloud.firestore {
         && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isAdmin()
         || (isMember() && resource.data.authorUid == request.auth.uid);
+    }
+
+    // Réserve du groupe : registre de mouvements jamais modifiés. Un joueur
+    // ne fait que verser (montant positif) ; le MJ ajuste dans les deux sens.
+    match /treasuryMovements/{movementId} {
+      allow read: if isAdmin() || isMember();
+      allow create: if validTreasuryMovement()
+        && (isAdmin() || (isMember() && request.resource.data.amount > 0));
+    }
+
+    // Objets communs : lus par la table, gérés par le MJ.
+    match /treasuryItems/{itemId} {
+      allow read: if isAdmin() || isMember();
+      allow create: if isAdmin() && validTreasuryItem();
+      allow delete: if isAdmin();
     }
 
     // Table du MJ (paramètres, journal privé) : réservée aux admins.

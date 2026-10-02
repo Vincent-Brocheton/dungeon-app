@@ -431,6 +431,18 @@ class _TableHome extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(AppRoutes.chronicle),
               ),
+              const SizedBox(height: 8),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: AppTheme.border),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                leading: const Icon(Icons.savings_outlined),
+                title: const Text('Réserve du groupe'),
+                subtitle: Text('Or commun et objets partagés', style: muted),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.treasury),
+              ),
               title('Ton personnage à cette table'),
               ListTile(
                 shape: RoundedRectangleBorder(

@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'table_membership.dart';
 
-/// `tablePublic/main`, `invites/{code}`, `tableMembers/{uid}` et
-/// `tableChronicle/{id}`.
+/// `tablePublic/main`, `invites/{code}`, `tableMembers/{uid}`,
+/// `tableChronicle/{id}`, `treasuryMovements/{id}` et `treasuryItems/{id}`.
 class FirestoreTableMembershipRepository implements TableMembershipRepository {
   FirestoreTableMembershipRepository(this._db);
 
@@ -112,4 +112,40 @@ class FirestoreTableMembershipRepository implements TableMembershipRepository {
 
   @override
   Future<void> deleteChronicle(String id) => _chronicle.doc(id).delete();
+
+  @override
+  Stream<List<TreasuryMovement>> watchTreasury() => _db
+      .collection('treasuryMovements')
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map(
+        (q) => [
+          for (final d in q.docs)
+            TreasuryMovement.fromMap(d.id, _fromFirestore(d.data())),
+        ],
+      );
+
+  @override
+  Future<void> addTreasuryMovement(TreasuryMovement movement) =>
+      _db.collection('treasuryMovements').add(_toFirestore(movement.toMap()));
+
+  @override
+  Stream<List<TreasuryItem>> watchTreasuryItems() => _db
+      .collection('treasuryItems')
+      .orderBy('createdAt')
+      .snapshots()
+      .map(
+        (q) => [
+          for (final d in q.docs)
+            TreasuryItem.fromMap(d.id, _fromFirestore(d.data())),
+        ],
+      );
+
+  @override
+  Future<void> addTreasuryItem(TreasuryItem item) =>
+      _db.collection('treasuryItems').add(_toFirestore(item.toMap()));
+
+  @override
+  Future<void> removeTreasuryItem(String id) =>
+      _db.collection('treasuryItems').doc(id).delete();
 }
