@@ -76,6 +76,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Politique de confidentialité'), findsOneWidget);
     expect(find.text('3. Qui voit quoi'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('6. Contact'), 300);
+    expect(find.textContaining('59260 Lille'), findsOneWidget);
   });
 
   testWidgets('export : personnages et notes privées en JSON', (tester) async {
